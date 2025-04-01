@@ -2,12 +2,14 @@
   "name": "academy-app",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "nuxi dev",
-    "prebuild": "echo 🚀 INICIANDO BUILD NUXT && ls -la && cat nuxt.config.ts",
-   "build": "nuxi build --verbose",
-    "generate": "nuxi generate"
-  },
+
+"scripts": {
+  "dev": "nuxi dev",
+  "build": "nuxi build",
+  "generate": "nuxi generate"
+
+
+  
 "engines": {
   "node": "18.x"
 },
