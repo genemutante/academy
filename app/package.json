@@ -8,6 +8,10 @@
    "build": "nuxi build --verbose",
     "generate": "nuxi generate"
   },
+"engines": {
+  "node": "18.x"
+},
+  
   "dependencies": {
     "@supabase/supabase-js": "^2.39.5",
     "axios": "^1.6.7",
