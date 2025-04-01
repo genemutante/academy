@@ -10,7 +10,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.39.5",
     "axios": "^1.6.7",
-    "nuxt": "^3.9.1"
+    "nuxt": "^3.9.1",
      "nuxi": "latest"
   }
 }
