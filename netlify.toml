@@ -1,12 +1,14 @@
+# netlify.toml
 [build]
-  functions = "functions"
+command = "npm run build"
+publish = ".output/public"
+
+[functions]
+directory = "netlify/functions"
+node_bundler = "esbuild"
 
 [dev]
-  framework = "vite"
-  command = "npm run dev"
-  port = 8888
-  targetPort = 3000
-  autoLaunch = true
-  
-[functions]
-directory = "functions"
+command = "nuxi dev"
+targetPort = 3000
+port = 8888
+framework = "#custom"
