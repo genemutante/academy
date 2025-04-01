@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "nuxi dev",
-    "build": "nuxi build || true",
+    "prebuild": "echo 🚀 INICIANDO BUILD NUXT && ls -la && cat nuxt.config.ts",
+   "build": "nuxi build --verbose",
     "generate": "nuxi generate"
   },
   "dependencies": {
