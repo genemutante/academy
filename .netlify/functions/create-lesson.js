@@ -16,7 +16,7 @@ exports.handler = async (event) => {
   const body = JSON.parse(event.body)
 
   const { data, error } = await supabase
-    .from('courses')
+    .from('lessons')
     .insert([body])
     .select()
     .single()
