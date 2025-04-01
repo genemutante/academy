@@ -1,4 +1,5 @@
 # netlify.toml
+base = "app"
 [build]
 command = "npm run build"
 publish = ".output/public"
@@ -12,3 +13,6 @@ command = "nuxi dev"
 targetPort = 3000
 port = 8888
 framework = "#custom"
+
+
+
