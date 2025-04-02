@@ -3,214 +3,187 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Curso - Aula</title>
+  <title>Aula</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body class="bg-white text-gray-800 p-6">
   <div class="max-w-4xl mx-auto">
-    <a href="javascript:history.back()" class="text-purple-600 hover:underline text-sm mb-4 block">← Voltar</a>
-    <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
+    <a href="javascript:history.back()" class="text-purple-600 hover:underline text-sm">← Voltar</a>
+
+    <h1 id="tituloCurso" class="text-2xl font-bold mt-4 mb-1">Carregando curso...</h1>
     <p id="descricaoCurso" class="mb-4 text-gray-600"></p>
 
-    <div class="mb-6">
-      <p class="text-sm text-gray-600 mb-1">
-        📊 Progresso: <span id="progressoTexto">0%</span>
-      </p>
+    <div class="mb-4">
+      <p class="text-sm mb-1"><span class="inline-block">📊</span> Progresso: <span id="textoProgresso">0%</span></p>
       <div class="w-full h-3 bg-gray-200 rounded">
         <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
       </div>
     </div>
 
-    <div class="flex gap-6">
+    <div class="flex gap-8">
       <div class="w-1/3">
-        <h2 class="font-semibold mb-2">📚 Aulas</h2>
+        <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
         <ul id="listaAulas" class="space-y-1 text-sm"></ul>
       </div>
+
       <div class="flex-1">
-        <h3 id="tituloAula" class="text-lg font-semibold mb-2"></h3>
+        <h3 id="tituloAula" class="text-lg font-semibold mb-2">Título da Aula</h3>
         <div class="aspect-video w-full rounded overflow-hidden mb-2">
           <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
         </div>
-        <div class="text-xs text-gray-500 mb-2">
-          <span id="statusTempo">⏱️ 0s assistidos</span>
-          <span id="statusPorcentagem">📊 0%</span>
-        </div>
-        <p class="text-green-600 font-medium hidden" id="statusFinal">✔️ Aula concluída!</p>
-
-        <div id="quizContainer" class="mt-6 hidden">
-          <a id="linkQuiz" href="#" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
-            Fazer Avaliação do Curso
-          </a>
+        <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
+        <p id="infoAssistido" class="text-sm mt-2 text-gray-700"></p>
+        <div id="quizContainer" class="mt-4 hidden">
+          <a id="linkQuiz" href="#" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">Fazer Avaliação do Curso</a>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
+
+   const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const url = new URL(window.location.href);
+    const url = new URL(location.href);
     const user_id = url.searchParams.get('user_id');
-    let course_id = url.searchParams.get('course_id');
+    const course_id = url.searchParams.get('course_id');
 
+    const playerFrame = document.getElementById('videoPlayer');
     const tituloCurso = document.getElementById('tituloCurso');
     const descricaoCurso = document.getElementById('descricaoCurso');
-    const videoPlayer = document.getElementById('videoPlayer');
     const listaAulas = document.getElementById('listaAulas');
     const tituloAula = document.getElementById('tituloAula');
-    const progressoTexto = document.getElementById('progressoTexto');
     const barraProgresso = document.getElementById('barraProgresso');
-    const statusTempo = document.getElementById('statusTempo');
-    const statusPorcentagem = document.getElementById('statusPorcentagem');
-    const statusFinal = document.getElementById('statusFinal');
-    const linkQuiz = document.getElementById('linkQuiz');
+    const textoProgresso = document.getElementById('textoProgresso');
+    const infoAssistido = document.getElementById('infoAssistido');
     const quizContainer = document.getElementById('quizContainer');
+    const linkQuiz = document.getElementById('linkQuiz');
 
     let aulas = [], aulaAtual = null, player = null, interval = null;
-    let lastTime = 0, duration = 0, progressoPorAula = {}, tempoAssistido = 0;
+    let lastTime = 0, duration = 0;
+    let progressoPorAula = {};
 
-    async function init() {
-      if (!user_id) return alert("ID do aluno ausente da URL.");
+    function getYouTubeId(url) {
+      const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : '';
+    }
 
-      if (!course_id) {
-        const { data: cursoMaisRecente } = await supabase
-          .from('courses')
-          .select('id')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        course_id = cursoMaisRecente?.id;
-      }
-
-      if (!course_id) return alert("ID do curso ausente e não foi possível determinar um curso padrão.");
-
+    async function carregarDados() {
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
-      tituloCurso.textContent = curso?.title || 'Curso';
-      descricaoCurso.textContent = curso?.description || '';
+      tituloCurso.textContent = curso.title;
+      descricaoCurso.textContent = curso.description;
 
-      const { data: todasAulas } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
-      aulas = todasAulas || [];
+      const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
+      aulas = lista || [];
 
-      if (!aulas.length) return alert("Nenhuma aula disponível neste curso.");
+      const { data: progresso } = await supabase.from('progress').select('*').eq('user_id', user_id).eq('course_id', course_id);
+      progresso?.forEach(p => progressoPorAula[p.lesson_id] = true);
 
-      listaAulas.innerHTML = '';
-      aulas.forEach(aula => {
-        const li = document.createElement('li');
-        li.textContent = `${aula.order}. ${aula.title}`;
-        li.className = 'cursor-pointer hover:underline';
-        li.onclick = () => carregarAula(aula);
-        listaAulas.appendChild(li);
-      });
+      atualizarProgressoGeral();
+      listarAulas();
+      if (aulas.length) selecionarAula(aulas[0]);
 
-      carregarAula(aulas[0]);
-
-      const { data: quiz } = await supabase.from('quizzes').select('*').eq('context_id', course_id).maybeSingle();
+      const { data: quiz } = await supabase.from('quizzes').select('*').eq('context_id', course_id).single();
       if (quiz) {
         quizContainer.classList.remove('hidden');
         linkQuiz.href = `/quiz.html?quiz_id=${quiz.id}&user_id=${user_id}`;
       }
     }
 
-    function getYouTubeId(url) {
-      const match = url.match(/(?:v=|\/embed\/|\.be\/)([\w-]{11})/);
-      return match ? match[1] : '';
+    function atualizarProgressoGeral() {
+      const total = aulas.length;
+      const concluidas = Object.keys(progressoPorAula).length;
+      const pct = Math.round((concluidas / total) * 100);
+      barraProgresso.style.width = `${pct}%`;
+      textoProgresso.textContent = `Progresso: ${pct}%`;
     }
 
-    async function carregarAula(aula) {
+    function listarAulas() {
+      listaAulas.innerHTML = '';
+      aulas.forEach(aula => {
+        const li = document.createElement('li');
+        li.className = 'cursor-pointer hover:underline';
+        li.innerHTML = `${aula.order}. ${aula.title} ${progressoPorAula[aula.id] ? '✔️' : ''}`;
+        li.onclick = () => selecionarAula(aula);
+        listaAulas.appendChild(li);
+      });
+    }
+
+    function selecionarAula(aula) {
       aulaAtual = aula;
       tituloAula.textContent = aula.title;
-      videoPlayer.src = `https://www.youtube.com/embed/${getYouTubeId(aula.youtube_url)}?enablejsapi=1`;
-      tempoAssistido = 0;
+      infoAssistido.textContent = '';
       clearInterval(interval);
-      await loadYouTubeAPI();
+      lastTime = 0;
       initPlayer();
-    }
-
-    function atualizarProgressoVisual() {
-      const percentual = Math.min(Math.round((tempoAssistido / duration) * 100), 100);
-      progressoTexto.textContent = `${percentual}%`;
-      barraProgresso.style.width = percentual + '%';
-      statusTempo.textContent = `⏱️ ${tempoAssistido}s assistidos`;
-      statusPorcentagem.textContent = `📊 ${percentual}%`;
-
-      if (percentual >= 97) {
-        statusFinal.classList.remove('hidden');
-        statusTempo.classList.add('hidden');
-        statusPorcentagem.classList.add('hidden');
-      } else {
-        statusFinal.classList.add('hidden');
-        statusTempo.classList.remove('hidden');
-        statusPorcentagem.classList.remove('hidden');
-      }
     }
 
     function loadYouTubeAPI() {
       return new Promise(resolve => {
         if (window.YT && window.YT.Player) return resolve();
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
         window.onYouTubeIframeAPIReady = resolve;
-        document.head.appendChild(tag);
       });
     }
 
     function initPlayer() {
-      player = new YT.Player(videoPlayer, {
-        events: {
-          onReady: onPlayerReady
-        }
+      const videoId = getYouTubeId(aulaAtual.youtube_url);
+      playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
+
+      loadYouTubeAPI().then(() => {
+        player = new YT.Player(playerFrame, {
+          events: {
+            onReady: onPlayerReady
+          }
+        });
       });
     }
 
     async function onPlayerReady() {
+      if (!player || typeof player.getDuration !== 'function') {
+        setTimeout(onPlayerReady, 300);
+        return;
+      }
+
       duration = player.getDuration();
-
-      const { data: segmentos } = await supabase
-        .from('progress_segments')
-        .select('*')
-        .eq('user_id', user_id)
-        .eq('lesson_id', aulaAtual.id);
-
-      tempoAssistido = segmentos?.reduce((total, seg) => total + (seg.segment.end - seg.segment.start), 0) || 0;
-      atualizarProgressoVisual();
-
-      interval = setInterval(async () => {
-        if (player.getPlayerState() !== YT.PlayerState.PLAYING) return;
-        const current = Math.floor(player.getCurrentTime());
-        if (current <= lastTime || current - lastTime > 30) {
-          lastTime = current;
-          return;
-        }
-
-        const segment = { start: lastTime, end: current };
-        lastTime = current;
-
-        await supabase.from('progress_segments').insert({
-          user_id,
-          course_id,
-          lesson_id: aulaAtual.id,
-          duration: Math.floor(duration),
-          segment
-        });
-
-        tempoAssistido += segment.end - segment.start;
-        atualizarProgressoVisual();
-
-        if (tempoAssistido / duration >= 0.97) {
-          await fetch('/.netlify/functions/consolida-progresso', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id, course_id, lesson_id: aulaAtual.id })
-          });
-        }
-      }, 5000);
+      interval = setInterval(trackProgress, 5000);
     }
 
-    init();
+    async function trackProgress() {
+      if (!player || typeof player.getCurrentTime !== 'function') return;
+      const state = player.getPlayerState();
+      if (state !== YT.PlayerState.PLAYING) return;
+
+      const current = Math.floor(player.getCurrentTime());
+      if (current <= lastTime || current - lastTime > 30) {
+        lastTime = current;
+        return;
+      }
+
+      lastTime = current;
+
+      await supabase.from('progress_segments').insert({
+        user_id, course_id, lesson_id: aulaAtual.id,
+        duration: Math.floor(duration),
+        segment: { start: lastTime - 5, end: current }
+      });
+
+      if (!progressoPorAula[aulaAtual.id] && current / duration >= 0.97) {
+        await supabase.from('progress').insert({ user_id, course_id, lesson_id: aulaAtual.id });
+        progressoPorAula[aulaAtual.id] = true;
+        atualizarProgressoGeral();
+        infoAssistido.innerHTML = '<span class="text-green-700">✔️ Aula concluída!</span>';
+      } else {
+        const pct = Math.min(100, Math.round((current / duration) * 100));
+        infoAssistido.textContent = `⏱️ ${current}s / ${Math.floor(duration)}s 📊 ${pct}%`;
+      }
+    }
+
+    carregarDados();
   </script>
 </body>
 </html>
