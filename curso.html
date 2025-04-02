@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Curso</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -32,11 +32,11 @@
         <div class="aspect-video w-full rounded overflow-hidden mb-2">
           <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
         </div>
-        <div class="text-xs text-gray-600 space-y-1">
-          <p>⚙️ Progresso salvo automaticamente durante a reprodução</p>
-          <p>⏱️ <span id="tempoAssistido">0s</span> / <span id="tempoTotal">0s</span></p>
-          <p>📊 Progresso: <span id="percentualProgresso">0%</span></p>
-          <p>🌟 Segmento: <span id="segmentoAtual">-</span></p>
+        <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
+        <div class="text-xs text-gray-700 mt-2">
+          <div>⏱️ <span id="tempoAssistido">0s</span> / <span id="tempoTotal">0s</span></div>
+          <div>📈 Progresso: <span id="progressoPercentual">0%</span></div>
+          <div>🌟 Segmento: <span id="segmentoAtual">-</span></div>
         </div>
         <div id="quizContainer" class="mt-6 hidden">
           <a id="linkQuiz" href="#" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">Fazer Avaliação do Curso</a>
@@ -46,14 +46,14 @@
   </div>
 
   <script>
-    const { createClient } = supabase;
-    const supabase = createClient(
+    const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
-      'SUA_CHAVE_PUBLIC_SUPABASE'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const user_id = new URLSearchParams(location.search).get('user_id');
-    const course_id = new URLSearchParams(location.search).get('course_id');
+    const url = new URL(location.href);
+    const user_id = url.searchParams.get('user_id');
+    const course_id = url.searchParams.get('course_id');
 
     const playerFrame = document.getElementById('videoPlayer');
     const tituloCurso = document.getElementById('tituloCurso');
@@ -65,18 +65,18 @@
     const quizContainer = document.getElementById('quizContainer');
     const linkQuiz = document.getElementById('linkQuiz');
 
-    const tempoAssistidoSpan = document.getElementById('tempoAssistido');
-    const tempoTotalSpan = document.getElementById('tempoTotal');
-    const percentualProgressoSpan = document.getElementById('percentualProgresso');
-    const segmentoAtualSpan = document.getElementById('segmentoAtual');
+    const tempoAssistido = document.getElementById('tempoAssistido');
+    const tempoTotal = document.getElementById('tempoTotal');
+    const progressoPercentual = document.getElementById('progressoPercentual');
+    const segmentoAtual = document.getElementById('segmentoAtual');
 
     let aulas = [], aulaAtual = null, player = null, interval = null;
     let lastTime = 0, duration = 0, progressoPorAula = {};
 
     async function init() {
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
-      tituloCurso.textContent = curso?.title;
-      descricaoCurso.textContent = curso?.description;
+      tituloCurso.textContent = curso.title;
+      descricaoCurso.textContent = curso.description;
 
       const { data: todasAulas } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
       aulas = todasAulas || [];
@@ -119,22 +119,18 @@
       tituloAula.textContent = aula.title;
       clearInterval(interval);
       lastTime = 0;
-      segmentoAtualSpan.textContent = '-';
 
       const videoId = getYouTubeId(aula.youtube_url);
       playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
-
       await loadYouTubeAPI();
       initPlayer();
-
-      await restaurarProgresso();
     }
 
     function atualizarProgresso() {
-      const concluidas = Object.keys(progressoPorAula).length;
+      const concluídas = Object.keys(progressoPorAula).length;
       const total = aulas.length;
-      const percentual = Math.round((concluidas / total) * 100);
-      progressoTexto.textContent = `${concluidas} de ${total} (${percentual}%)`;
+      const percentual = Math.round((concluídas / total) * 100);
+      progressoTexto.textContent = `${concluídas} de ${total} (${percentual}%)`;
       barraProgresso.style.width = `${percentual}%`;
     }
 
@@ -150,18 +146,32 @@
 
     function initPlayer() {
       player = new YT.Player(playerFrame, {
-        events: { onReady: onPlayerReady }
+        events: {
+          onReady: onPlayerReady
+        }
       });
     }
 
     async function onPlayerReady() {
       duration = player.getDuration();
-      tempoTotalSpan.textContent = `${Math.floor(duration)}s`;
+      tempoTotal.textContent = `${Math.floor(duration)}s`;
+
+      const saved = localStorage.getItem(`progresso_${aulaAtual.id}`);
+      if (saved) {
+        player.seekTo(Number(saved), true);
+        lastTime = Number(saved);
+      }
 
       interval = setInterval(async () => {
         if (player.getPlayerState() !== YT.PlayerState.PLAYING) return;
 
         const current = Math.floor(player.getCurrentTime());
+        tempoAssistido.textContent = `${current}s`;
+        progressoPercentual.textContent = `${Math.round((current / duration) * 100)}%`;
+        segmentoAtual.textContent = `${lastTime}s → ${current}s`;
+
+        localStorage.setItem(`progresso_${aulaAtual.id}`, current);
+
         if (current <= lastTime || current - lastTime > 30) {
           lastTime = current;
           return;
@@ -169,8 +179,6 @@
 
         const segment = { start: lastTime, end: current };
         lastTime = current;
-
-        segmentoAtualSpan.textContent = `${segment.start}s → ${segment.end}s`;
 
         await supabase.from('progress_segments').insert({
           user_id,
@@ -180,41 +188,23 @@
           segment
         });
 
-        await restaurarProgresso(); // recalcula tempo total assistido
-      }, 5000);
-    }
+        const { data: jaConcluido } = await supabase
+          .from('progress')
+          .select('id')
+          .eq('user_id', user_id)
+          .eq('lesson_id', aulaAtual.id)
+          .single();
 
-    async function restaurarProgresso() {
-      const { data: segmentos } = await supabase
-        .from('progress_segments')
-        .select('segment')
-        .eq('user_id', user_id)
-        .eq('lesson_id', aulaAtual.id);
-
-      let totalAssistido = 0;
-      let timeline = Array(duration).fill(false);
-
-      segmentos?.forEach(({ segment }) => {
-        for (let i = segment.start; i < segment.end && i < duration; i++) {
-          timeline[i] = true;
+        if (!jaConcluido && current / duration >= 0.99) {
+          await fetch('/.netlify/functions/consolida-progresso', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id, course_id, lesson_id: aulaAtual.id })
+          });
+          progressoPorAula[aulaAtual.id] = true;
+          atualizarProgresso();
         }
-      });
-
-      timeline.forEach(v => { if (v) totalAssistido++ });
-
-      const percentual = Math.floor((totalAssistido / duration) * 100);
-      tempoAssistidoSpan.textContent = `${totalAssistido}s`;
-      percentualProgressoSpan.textContent = `${percentual}%`;
-
-      if (!progressoPorAula[aulaAtual.id] && percentual >= 99) {
-        await fetch('/.netlify/functions/consolida-progresso', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id, course_id, lesson_id: aulaAtual.id })
-        });
-        progressoPorAula[aulaAtual.id] = true;
-        atualizarProgresso();
-      }
+      }, 5000);
     }
 
     init();
