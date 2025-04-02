@@ -1,84 +1,95 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>🎓 Portal do Aluno</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Academy - Aluno</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 2rem; background-color: #f7f7f7; }
-    h1 { color: #2c3e50; }
+    body {
+      font-family: sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 2rem;
+      max-width: 800px;
+      margin-inline: auto;
+    }
+
+    h1 {
+      color: #1f2937;
+    }
+
     .curso {
-      background: white;
+      background: #fff;
+      border: 1px solid #e5e7eb;
       padding: 1rem;
       border-radius: 8px;
       margin-bottom: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    .curso h2 { margin: 0 0 0.5rem; }
-    .status { margin-top: 0.5rem; }
-    button {
+
+    .curso h2 {
+      margin: 0 0 0.5rem;
+    }
+
+    .curso a {
+      display: inline-block;
+      margin-top: 0.5rem;
+      background: #4f46e5;
+      color: #fff;
       padding: 0.5rem 1rem;
-      background-color: #27ae60;
-      color: white;
-      border: none;
       border-radius: 4px;
-      cursor: pointer;
+      text-decoration: none;
     }
-    button:disabled { background-color: #95a5a6; }
+
+    .curso a:hover {
+      background: #4338ca;
+    }
   </style>
 </head>
 <body>
-  <h1>🎓 Meus Cursos</h1>
-  <div id="cursos"></div>
+  <h1>👩‍🎓 Olá, Maria Aluna!</h1>
+  <p>Veja abaixo os cursos disponíveis:</p>
 
+  <div id="cursos">Carregando...</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const user_id = urlParams.get("user_id");
+    const { createClient } = supabase
+    const supabaseUrl = 'https://bkueljjvhijojzcyodvk.supabase.co'
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    if (!user_id) {
-      document.body.innerHTML = '<h2 style="color:red">Usuário não identificado. Faça login novamente.</h2>';
-      throw new Error("Usuário não informado");
-    }
+    const userId = '22222222-2222-2222-2222-222222222222' // Maria Aluna
 
     async function carregarCursos() {
-      const container = document.getElementById("cursos");
-      const cursos = await fetch("/.netlify/functions/get-courses", {
-        method: "POST"
-      }).then(res => res.json());
+      const { data: cursos, error } = await supabase
+        .from('courses')
+        .select('*')
 
-      for (const curso of cursos) {
-        const progresso = await fetch("/.netlify/functions/get-user-progress", {
-          method: "POST",
-          body: JSON.stringify({ user_id, course_id: curso.id }),
-          headers: { "Content-Type": "application/json" }
-        }).then(res => res.json());
+      const container = document.getElementById('cursos')
 
-        const concluido = progresso?.completed === true;
+      if (error) {
+        container.innerHTML = `<p style="color:red;">Erro ao carregar cursos: ${error.message}</p>`
+        return
+      }
 
-        const div = document.createElement("div");
-        div.className = "curso";
-        div.innerHTML = `
+      if (!cursos.length) {
+        container.innerHTML = '<p>Nenhum curso encontrado.</p>'
+        return
+      }
+
+      const html = cursos.map(curso => `
+        <div class="curso">
           <h2>${curso.title}</h2>
           <p>${curso.description}</p>
-          <div class="status">
-            <strong>Status:</strong> ${concluido ? "✅ Concluído" : "❌ Não iniciado"}<br/>
-            <button ${concluido ? "disabled" : ""} onclick="marcarConcluido('${curso.id}', this)">Concluir curso</button>
-          </div>
-        `;
-        container.appendChild(div);
-      }
+          <a href="/curso/${curso.id}">📚 Acessar Curso</a>
+        </div>
+      `).join('')
+
+      container.innerHTML = html
     }
 
-    async function marcarConcluido(course_id, btn) {
-      btn.disabled = true;
-      await fetch("/.netlify/functions/save-progress", {
-        method: "POST",
-        body: JSON.stringify({ user_id, course_id, completed: true }),
-        headers: { "Content-Type": "application/json" }
-      });
-      btn.parentElement.innerHTML = `<strong>Status:</strong> ✅ Concluído`;
-    }
-
-    carregarCursos();
+    carregarCursos()
   </script>
 </body>
 </html>
