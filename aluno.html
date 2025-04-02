@@ -1,120 +1,74 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Academy - Aluno</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f9fafb;
-      margin: 0;
-      padding: 2rem;
-      max-width: 800px;
-      margin-inline: auto;
-    }
-
-    h1 {
-      color: #1f2937;
-    }
-
-    .curso {
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-
-    .curso h2 {
-      margin: 0 0 0.5rem;
-    }
-
-    .curso a {
-      display: inline-block;
-      margin-top: 0.5rem;
-      background: #4f46e5;
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      text-decoration: none;
-    }
-
-    .curso a:hover {
-      background: #4338ca;
-    }
-  </style>
+  <title>Área do Aluno</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
 </head>
-<body>
-  <h1 id="saudacao">👩‍🎓 Olá, estudante!</h1>
-  <p>Veja abaixo os cursos disponíveis:</p>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
 
-  <div id="cursos">Carregando...</div>
+  <div class="bg-white rounded shadow p-6 max-w-xl w-full">
+    <h1 class="text-2xl font-bold mb-4">🎓 Olá, estudante!</h1>
+    <p class="mb-2">Veja abaixo os cursos disponíveis:</p>
+    <div id="cursos" class="space-y-2">
+      <p>Carregando...</p>
+    </div>
+  </div>
 
-  <!-- Biblioteca Supabase -->
+  <!-- Carregar biblioteca Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
+
   <script>
+    // Inicializar Supabase
     const supabase = supabase.createClient(
-     
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    );
+    )
 
-    // Utilitário para pegar parâmetros da URL
-    function getParam(name) {
-      const url = new URL(window.location.href)
-      return url.searchParams.get(name)
+    // Obter o ID do aluno da URL
+    const params = new URLSearchParams(window.location.search)
+    const userId = params.get("user_id")
+
+    if (!userId) {
+      document.getElementById("cursos").innerHTML = "<p class='text-red-600'>Erro: ID do aluno não informado na URL.</p>"
+    } else {
+      carregarCursos()
     }
-
-    const userId = getParam("user_id")
 
     async function carregarCursos() {
-      const container = document.getElementById('cursos')
+      const cursosDiv = document.getElementById("cursos")
+      cursosDiv.innerHTML = "<p class='text-gray-600'>Buscando cursos...</p>"
 
-      if (!userId) {
-        container.innerHTML = `<p style="color:red;">❌ Nenhum user_id informado na URL.</p>`
-        return
-      }
-
-      // Buscar nome do aluno
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', userId)
-        .single()
-
-      if (userData?.name) {
-        document.getElementById('saudacao').innerText = `👩‍🎓 Olá, ${userData.name}!`
-      }
-
-      // Buscar cursos
-      const { data: cursos, error } = await supabase
-        .from('courses')
-        .select('*')
+      const { data, error } = await supabase
+        .from("courses")
+        .select("*")
 
       if (error) {
-        container.innerHTML = `<p style="color:red;">Erro ao carregar cursos: ${error.message}</p>`
+        cursosDiv.innerHTML = "<p class='text-red-600'>Erro ao carregar cursos.</p>"
+        console.error("Erro:", error)
         return
       }
 
-      if (!cursos.length) {
-        container.innerHTML = '<p>Nenhum curso encontrado.</p>'
+      if (!data || data.length === 0) {
+        cursosDiv.innerHTML = "<p class='text-gray-600'>Nenhum curso encontrado.</p>"
         return
       }
 
-      const html = cursos.map(curso => `
-        <div class="curso">
-          <h2>${curso.title}</h2>
-          <p>${curso.description}</p>
-          <a href="/curso/${curso.id}?user_id=${userId}">📚 Acessar Curso</a>
-        </div>
-      `).join('')
-
-      container.innerHTML = html
+      cursosDiv.innerHTML = ""
+      data.forEach((curso) => {
+        const card = document.createElement("div")
+        card.className = "border p-4 rounded bg-gray-50 hover:bg-gray-100 cursor-pointer"
+        card.innerHTML = `
+          <h2 class="text-lg font-semibold">${curso.title}</h2>
+          <p class="text-sm text-gray-600">${curso.description}</p>
+          <button onclick="window.location.href='/curso/${curso.id}'" class="mt-2 inline-block bg-blue-600 text-white px-4 py-1 rounded text-sm hover:bg-blue-700">
+            Acessar curso
+          </button>
+        `
+        cursosDiv.appendChild(card)
+      })
     }
-
-    carregarCursos()
   </script>
 </body>
 </html>
