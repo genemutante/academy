@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Debug das Funções Serverless</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    h1 { color: green; }
+    .function-box {
+      border: 1px solid #ddd; margin-bottom: 1.5rem; padding: 1rem; border-radius: 8px;
+    }
+    textarea { width: 100%; height: 100px; font-family: monospace; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    button { padding: 0.5rem 1rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Painel de Testes - Funções Serverless</h1>
+
+  <div id="functions"></div>
+
+  <script>
+    const functions = [
+      "create-course",
+      "get-courses",
+      "create-lesson",
+      "get-lessons",
+      "create-option",
+      "create-question",
+      "create-quiz",
+      "get-quiz",
+      "submit-quiz",
+      "save-progress",
+      "get-user-progress",
+      "get-user-progress-by-course",
+      "create-track",
+      "get-tracks",
+      "create-track-course",
+      "get-track-courses",
+      "delete-track-course"
+    ];
+
+    const payloads = {
+      "create-course": { title: "Curso Teste", description: "Curso de testes via debug.html" },
+      "get-courses": {},
+      "save-progress": { user_id: "debug-user", course_id: 1, completed: true },
+      "submit-quiz": { user_id: "debug-user", quiz_id: 1, answers: [1, 2, 3] }
+    };
+
+    const container = document.getElementById('functions');
+
+    functions.forEach(fn => {
+      const box = document.createElement('div');
+      box.className = 'function-box';
+
+      box.innerHTML = `
+        <h3>⚙️ ${fn}</h3>
+        <label>Payload JSON (POST):</label>
+        <textarea id="payload-${fn}">${JSON.stringify(payloads[fn] || {}, null, 2)}</textarea>
+        <button onclick="callFunction('${fn}')">Executar</button>
+        <pre id="response-${fn}">Aguardando chamada...</pre>
+      `;
+      container.appendChild(box);
+    });
+
+    async function callFunction(name) {
+      const payload = document.getElementById(`payload-${name}`).value;
+      const responseBox = document.getElementById(`response-${name}`);
+      try {
+        const res = await fetch(`/.netlify/functions/${name}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        });
+        const json = await res.json();
+        responseBox.textContent = JSON.stringify(json, null, 2);
+      } catch (err) {
+        responseBox.textContent = 'Erro: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
