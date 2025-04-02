@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>🔧 Painel Administrativo</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background: #f4f4f4; }
+    h1 { color: #2c3e50; }
+    .box {
+      background: white;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Painel do Administrador</h1>
+  <div class="box">
+    <p><strong>ID do Usuário Logado:</strong> <span id="userId"></span></p>
+    <p><strong>Função:</strong> Administrador</p>
+  </div>
+
+  <div class="box">
+    <h2>Próximos Recursos:</h2>
+    <ul>
+      <li>📚 Gerenciar cursos</li>
+      <li>🧠 Criar trilhas e vincular cursos</li>
+      <li>👥 Atribuir alunos a trilhas</li>
+      <li>📈 Acompanhar progresso dos alunos</li>
+    </ul>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const user_id = urlParams.get("user_id");
+
+    if (!user_id) {
+      document.body.innerHTML = '<h2 style="color:red">Usuário não identificado. Volte para o login.</h2>';
+    } else {
+      document.getElementById("userId").textContent = user_id;
+    }
+  </script>
+</body>
+</html>
