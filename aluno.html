@@ -52,14 +52,15 @@
 
   <div id="cursos">Carregando...</div>
 
+  <!-- Corrigir: carregar a biblioteca antes de usar -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <script>
-    const { createClient } = supabase
-    const supabaseUrl = 'https://bkueljjvhijojzcyodvk.supabase.co'
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = supabaseJs.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
 
-    const userId = '22222222-2222-2222-2222-222222222222' // Maria Aluna
+    const userId = '22222222-2222-2222-2222-222222222222'; // Maria Aluna
 
     async function carregarCursos() {
       const { data: cursos, error } = await supabase
