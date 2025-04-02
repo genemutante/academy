@@ -41,14 +41,20 @@
   </div>
 
   <script>
-    const { createClient } = supabase;
-    const supabaseUrl = 'https://bkueljjvhijojzcyodvk.supabase.co';
-    const supabaseKey = 'SUA_CHAVE_COMPLETA_AQUI';
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Inicialização segura do Supabase
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
 
     const url = new URL(location.href);
     const user_id = url.searchParams.get('user_id');
     const course_id = url.searchParams.get('course_id');
+
+    if (!user_id || !course_id) {
+      alert("Parâmetros obrigatórios ausentes na URL.");
+      throw new Error("Parâmetros obrigatórios ausentes");
+    }
 
     const playerFrame = document.getElementById('videoPlayer');
     const tituloCurso = document.getElementById('tituloCurso');
@@ -65,8 +71,8 @@
 
     async function init() {
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
-      tituloCurso.textContent = curso.title;
-      descricaoCurso.textContent = curso.description;
+      tituloCurso.textContent = curso?.title || 'Curso não encontrado';
+      descricaoCurso.textContent = curso?.description || '';
 
       const { data: todasAulas } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
       aulas = todasAulas || [];
@@ -117,10 +123,10 @@
     }
 
     function atualizarProgresso() {
-      const concluídas = Object.keys(progressoPorAula).length;
+      const concluidas = Object.keys(progressoPorAula).length;
       const total = aulas.length;
-      const percentual = Math.round((concluídas / total) * 100);
-      progressoTexto.textContent = `${concluídas} de ${total} (${percentual}%)`;
+      const percentual = Math.round((concluidas / total) * 100);
+      progressoTexto.textContent = `${concluidas} de ${total} (${percentual}%)`;
       barraProgresso.style.width = `${percentual}%`;
     }
 
@@ -156,6 +162,7 @@
         const segment = { start: lastTime, end: current };
         lastTime = current;
 
+        // Gravação do segmento no banco
         await supabase.from('progress_segments').insert({
           user_id,
           course_id,
@@ -164,7 +171,7 @@
           segment
         });
 
-        const watchedTime = (segment.end - segment.start);
+        // Verificação de conclusão automática
         const { data: jaConcluido } = await supabase
           .from('progress')
           .select('id')
