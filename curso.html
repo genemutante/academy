@@ -43,7 +43,7 @@
   <script>
     const { createClient } = supabase;
     const supabaseUrl = 'https://bkueljjvhijojzcyodvk.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJI...'; // SUA CHAVE COMPLETA
+    const supabaseKey = 'SUA_CHAVE_COMPLETA_AQUI';
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const url = new URL(location.href);
@@ -142,12 +142,12 @@
       });
     }
 
-    function onPlayerReady(event) {
+    function onPlayerReady() {
       duration = player.getDuration();
       interval = setInterval(async () => {
         if (player.getPlayerState() !== YT.PlayerState.PLAYING) return;
 
-        const current = Math.floor(await player.getCurrentTime());
+        const current = Math.floor(player.getCurrentTime());
         if (current <= lastTime || current - lastTime > 30) {
           lastTime = current;
           return; // pulo ou replay
@@ -164,7 +164,23 @@
           segment
         });
 
-        console.log('✔️ Segmento salvo:', segment);
+        const watchedTime = (segment.end - segment.start);
+        const { data: jaConcluido } = await supabase
+          .from('progress')
+          .select('id')
+          .eq('user_id', user_id)
+          .eq('lesson_id', aulaAtual.id)
+          .single();
+
+        if (!jaConcluido && current / duration >= 0.99) {
+          await fetch('/.netlify/functions/consolida-progresso', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id, course_id, lesson_id: aulaAtual.id })
+          });
+          progressoPorAula[aulaAtual.id] = true;
+          atualizarProgresso();
+        }
       }, 5000);
     }
 
