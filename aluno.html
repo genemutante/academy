@@ -47,12 +47,12 @@
   </style>
 </head>
 <body>
-  <h1>👩‍🎓 Olá, Maria Aluna!</h1>
+  <h1 id="saudacao">👩‍🎓 Olá, estudante!</h1>
   <p>Veja abaixo os cursos disponíveis:</p>
 
   <div id="cursos">Carregando...</div>
 
-  <!-- Corrigir: carregar a biblioteca antes de usar -->
+  <!-- Biblioteca Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <script>
     const supabase = supabaseJs.createClient(
@@ -60,14 +60,37 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const userId = '22222222-2222-2222-2222-222222222222'; // Maria Aluna
+    // Utilitário para pegar parâmetros da URL
+    function getParam(name) {
+      const url = new URL(window.location.href)
+      return url.searchParams.get(name)
+    }
+
+    const userId = getParam("user_id")
 
     async function carregarCursos() {
+      const container = document.getElementById('cursos')
+
+      if (!userId) {
+        container.innerHTML = `<p style="color:red;">❌ Nenhum user_id informado na URL.</p>`
+        return
+      }
+
+      // Buscar nome do aluno
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', userId)
+        .single()
+
+      if (userData?.name) {
+        document.getElementById('saudacao').innerText = `👩‍🎓 Olá, ${userData.name}!`
+      }
+
+      // Buscar cursos
       const { data: cursos, error } = await supabase
         .from('courses')
         .select('*')
-
-      const container = document.getElementById('cursos')
 
       if (error) {
         container.innerHTML = `<p style="color:red;">Erro ao carregar cursos: ${error.message}</p>`
@@ -83,7 +106,7 @@
         <div class="curso">
           <h2>${curso.title}</h2>
           <p>${curso.description}</p>
-          <a href="/curso/${curso.id}">📚 Acessar Curso</a>
+          <a href="/curso/${curso.id}?user_id=${userId}">📚 Acessar Curso</a>
         </div>
       `).join('')
 
