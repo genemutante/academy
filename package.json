@@ -1,24 +1,35 @@
+
 {
   "name": "academy-app",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "generate": "nuxi generate"
+  },
 
-"scripts": {
-  "dev": "nuxi dev",
-  "build": "nuxi build",
-  "generate": "nuxi generate"
-
-
-  
-"engines": {
-  "node": "18.x"
-},
   
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.5",
-    "axios": "^1.6.7",
     "nuxt": "^3.9.1",
-     "nuxi": "latest"
+    "nuxi": "latest",
+    "@supabase/supabase-js": "^2.39.5",
+    "axios": "^1.6.7"
+  },
+
+  
+  "engines": {
+    "node": "18.x"
   }
 }
+
+
+
+
+
+
+
+
+
+  
 
