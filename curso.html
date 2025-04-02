@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Curso</title>
+  <title>Curso - Aula</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-white text-gray-800 p-6">
   <div class="max-w-4xl mx-auto">
-    <a href="javascript:history.back()" class="text-purple-600 hover:underline text-sm">← Voltar</a>
-    <h1 id="tituloCurso" class="text-2xl font-bold mt-4 mb-2">Carregando curso...</h1>
+    <a href="javascript:history.back()" class="text-purple-600 hover:underline text-sm mb-4 block">← Voltar</a>
+    <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
     <p id="descricaoCurso" class="mb-4 text-gray-600"></p>
 
     <div class="mb-6">
@@ -32,10 +32,16 @@
         <div class="aspect-video w-full rounded overflow-hidden mb-2">
           <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
         </div>
-        <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
-        <div id="progressoExtra" class="text-sm text-gray-700 mt-1"></div>
+        <div class="text-xs text-gray-500 mb-2">
+          <span id="statusTempo">⏱️ 0s assistidos</span>
+          <span id="statusPorcentagem">📊 0%</span>
+        </div>
+        <p class="text-green-600 font-medium hidden" id="statusFinal">✔️ Aula concluída!</p>
+
         <div id="quizContainer" class="mt-6 hidden">
-          <a id="linkQuiz" href="#" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">Fazer Avaliação do Curso</a>
+          <a id="linkQuiz" href="#" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
+            Fazer Avaliação do Curso
+          </a>
         </div>
       </div>
     </div>
@@ -47,25 +53,41 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const url = new URL(location.href);
+    const url = new URL(window.location.href);
     const user_id = url.searchParams.get('user_id');
-    const course_id = url.searchParams.get('course_id');
+    let course_id = url.searchParams.get('course_id');
 
-    const playerFrame = document.getElementById('videoPlayer');
     const tituloCurso = document.getElementById('tituloCurso');
     const descricaoCurso = document.getElementById('descricaoCurso');
-    const tituloAula = document.getElementById('tituloAula');
+    const videoPlayer = document.getElementById('videoPlayer');
     const listaAulas = document.getElementById('listaAulas');
-    const barraProgresso = document.getElementById('barraProgresso');
+    const tituloAula = document.getElementById('tituloAula');
     const progressoTexto = document.getElementById('progressoTexto');
-    const progressoExtra = document.getElementById('progressoExtra');
-    const quizContainer = document.getElementById('quizContainer');
+    const barraProgresso = document.getElementById('barraProgresso');
+    const statusTempo = document.getElementById('statusTempo');
+    const statusPorcentagem = document.getElementById('statusPorcentagem');
+    const statusFinal = document.getElementById('statusFinal');
     const linkQuiz = document.getElementById('linkQuiz');
+    const quizContainer = document.getElementById('quizContainer');
 
     let aulas = [], aulaAtual = null, player = null, interval = null;
-    let lastTime = 0, duration = 0, progressoPorAula = {}, segmentos = [];
+    let lastTime = 0, duration = 0, progressoPorAula = {}, tempoAssistido = 0;
 
     async function init() {
+      if (!user_id) return alert("ID do aluno ausente da URL.");
+
+      if (!course_id) {
+        const { data: cursoMaisRecente } = await supabase
+          .from('courses')
+          .select('id')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        course_id = cursoMaisRecente?.id;
+      }
+
+      if (!course_id) return alert("ID do curso ausente e não foi possível determinar um curso padrão.");
+
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
       tituloCurso.textContent = curso?.title || 'Curso';
       descricaoCurso.textContent = curso?.description || '';
@@ -73,22 +95,20 @@
       const { data: todasAulas } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
       aulas = todasAulas || [];
 
-      const { data: progresso } = await supabase.from('progress').select('*').eq('user_id', user_id).eq('course_id', course_id);
-      progresso?.forEach(p => progressoPorAula[p.lesson_id] = true);
+      if (!aulas.length) return alert("Nenhuma aula disponível neste curso.");
 
       listaAulas.innerHTML = '';
       aulas.forEach(aula => {
         const li = document.createElement('li');
         li.textContent = `${aula.order}. ${aula.title}`;
-        li.className = 'cursor-pointer hover:underline flex justify-between items-center';
-        if (progressoPorAula[aula.id]) li.innerHTML += ' <span class="text-green-600 text-xs ml-2">✔️</span>';
+        li.className = 'cursor-pointer hover:underline';
         li.onclick = () => carregarAula(aula);
         listaAulas.appendChild(li);
       });
 
-      if (aulas.length) carregarAula(aulas[0]);
+      carregarAula(aulas[0]);
 
-      const { data: quiz } = await supabase.from('quizzes').select('*').eq('context_id', course_id).single();
+      const { data: quiz } = await supabase.from('quizzes').select('*').eq('context_id', course_id).maybeSingle();
       if (quiz) {
         quizContainer.classList.remove('hidden');
         linkQuiz.href = `/quiz.html?quiz_id=${quiz.id}&user_id=${user_id}`;
@@ -96,45 +116,40 @@
     }
 
     function getYouTubeId(url) {
-      const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
+      const match = url.match(/(?:v=|\/embed\/|\.be\/)([\w-]{11})/);
       return match ? match[1] : '';
     }
 
     async function carregarAula(aula) {
       aulaAtual = aula;
       tituloAula.textContent = aula.title;
+      videoPlayer.src = `https://www.youtube.com/embed/${getYouTubeId(aula.youtube_url)}?enablejsapi=1`;
+      tempoAssistido = 0;
       clearInterval(interval);
-      lastTime = 0;
-      segmentos = [];
-      progressoExtra.textContent = '⏳ Carregando aula...';
-
-      const videoId = getYouTubeId(aula.youtube_url);
-      playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
       await loadYouTubeAPI();
       initPlayer();
     }
 
-    async function calcularProgressoTotal(lessonId) {
-      const { data } = await supabase.from('progress_segments').select('segment').eq('user_id', user_id).eq('lesson_id', lessonId);
-      const todos = (data || []).map(row => row.segment);
-      const merge = mergeSegmentos(todos);
-      const total = merge.reduce((acc, s) => acc + (s.end - s.start), 0);
-      return total;
-    }
+    function atualizarProgressoVisual() {
+      const percentual = Math.min(Math.round((tempoAssistido / duration) * 100), 100);
+      progressoTexto.textContent = `${percentual}%`;
+      barraProgresso.style.width = percentual + '%';
+      statusTempo.textContent = `⏱️ ${tempoAssistido}s assistidos`;
+      statusPorcentagem.textContent = `📊 ${percentual}%`;
 
-    function mergeSegmentos(lista) {
-      const ordenado = lista.sort((a, b) => a.start - b.start);
-      const resultado = [];
-      ordenado.forEach(seg => {
-        const ultimo = resultado[resultado.length - 1];
-        if (!ultimo || seg.start > ultimo.end) resultado.push({ ...seg });
-        else ultimo.end = Math.max(ultimo.end, seg.end);
-      });
-      return resultado;
+      if (percentual >= 97) {
+        statusFinal.classList.remove('hidden');
+        statusTempo.classList.add('hidden');
+        statusPorcentagem.classList.add('hidden');
+      } else {
+        statusFinal.classList.add('hidden');
+        statusTempo.classList.remove('hidden');
+        statusPorcentagem.classList.remove('hidden');
+      }
     }
 
     function loadYouTubeAPI() {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         if (window.YT && window.YT.Player) return resolve();
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
@@ -144,7 +159,7 @@
     }
 
     function initPlayer() {
-      player = new YT.Player(playerFrame, {
+      player = new YT.Player(videoPlayer, {
         events: {
           onReady: onPlayerReady
         }
@@ -152,19 +167,16 @@
     }
 
     async function onPlayerReady() {
-      duration = Math.floor(player.getDuration());
-      const assistido = await calcularProgressoTotal(aulaAtual.id);
-      const percentual = Math.min(100, Math.round((assistido / duration) * 100));
-      progressoExtra.textContent = `⏱️ ${assistido}s / ${duration}s\n📊 Progresso: ${percentual}%`;
+      duration = player.getDuration();
 
-      if (percentual >= 99 && !progressoPorAula[aulaAtual.id]) {
-        await fetch('/.netlify/functions/consolida-progresso', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id, course_id, lesson_id: aulaAtual.id })
-        });
-        progressoPorAula[aulaAtual.id] = true;
-      }
+      const { data: segmentos } = await supabase
+        .from('progress_segments')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('lesson_id', aulaAtual.id);
+
+      tempoAssistido = segmentos?.reduce((total, seg) => total + (seg.segment.end - seg.segment.start), 0) || 0;
+      atualizarProgressoVisual();
 
       interval = setInterval(async () => {
         if (player.getPlayerState() !== YT.PlayerState.PLAYING) return;
@@ -176,27 +188,24 @@
 
         const segment = { start: lastTime, end: current };
         lastTime = current;
-        segmentos.push(segment);
 
         await supabase.from('progress_segments').insert({
           user_id,
           course_id,
           lesson_id: aulaAtual.id,
-          duration,
+          duration: Math.floor(duration),
           segment
         });
 
-        const assistido = await calcularProgressoTotal(aulaAtual.id);
-        const percentual = Math.min(100, Math.round((assistido / duration) * 100));
-        progressoExtra.textContent = `⏱️ ${assistido}s / ${duration}s\n📊 Progresso: ${percentual}%\n🌟 Segmento: ${segment.start}s → ${segment.end}s`;
+        tempoAssistido += segment.end - segment.start;
+        atualizarProgressoVisual();
 
-        if (percentual >= 99 && !progressoPorAula[aulaAtual.id]) {
+        if (tempoAssistido / duration >= 0.97) {
           await fetch('/.netlify/functions/consolida-progresso', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_id, course_id, lesson_id: aulaAtual.id })
           });
-          progressoPorAula[aulaAtual.id] = true;
         }
       }, 5000);
     }
