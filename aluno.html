@@ -57,8 +57,7 @@
         card.innerHTML = `
           <h3>${curso.title}</h3>
           <p>${curso.description}</p>
-         <a href="/curso/${curso.id}?user_id=${userId}" class="...">Acessar curso</a>
-
+          <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="contrast">Acessar curso</a>
         `;
         container.appendChild(card);
       });
