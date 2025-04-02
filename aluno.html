@@ -4,14 +4,8 @@
   <meta charset="UTF-8">
   <title>🎓 Portal do Aluno</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
-      background-color: #f7f7f7;
-    }
-    h1 {
-      color: #2c3e50;
-    }
+    body { font-family: Arial, sans-serif; padding: 2rem; background-color: #f7f7f7; }
+    h1 { color: #2c3e50; }
     .curso {
       background: white;
       padding: 1rem;
@@ -19,12 +13,8 @@
       margin-bottom: 1rem;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .curso h2 {
-      margin: 0 0 0.5rem;
-    }
-    .status {
-      margin-top: 0.5rem;
-    }
+    .curso h2 { margin: 0 0 0.5rem; }
+    .status { margin-top: 0.5rem; }
     button {
       padding: 0.5rem 1rem;
       background-color: #27ae60;
@@ -33,17 +23,21 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    button:disabled {
-      background-color: #95a5a6;
-    }
+    button:disabled { background-color: #95a5a6; }
   </style>
 </head>
 <body>
-  <h1>🎓 Cursos da Maria Aluna</h1>
+  <h1>🎓 Meus Cursos</h1>
   <div id="cursos"></div>
 
   <script>
-    const user_id = "22222222-2222-2222-2222-222222222222"; // Maria Aluna
+    const urlParams = new URLSearchParams(window.location.search);
+    const user_id = urlParams.get("user_id");
+
+    if (!user_id) {
+      document.body.innerHTML = '<h2 style="color:red">Usuário não identificado. Faça login novamente.</h2>';
+      throw new Error("Usuário não informado");
+    }
 
     async function carregarCursos() {
       const container = document.getElementById("cursos");
@@ -54,10 +48,7 @@
       for (const curso of cursos) {
         const progresso = await fetch("/.netlify/functions/get-user-progress", {
           method: "POST",
-          body: JSON.stringify({
-            user_id,
-            course_id: curso.id
-          }),
+          body: JSON.stringify({ user_id, course_id: curso.id }),
           headers: { "Content-Type": "application/json" }
         }).then(res => res.json());
 
@@ -81,11 +72,7 @@
       btn.disabled = true;
       await fetch("/.netlify/functions/save-progress", {
         method: "POST",
-        body: JSON.stringify({
-          user_id,
-          course_id,
-          completed: true
-        }),
+        body: JSON.stringify({ user_id, course_id, completed: true }),
         headers: { "Content-Type": "application/json" }
       });
       btn.parentElement.innerHTML = `<strong>Status:</strong> ✅ Concluído`;
