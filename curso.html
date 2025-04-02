@@ -33,6 +33,14 @@
           <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
         </div>
         <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
+
+        <!-- 🔍 Painel visual de progresso ao vivo -->
+        <div class="text-xs text-gray-600 mt-2" id="painelProgresso">
+          <div>⏱️ <span id="tempoAtual">0</span>s / <span id="duracaoTotal">0</span>s</div>
+          <div>📈 Progresso: <span id="porcentagemAssistida">0</span>%</div>
+          <div>🧩 Segmento: <span id="segmentoAtual">--</span></div>
+        </div>
+
         <div id="quizContainer" class="mt-6 hidden">
           <a id="linkQuiz" href="#" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">Fazer Avaliação do Curso</a>
         </div>
@@ -41,7 +49,6 @@
   </div>
 
   <script>
-    // Inicialização segura do Supabase
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
@@ -65,6 +72,12 @@
     const progressoTexto = document.getElementById('progressoTexto');
     const quizContainer = document.getElementById('quizContainer');
     const linkQuiz = document.getElementById('linkQuiz');
+
+    // 👇 Novos elementos para feedback visual
+    const tempoAtualSpan = document.getElementById('tempoAtual');
+    const duracaoTotalSpan = document.getElementById('duracaoTotal');
+    const porcentagemSpan = document.getElementById('porcentagemAssistida');
+    const segmentoSpan = document.getElementById('segmentoAtual');
 
     let aulas = [], aulaAtual = null, player = null, interval = null;
     let lastTime = 0, duration = 0, progressoPorAula = {};
@@ -150,19 +163,25 @@
 
     function onPlayerReady() {
       duration = player.getDuration();
+      duracaoTotalSpan.textContent = duration;
+
       interval = setInterval(async () => {
         if (player.getPlayerState() !== YT.PlayerState.PLAYING) return;
 
         const current = Math.floor(player.getCurrentTime());
+
+        tempoAtualSpan.textContent = current;
+        porcentagemSpan.textContent = Math.floor((current / duration) * 100);
+
         if (current <= lastTime || current - lastTime > 30) {
           lastTime = current;
-          return; // pulo ou replay
+          return;
         }
 
         const segment = { start: lastTime, end: current };
+        segmentoSpan.textContent = `${segment.start}s → ${segment.end}s`;
         lastTime = current;
 
-        // Gravação do segmento no banco
         await supabase.from('progress_segments').insert({
           user_id,
           course_id,
@@ -171,7 +190,6 @@
           segment
         });
 
-        // Verificação de conclusão automática
         const { data: jaConcluido } = await supabase
           .from('progress')
           .select('id')
