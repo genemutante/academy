@@ -1,6 +1,6 @@
 <template>
   <div class="p-6 max-w-4xl mx-auto">
-    <NuxtLink to="/" class="text-sm text-purple-600 hover:underline">← Voltar</NuxtLink>
+    <NuxtLink :to="`/aluno.html?user_id=${userId}`" class="text-sm text-purple-600 hover:underline">← Voltar</NuxtLink>
 
     <h1 class="text-2xl font-bold mt-4 mb-2">{{ curso.title }}</h1>
     <p class="text-gray-600 mb-6">{{ curso.description }}</p>
@@ -73,6 +73,8 @@ import {
 
 const route = useRoute()
 const cursoId = route.params.id
+const userId = route.query.user_id || '' // <-- agora dinâmico pela URL
+const trackId = '00000000-0000-0000-0000-000000000000'
 
 const curso = ref({})
 const aulas = ref([])
@@ -83,14 +85,10 @@ const quiz = ref(null)
 const quizDisponivel = ref(false)
 const progressoPorAula = ref({})
 
-const userId = '11111111-1111-1111-1111-111111111111'
-const trackId = '00000000-0000-0000-0000-000000000000'
-
 let player
 let interval
 let duration = 0
 let lastTime = 0
-let watchSegments = []
 
 const aulasConcluidas = computed(() =>
   aulas.value.filter(a => progressoPorAula.value[a.id])
@@ -99,7 +97,7 @@ const aulasConcluidas = computed(() =>
 const percentualProgresso = computed(() => {
   if (!aulas.value.length) return 0
   return Math.round((aulasConcluidas.value.length / aulas.value.length) * 100)
-})
+)
 
 onMounted(async () => {
   try {
@@ -131,7 +129,6 @@ onMounted(async () => {
 watch(() => aulaSelecionada.value?.id, () => {
   clearInterval(interval)
   lastTime = 0
-  watchSegments = []
   initPlayer()
 })
 
@@ -174,16 +171,6 @@ async function onPlayerReady() {
 
       if (current > lastTime + 1) {
         const segment = { start: lastTime, end: current }
-		
-console.log('[Progresso] Enviando segmento:', {
-  user_id: userId,
-  track_id: trackId,
-  course_id: cursoId,
-  lesson_id: aulaSelecionada.value.id,
-  duration: Math.floor(duration),
-  segment: { start: lastTime, end: current }
-})
-		
 
         await saveProgress({
           user_id: userId,
