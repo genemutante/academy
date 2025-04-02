@@ -5,3 +5,7 @@
 [functions]
   directory = ".netlify/functions"
   node_bundler = "esbuild"
+
+
+[functions."consolida-batch"]
+  schedule = "*/15 * * * *"  # Executa a cada 15 minutos
