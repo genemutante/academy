@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatório do Aluno</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+  <div class="max-w-6xl mx-auto">
+    <a href="admin.html" class="text-blue-600 hover:underline text-sm">&larr; Voltar ao Painel</a>
+    <h1 class="text-2xl font-bold mt-4 mb-6">Relatório de Progresso do Aluno</h1>
+
+    <div id="dadosAluno" class="mb-4 text-gray-700 text-lg font-medium"></div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full table-auto bg-white shadow rounded">
+        <thead class="bg-gray-100">
+          <tr class="text-left text-sm">
+            <th class="px-4 py-2">Curso</th>
+            <th class="px-4 py-2">Aula</th>
+            <th class="px-4 py-2">Ordem</th>
+            <th class="px-4 py-2">Duração</th>
+            <th class="px-4 py-2">Assistido</th>
+            <th class="px-4 py-2">%</th>
+            <th class="px-4 py-2">Status</th>
+            <th class="px-4 py-2">Retomar em</th>
+            <th class="px-4 py-2">Última Atividade</th>
+            <th class="px-4 py-2">Dias sem acesso</th>
+            <th class="px-4 py-2">Revisitada</th>
+            <th class="px-4 py-2">Sessões</th>
+            <th class="px-4 py-2">Abandonada</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaDados" class="text-sm"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
+
+    const email = new URLSearchParams(window.location.search).get('email');
+    if (!email) {
+      alert("Email do aluno não informado na URL.");
+      throw new Error("Parâmetro ausente: email");
+    }
+
+    document.getElementById("dadosAluno").innerText = `Aluno: ${email}`;
+
+    async function carregarRelatorio() {
+      const { data, error } = await supabase.rpc('fn_relatorio_progresso', { p_email: email });
+      if (error) {
+        console.error(error);
+        alert('Erro ao buscar relatório');
+        return;
+      }
+
+      const tbody = document.getElementById('tabelaDados');
+      tbody.innerHTML = '';
+
+      data.forEach(linha => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-4 py-2">${linha.curso}</td>
+          <td class="px-4 py-2">${linha.aula}</td>
+          <td class="px-4 py-2 text-center">${linha.ordem}</td>
+          <td class="px-4 py-2 text-center">${linha.duracao_total}s</td>
+          <td class="px-4 py-2 text-center">${linha.segundos_assistidos}s</td>
+          <td class="px-4 py-2 text-center">${linha.percentual_assistido}%</td>
+          <td class="px-4 py-2">${linha.status}</td>
+          <td class="px-4 py-2 text-center">${linha.retomar_em_segundos}s</td>
+          <td class="px-4 py-2">${linha.ultima_atividade ? new Date(linha.ultima_atividade).toLocaleString() : '-'}</td>
+          <td class="px-4 py-2 text-center">${linha.dias_sem_acesso ?? '-'}</td>
+          <td class="px-4 py-2 text-center">${linha.aula_revisitada ? 'Sim' : 'Não'}</td>
+          <td class="px-4 py-2 text-center">${linha.vezes_revisitada}</td>
+          <td class="px-4 py-2 text-center">${linha.aula_abandonada ? 'Sim' : 'Não'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    carregarRelatorio();
+  </script>
+</body>
+</html>
