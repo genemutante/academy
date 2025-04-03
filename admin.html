@@ -3,50 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel do Administrador</title>
+  <title>Dashboard de Cursos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-50 text-gray-800">
-  <div class="max-w-5xl mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-4">👩‍💼 Painel do Administrador</h1>
-
-    <!-- Buscar relatório de aluno -->
-    <div class="bg-white shadow rounded p-4 mb-6">
-      <h2 class="font-semibold text-lg mb-2">🔍 Relatório por Aluno</h2>
-      <form id="formBusca" class="flex gap-4 items-end flex-wrap">
-        <div>
-          <label for="email" class="block text-sm font-medium">Email do aluno:</label>
-          <input type="email" id="email" name="email" class="border rounded px-3 py-1" required />
-        </div>
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Buscar</button>
-      </form>
-    </div>
-
-    <!-- Resultado -->
-    <div id="resultado" class="bg-white shadow rounded p-4 hidden">
-      <h2 class="text-lg font-semibold mb-3">📊 Relatório de Progresso</h2>
-      <div id="aluno-email" class="text-sm text-gray-600 mb-2"></div>
-      <div class="overflow-x-auto">
-        <table class="table-auto text-sm w-full">
-          <thead>
-            <tr class="bg-gray-200">
-              <th class="px-2 py-1 text-left">Curso</th>
-              <th class="px-2 py-1 text-left">Aula</th>
-              <th class="px-2 py-1">Ordem</th>
-              <th class="px-2 py-1">Duração</th>
-              <th class="px-2 py-1">Assistido</th>
-              <th class="px-2 py-1">%</th>
-              <th class="px-2 py-1">Status</th>
-              <th class="px-2 py-1">Retomar</th>
-              <th class="px-2 py-1">Vezes</th>
-              <th class="px-2 py-1">Último acesso</th>
-            </tr>
-          </thead>
-          <tbody id="tabela"></tbody>
-        </table>
-      </div>
-    </div>
+<body class="bg-gray-100 text-gray-900">
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <h1 class="text-3xl font-bold mb-4">📊 Dashboard Geral de Cursos</h1>
+    <div id="painel" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </div>
 
   <script>
@@ -55,44 +19,38 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const form = document.getElementById('formBusca');
-    const tabela = document.getElementById('tabela');
-    const resultado = document.getElementById('resultado');
-    const alunoEmail = document.getElementById('aluno-email');
+    async function carregarKPIs() {
+      const { data, error } = await supabase.rpc('fn_kpi_curso');
+      if (error) return alert('Erro ao carregar KPIs');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      if (!email) return alert('Informe o email');
+      const painel = document.getElementById('painel');
+      painel.innerHTML = '';
 
-      const { data, error } = await supabase.rpc('fn_relatorio_progresso', { p_email: email });
-
-      if (error || !data?.length) {
-        alert('Nenhum resultado encontrado ou erro ao consultar.');
-        return;
-      }
-
-      tabela.innerHTML = '';
-      alunoEmail.textContent = `Email: ${email}`;
-      resultado.classList.remove('hidden');
-
-      data.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="border px-2 py-1">${item.curso}</td>
-          <td class="border px-2 py-1">${item.aula}</td>
-          <td class="border px-2 py-1 text-center">${item.ordem}</td>
-          <td class="border px-2 py-1 text-center">${item.duracao_total}s</td>
-          <td class="border px-2 py-1 text-center">${item.segundos_assistidos}s</td>
-          <td class="border px-2 py-1 text-center">${item.percentual_assistido}%</td>
-          <td class="border px-2 py-1 text-center">${item.status}</td>
-          <td class="border px-2 py-1 text-center">${item.retomar_em_segundos || 0}s</td>
-          <td class="border px-2 py-1 text-center">${item.vezes_revisitada || 0}</td>
-          <td class="border px-2 py-1 text-center">${item.ultima_atividade?.split('T')[0] || '-'}</td>
+      data.forEach(kpi => {
+        const card = document.createElement('div');
+        card.className = 'bg-white p-4 shadow rounded-lg';
+        card.innerHTML = `
+          <h2 class="text-xl font-semibold mb-2">${kpi.curso}</h2>
+          <ul class="text-sm space-y-1">
+            <li><strong>Alunos:</strong> ${kpi.total_alunos}</li>
+            <li><strong>% Médio Assistido:</strong> ${kpi.percentual_medio_assistido.toFixed(1)}%</li>
+            <li><strong>Taxa de Conclusão:</strong> ${kpi.taxa_conclusao.toFixed(1)}%</li>
+            <li><strong>Taxa de Abandono:</strong> ${kpi.taxa_abandono.toFixed(1)}%</li>
+            <li><strong>Tempo Médio:</strong> ${formatarTempo(kpi.tempo_medio_assistido)}</li>
+            <li><strong>Sessões por Aula:</strong> ${kpi.media_sessoes_aula.toFixed(2)}</li>
+          </ul>
         `;
-        tabela.appendChild(tr);
+        painel.appendChild(card);
       });
-    });
+    }
+
+    function formatarTempo(segundos) {
+      const m = Math.floor(segundos / 60);
+      const s = segundos % 60;
+      return `${m}m ${s}s`;
+    }
+
+    carregarKPIs();
   </script>
 </body>
 </html>
