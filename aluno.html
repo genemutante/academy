@@ -4,75 +4,86 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Área do Aluno</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <style>
-    body { background: #f8f9fa; font-family: 'Carlito', sans-serif; }
-    .curso-card { border-left: 5px solid #0d6efd; background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; }
-    .progresso { font-size: 0.9rem; color: #6c757d; }
-    .aula-status span { margin-right: 8px; }
-  </style>
-</head>
-<body class="container py-5">
-  <h2 class="mb-4">🎓 Bem-vindo, <span id="nomeAluno">Aluno</span></h2>
-  <div id="cursosContainer"></div>
 
-  <script>
-    const supabase = window.supabase.createClient(
+  <!-- FONTE PADRÃO -->
+  <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Carlito', sans-serif;
+      background-color: #f8f9fc;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 60px auto;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #1a237e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    p {
+      font-size: 18px;
+      color: #444;
+      margin-top: 10px;
+    }
+
+    .icon {
+      font-size: 32px;
+    }
+  </style>
+
+  <!-- FAVICON / ÍCONES -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+</head>
+<body>
+  <div class="container">
+    <h1><span class="icon">🎓</span> <span id="welcome"></span></h1>
+    <p>Aqui estão seus cursos disponíveis. Clique em <strong>"Continuar"</strong> para retomar de onde parou.</p>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabase = createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('id');
-
     async function carregarAluno() {
-      const { data: user } = await supabase.from('users').select('name').eq('id', userId).single();
-      if (user) document.getElementById('nomeAluno').textContent = user.name;
-    }
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      if (!id) return;
 
-    async function carregarCursos() {
-      const { data: progresso } = await supabase.rpc('fn_base_progresso', { p_email: null });
-      const aulasAgrupadas = {};
+      const { data, error } = await supabase
+        .from("users")
+        .select("name")
+        .eq("id", id)
+        .single();
 
-      progresso.filter(p => p.uuid === userId).forEach(item => {
-        const idCurso = item.id;
-        if (!aulasAgrupadas[idCurso]) aulasAgrupadas[idCurso] = { curso: item.curso, aulas: [], concluido: 0, total: 0 };
-        aulasAgrupadas[idCurso].aulas.push(item);
-        aulasAgrupadas[idCurso].total++;
-        if (item.status === '✔ Concluída') aulasAgrupadas[idCurso].concluido++;
-      });
-
-      const container = document.getElementById('cursosContainer');
-      container.innerHTML = '';
-
-      for (const idCurso in aulasAgrupadas) {
-        const curso = aulasAgrupadas[idCurso];
-        const percentual = Math.round((curso.concluido / curso.total) * 100);
-
-        const div = document.createElement('div');
-        div.className = 'curso-card';
-        div.innerHTML = `
-          <h5>${curso.curso}</h5>
-          <div class="progress mb-2"><div class="progress-bar" style="width:${percentual}%;">${percentual}%</div></div>
-          <p class="progresso">Clique em uma aula para continuar:</p>
-          <ul class="list-group">
-            ${curso.aulas.map(aula => `
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                ${aula.aula}
-                <span class="badge ${
-                  aula.status.includes('✔') ? 'bg-success' : aula.status.includes('🕒') ? 'bg-warning text-dark' : 'bg-secondary'
-                }">${aula.status}</span>
-              </li>
-            `).join('')}
-          </ul>
-        `;
-        container.appendChild(div);
+      if (error) {
+        document.getElementById("welcome").innerText = "Erro ao carregar aluno";
+        return;
       }
+
+      document.getElementById("welcome").innerText = `Bem-vindo, ${data.name}`;
     }
 
     carregarAluno();
-    carregarCursos();
   </script>
 </body>
 </html>
