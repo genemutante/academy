@@ -5,6 +5,7 @@
   <title>Importar Alunos</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 text-gray-900 p-8">
@@ -15,7 +16,7 @@
 
     <div v-if="alunos.length">
       <h2 class="text-xl font-semibold mb-2">👀 Pré-visualização:</h2>
-      <table class="table-auto w-full text-left border border-gray-300">
+      <table class="table-auto w-full text-left border border-gray-300 mb-6">
         <thead class="bg-gray-200">
           <tr>
             <th class="px-2 py-1" v-for="col in colunas" :key="col">{{ col }}</th>
@@ -27,6 +28,11 @@
           </tr>
         </tbody>
       </table>
+
+      <button @click="salvarAlunos" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
+        🚀 Salvar no Supabase
+      </button>
+      <p v-if="mensagem" class="mt-4 text-green-600">{{ mensagem }}</p>
     </div>
   </div>
 
@@ -37,6 +43,12 @@
       setup() {
         const alunos = ref([]);
         const colunas = ref([]);
+        const mensagem = ref('');
+
+        const supabase = window.supabase.createClient(
+          'https://bkueljjvhijojzcyodvk.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...CHAVE_REST_COMPLETA'
+        );
 
         function handleFile(event) {
           const file = event.target.files[0];
@@ -48,12 +60,18 @@
             complete(results) {
               alunos.value = results.data;
               colunas.value = results.meta.fields;
-              console.log('Importado:', alunos.value);
+              mensagem.value = '';
             }
           });
         }
 
-        return { alunos, colunas, handleFile };
+        async function salvarAlunos() {
+          if (!alunos.value.length) return;
+          const { error } = await supabase.from('users').insert(alunos.value);
+          mensagem.value = error ? `Erro: ${error.message}` : 'Alunos salvos com sucesso! ✅';
+        }
+
+        return { alunos, colunas, handleFile, salvarAlunos, mensagem };
       }
     }).mount('#app');
   </script>
