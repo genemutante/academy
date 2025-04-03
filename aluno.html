@@ -1,79 +1,83 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Área do Aluno</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <link rel="manifest" href="/site.webmanifest" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <style>
-      body {
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #f7f9fc;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        color: #333;
-      }
-      .container {
-        text-align: center;
-        max-width: 600px;
-        padding: 2rem;
-        background-color: white;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-        border-radius: 12px;
-      }
-      .emoji {
-        font-size: 2rem;
-      }
-      h1 {
-        font-size: 1.8rem;
-        color: #1e40af;
-        margin-top: 1rem;
-      }
-      p {
-        margin-top: 0.5rem;
-        color: #555;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="emoji">🎓</div>
-      <h1 id="boasVindas">Bem-vindo, Aluno</h1>
-      <p>Aqui estão seus cursos. Clique em "Continuar" para acessar a próxima aula.</p>
-    </div>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Área do Aluno</title>
+  <link rel="icon" type="image/png" href="/favicon-32x32.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/+esm" type="module"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center py-10">
+  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-4xl">
+    <h1 id="student-name" class="text-2xl font-bold text-center text-blue-800 mb-4">Bem-vindo, Aluno</h1>
+    <p class="text-center text-gray-600 mb-6">Aqui estão seus cursos. Clique em "Continuar" para acessar a próxima aula.</p>
+    <div id="courses-container" class="space-y-6"></div>
+  </div>
 
-    <script>
-      const supabase = window.supabase.createClient(
-        'https://bkueljjvhijojzcyodvk.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-      );
+  <script type="module">
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('id');
+    const urlParams = new URLSearchParams(window.location.search);
+    const alunoId = urlParams.get('id');
 
-      async function buscarAluno() {
-        if (!userId) return;
+    const studentNameEl = document.getElementById('student-name');
+    const container = document.getElementById('courses-container');
 
-        const { data, error } = await supabase
-          .from('users')
-          .select('name')
-          .eq('id', userId)
-          .single();
+    async function loadProgress() {
+      if (!alunoId) return;
 
-        if (data?.name) {
-          document.getElementById('boasVindas').textContent = `Bem-vindo, ${data.name}`;
-        } else {
-          console.error('Erro ao buscar aluno:', error);
-        }
+      const { data, error } = await supabase.rpc('fn_base_progresso', {
+        p_email: null,
+        p_id: alunoId
+      });
+
+      if (error) {
+        container.innerHTML = `<div class="text-red-600">Erro ao carregar dados: ${error.message}</div>`;
+        return;
       }
 
-      buscarAluno();
-    </script>
-  </body>
+      const cursos = {};
+      let alunoNome = '';
+
+      data.forEach(item => {
+        alunoNome = alunoNome || item.nome;
+        if (!cursos[item.curso]) cursos[item.curso] = [];
+        cursos[item.curso].push(item);
+      });
+
+      studentNameEl.textContent = `Bem-vindo, ${alunoNome}`;
+      renderCourses(cursos);
+    }
+
+    function renderCourses(cursos) {
+      container.innerHTML = '';
+      Object.entries(cursos).forEach(([curso, aulas]) => {
+        const cursoDiv = document.createElement('div');
+        cursoDiv.className = 'bg-blue-50 p-4 rounded-xl shadow-sm';
+
+        const header = `<h2 class="text-xl font-semibold text-blue-700 mb-2">📘 ${curso}</h2>`;
+        const lista = aulas.map(aula => `
+          <div class="flex items-center justify-between py-1 border-b border-gray-200">
+            <span class="text-gray-800">${aula.status} ${aula.aula}</span>
+            <span class="text-sm text-gray-500">${aula.percentual_assistido}%</span>
+          </div>
+        `).join('');
+
+        cursoDiv.innerHTML = header + lista;
+        container.appendChild(cursoDiv);
+      });
+    }
+
+    loadProgress();
+  </script>
+</body>
 </html>
