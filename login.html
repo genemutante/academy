@@ -2,97 +2,118 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Acesso à Plataforma</title>
+
+  <!-- Fonte -->
   <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
   <style>
     body {
       margin: 0;
-      font-family: 'Carlito', sans-serif;
       background-color: #f5f7fa;
+      font-family: 'Carlito', sans-serif;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
+      color: #333;
     }
-    .container {
+
+    .login-box {
       background: white;
-      padding: 2rem 3rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      padding: 40px;
+      max-width: 420px;
+      width: 100%;
       text-align: center;
     }
-    h1 {
-      font-size: 1.8rem;
-      color: #1e3a8a;
-      margin-bottom: 1rem;
+
+    .login-box h1 {
+      font-size: 24px;
+      color: #1a237e;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
-    input {
-      padding: 0.75rem;
-      font-size: 1rem;
+
+    .login-box p {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
       width: 100%;
-      margin-bottom: 1rem;
-      border-radius: 8px;
+      padding: 12px;
+      font-size: 16px;
       border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 16px;
     }
+
     button {
-      background-color: #2563eb;
+      width: 100%;
+      background-color: #1a73e8;
       color: white;
       border: none;
-      padding: 0.75rem 1.5rem;
+      padding: 12px;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 16px;
       cursor: pointer;
     }
+
     button:hover {
-      background-color: #1d4ed8;
+      background-color: #1558b0;
     }
   </style>
-
-  <!-- FAVICON / ÍCONES -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="manifest" href="/site.webmanifest">
 </head>
-
 <body>
-  <div class="container">
+  <div class="login-box">
     <h1>🔑 Acesso à Plataforma</h1>
     <p>Digite o código de acesso fornecido pelo professor para entrar.</p>
     <input type="text" id="codigo" placeholder="Ex: RA7XQ2" />
     <button onclick="entrar()">Entrar</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
-  <script>
-    const supabase = window.supabase.createClient(
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabase = createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    async function entrar() {
+    window.entrar = async function () {
       const codigo = document.getElementById('codigo').value.trim();
-
       if (!codigo) {
-        alert('Por favor, digite o código de acesso.');
+        alert("Por favor, digite um código de acesso.");
         return;
       }
 
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('id, name')
-        .eq('codigo_acesso', codigo)
+      const { data, error } = await supabase
+        .from("users")
+        .select("id")
+        .eq("codigo_acesso", codigo)
         .single();
 
-      if (error || !user) {
-        alert('Código inválido. Verifique com seu professor.');
+      if (error || !data) {
+        alert("Código inválido. Verifique com o professor.");
         return;
       }
 
-      window.location.href = `/aluno.html?id=${user.id}`;
-    }
+      window.location.href = `aluno.html?id=${data.id}`;
+    };
   </script>
 </body>
 </html>
