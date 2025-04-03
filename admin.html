@@ -99,6 +99,7 @@
     }
 
     canvas {
+      max-height: 300px;
       width: 100% !important;
     }
   </style>
@@ -147,18 +148,18 @@
 
   <div class="bloco">
     <h2>Indicadores por Curso</h2>
-    <canvas id="graficoCursos" height="60"></canvas>
+    <canvas id="graficoCursos"></canvas>
   </div>
 
   <div class="grid-2">
     <div class="bloco">
       <h2>Status das Aulas</h2>
-      <canvas id="graficoStatusAulas" height="150"></canvas>
+      <canvas id="graficoStatusAulas"></canvas>
     </div>
 
     <div class="bloco">
       <h2>Alunos por Curso</h2>
-      <canvas id="graficoAlunosCurso" height="150"></canvas>
+      <canvas id="graficoAlunosCurso"></canvas>
     </div>
   </div>
 
@@ -188,7 +189,15 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    // Gráfico 1 – Barras por curso
+    const chartOptions = {
+      maintainAspectRatio: true,
+      aspectRatio: 2,
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' }
+      }
+    };
+
     new Chart(document.getElementById('graficoCursos').getContext('2d'), {
       type: 'bar',
       data: {
@@ -199,12 +208,9 @@
           backgroundColor: ['#4ade80', '#60a5fa', '#facc15']
         }]
       },
-      options: {
-        scales: { y: { beginAtZero: true, max: 100 } }
-      }
+      options: { ...chartOptions, scales: { y: { beginAtZero: true, max: 100 } } }
     });
 
-    // Gráfico 2 – Pizza status
     new Chart(document.getElementById('graficoStatusAulas').getContext('2d'), {
       type: 'pie',
       data: {
@@ -213,10 +219,14 @@
           data: [60, 25, 15],
           backgroundColor: ['#4ade80', '#93c5fd', '#f87171']
         }]
+      },
+      options: {
+        ...chartOptions,
+        aspectRatio: 1.5,
+        plugins: { legend: { position: 'bottom' } }
       }
     });
 
-    // Gráfico 3 – Alunos por curso
     new Chart(document.getElementById('graficoAlunosCurso').getContext('2d'), {
       type: 'bar',
       data: {
@@ -228,8 +238,9 @@
         }]
       },
       options: {
+        ...chartOptions,
         indexAxis: 'y',
-        scales: { x: { beginAtZero: true } }
+        aspectRatio: 2.5
       }
     });
   </script>
