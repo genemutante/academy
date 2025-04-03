@@ -3,54 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel Admin</title>
+  <title>Painel Administrativo</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100 min-h-screen text-gray-800">
-  <div class="max-w-7xl mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-4">🧑‍💼 Painel do Administrador</h1>
+<body class="bg-gray-50 text-gray-900">
+  <div class="max-w-6xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Painel Administrativo 📊</h1>
 
-    <!-- Filtro por e-mail -->
-    <form id="formEmail" class="mb-6 flex flex-wrap items-center gap-4">
-      <input type="email" id="emailInput" placeholder="Digite o e-mail do aluno" class="border p-2 rounded w-full md:w-96" required>
-      <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Buscar</button>
-    </form>
+    <nav class="mb-6">
+      <button class="tab px-4 py-2 bg-blue-600 text-white rounded mr-2" onclick="mostrarAba('alunos')">👥 Alunos</button>
+      <button class="tab px-4 py-2 bg-blue-600 text-white rounded mr-2" onclick="mostrarAba('cursos')">📚 Cursos</button>
+    </nav>
 
-    <div class="grid md:grid-cols-3 gap-6">
-      <!-- Relatório -->
-      <div class="md:col-span-2">
-        <div class="bg-white p-4 rounded shadow-md overflow-auto">
-          <table id="tabelaRelatorio" class="w-full text-sm">
-            <thead>
-              <tr class="bg-gray-100 text-left">
-                <th class="p-2">Curso</th>
-                <th class="p-2">Aula</th>
-                <th class="p-2">Ordem</th>
-                <th class="p-2">Duração</th>
-                <th class="p-2">Assistido</th>
-                <th class="p-2">%</th>
-                <th class="p-2">Status</th>
-                <th class="p-2">Retomar</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyRelatorio"></tbody>
-          </table>
-        </div>
-      </div>
+    <!-- Aba Alunos -->
+    <div id="aba-alunos" class="aba">
+      <input type="text" id="buscaAluno" placeholder="Buscar aluno por nome ou e-mail..." class="border p-2 rounded w-full mb-4" oninput="buscarAlunos()">
+      <ul id="listaAlunos" class="space-y-2"></ul>
+    </div>
 
-      <!-- Ações rápidas -->
-      <div>
-        <div class="bg-white p-4 rounded shadow-md">
-          <h2 class="font-semibold mb-3">🧰 Ferramentas</h2>
-          <ul class="list-disc ml-5 space-y-1 text-sm">
-            <li>Exportar dados</li>
-            <li>Ver trilhas</li>
-            <li>Ver alunos</li>
-            <li>Ver quizzes</li>
-          </ul>
-        </div>
-      </div>
+    <!-- Aba Cursos -->
+    <div id="aba-cursos" class="aba hidden">
+      <h2 class="text-lg font-semibold mb-2">Selecione um curso:</h2>
+      <ul id="listaCursos" class="space-y-2"></ul>
     </div>
   </div>
 
@@ -60,35 +35,43 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    document.getElementById('formEmail').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('emailInput').value;
-      const { data, error } = await supabase.rpc('fn_relatorio_progresso', { p_email: email });
+    function mostrarAba(nome) {
+      document.querySelectorAll('.aba').forEach(div => div.classList.add('hidden'));
+      document.getElementById(`aba-${nome}`).classList.remove('hidden');
+    }
 
-      const tbody = document.getElementById('tbodyRelatorio');
-      tbody.innerHTML = '';
+    async function buscarAlunos() {
+      const termo = document.getElementById('buscaAluno').value;
+      const { data, error } = await supabase.from('users').select('*').ilike('name', `%${termo}%`);
+      const lista = document.getElementById('listaAlunos');
+      lista.innerHTML = '';
+      (data || []).forEach(aluno => {
+        const li = document.createElement('li');
+        li.className = 'bg-white p-3 rounded shadow flex justify-between';
+        li.innerHTML = `
+          <span><strong>${aluno.name}</strong> - ${aluno.email}</span>
+          <a href="/relatorio-aluno.html?email=${aluno.email}" class="text-blue-600 hover:underline">Ver progresso</a>
+        `;
+        lista.appendChild(li);
+      });
+    }
 
-      if (data && data.length > 0) {
-        data.forEach(item => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td class="p-2">${item.curso}</td>
-            <td class="p-2">${item.aula}</td>
-            <td class="p-2">${item.ordem}</td>
-            <td class="p-2">${item.duracao_total} s</td>
-            <td class="p-2">${item.segundos_assistidos} s</td>
-            <td class="p-2">${item.percentual_assistido}%</td>
-            <td class="p-2">${item.status}</td>
-            <td class="p-2">${item.retomar_em_segundos || 0} s</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } else {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="8" class="p-4 text-center text-gray-500">Nenhum dado encontrado para este aluno.</td>`;
-        tbody.appendChild(tr);
-      }
-    });
+    async function carregarCursos() {
+      const { data, error } = await supabase.from('courses').select('*');
+      const lista = document.getElementById('listaCursos');
+      lista.innerHTML = '';
+      (data || []).forEach(curso => {
+        const li = document.createElement('li');
+        li.className = 'bg-white p-3 rounded shadow flex justify-between';
+        li.innerHTML = `
+          <span><strong>${curso.title}</strong></span>
+          <a href="/relatorio-curso.html?course_id=${curso.id}" class="text-green-600 hover:underline">Analisar curso</a>
+        `;
+        lista.appendChild(li);
+      });
+    }
+
+    carregarCursos();
   </script>
 </body>
 </html>
