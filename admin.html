@@ -1,45 +1,94 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>🔧 Painel Administrativo</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 2rem; background: #f4f4f4; }
-    h1 { color: #2c3e50; }
-    .box {
-      background: white;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Administrador</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-  <h1>🔧 Painel do Administrador</h1>
-  <div class="box">
-    <p><strong>ID do Usuário Logado:</strong> <span id="userId"></span></p>
-    <p><strong>Função:</strong> Administrador</p>
-  </div>
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-6xl mx-auto py-8 px-4">
+    <h1 class="text-3xl font-bold mb-6 text-center">🎛️ Painel do Administrador</h1>
 
-  <div class="box">
-    <h2>Próximos Recursos:</h2>
-    <ul>
-      <li>📚 Gerenciar cursos</li>
-      <li>🧠 Criar trilhas e vincular cursos</li>
-      <li>👥 Atribuir alunos a trilhas</li>
-      <li>📈 Acompanhar progresso dos alunos</li>
-    </ul>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Dashboard de Progresso por Aluno -->
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">📊 Relatório de Progresso</h2>
+        <label class="block text-sm text-gray-700 mb-2" for="email">Email do aluno:</label>
+        <div class="flex items-center gap-2 mb-4">
+          <input id="email" type="email" placeholder="ex: aluno@email.com" class="flex-1 px-3 py-2 border rounded" />
+          <button onclick="buscarRelatorio()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">Buscar</button>
+        </div>
+        <div id="tabela-container" class="overflow-x-auto text-sm"></div>
+      </div>
+
+      <!-- Ações futuras -->
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">🧰 Ferramentas administrativas</h2>
+        <ul class="list-disc pl-4 text-gray-700 space-y-1">
+          <li>Gerenciar trilhas e cursos</li>
+          <li>Ver alunos ativos</li>
+          <li>Exportar relatórios CSV</li>
+          <li>Cadastro de instrutores</li>
+          <li>Monitorar quizzes e feedbacks</li>
+        </ul>
+        <p class="mt-4 text-xs text-gray-500">* Em breve essas funções serão disponibilizadas.</p>
+      </div>
+
+    </div>
   </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const user_id = urlParams.get("user_id");
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
 
-    if (!user_id) {
-      document.body.innerHTML = '<h2 style="color:red">Usuário não identificado. Volte para o login.</h2>';
-    } else {
-      document.getElementById("userId").textContent = user_id;
+    async function buscarRelatorio() {
+      const email = document.getElementById('email').value.trim();
+      if (!email) return alert('Informe o email do aluno.');
+
+      const { data, error } = await supabase.rpc('fn_relatorio_progresso', { p_email: email });
+      if (error) {
+        console.error(error);
+        document.getElementById('tabela-container').innerHTML = `<p class="text-red-600">Erro ao buscar relatório: ${error.message}</p>`;
+        return;
+      }
+
+      const headers = [
+        'Curso', 'Aula', 'Ordem', 'Duração', 'Assistido (s)', '% Assistido', 'Status',
+        'Retomar em (s)', 'Retomar +5s', 'Último acesso', 'Dias sem acesso',
+        'Revisitada?', 'Vezes', 'Intervalo entre sessões (min)', 'Abandonada'
+      ];
+
+      let html = '<table class="min-w-full border text-left"><thead><tr>';
+      headers.forEach(h => html += `<th class="border-b px-2 py-1 bg-gray-50">${h}</th>`);
+      html += '</tr></thead><tbody>';
+
+      data.forEach(row => {
+        html += '<tr class="hover:bg-gray-50">';
+        html += `<td class="border-b px-2 py-1">${row.curso}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.aula}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.ordem}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.duracao_total}s</td>`;
+        html += `<td class="border-b px-2 py-1">${row.segundos_assistidos}s</td>`;
+        html += `<td class="border-b px-2 py-1">${row.percentual_assistido}%</td>`;
+        html += `<td class="border-b px-2 py-1">${row.status}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.retomar_em_segundos}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.retomar_em_mais_5s}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.ultima_atividade || '-'}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.dias_sem_acesso ?? '-'}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.aula_revisitada ? '✔' : ''}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.vezes_revisitada ?? 0}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.tempo_medio_entre_sessoes ?? 0}</td>`;
+        html += `<td class="border-b px-2 py-1">${row.aula_abandonada ? '⚠️' : ''}</td>`;
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('tabela-container').innerHTML = html;
     }
   </script>
 </body>
