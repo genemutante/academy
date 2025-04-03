@@ -1,79 +1,97 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Importar Alunos</title>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <style>
+    body { max-width: 900px; margin: 2rem auto; }
+    table { font-size: 0.95rem; }
+    th { background-color: #f2f2f2; }
+    .preview { margin-top: 2rem; }
+    .actions { margin-top: 2rem; display: flex; gap: 1rem; }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-900 p-8">
-  <div id="app" class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
-    <h1 class="text-2xl font-bold mb-4">📥 Importar Alunos via CSV</h1>
+<body>
+  <div id="app">
+    <h1>📥 Importar Alunos via Planilha</h1>
+    <p>Importe um arquivo `.xlsx` ou `.csv` com as colunas: Nome, Número, Série / Departamento, Escola / Empresa, E-mail.</p>
 
-    <input type="file" accept=".csv" @change="handleFile" class="mb-6">
+    <input type="file" @change="handleFile" accept=".csv,.xlsx" />
 
-    <div v-if="alunos.length">
-      <h2 class="text-xl font-semibold mb-2">👀 Pré-visualização:</h2>
-      <table class="table-auto w-full text-left border border-gray-300 mb-6">
-        <thead class="bg-gray-200">
+    <div class="actions" v-if="alunos.length">
+      <button @click="salvarNoSupabase">✅ Salvar no Supabase</button>
+      <a :href="modeloURL" download class="contrast">📄 Baixar Modelo Excel</a>
+    </div>
+
+    <div class="preview" v-if="alunos.length">
+      <h3>👀 Pré-visualização:</h3>
+      <table>
+        <thead>
           <tr>
-            <th class="px-2 py-1" v-for="col in colunas" :key="col">{{ col }}</th>
+            <th v-for="(v, k) in alunos[0]" :key="k">{{ k }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(aluno, idx) in alunos" :key="idx" class="border-t">
-            <td class="px-2 py-1" v-for="col in colunas">{{ aluno[col] }}</td>
+          <tr v-for="(aluno, i) in alunos" :key="i">
+            <td v-for="(valor, chave) in aluno" :key="chave">{{ valor }}</td>
           </tr>
         </tbody>
       </table>
-
-      <button @click="salvarAlunos" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
-        🚀 Salvar no Supabase
-      </button>
-      <p v-if="mensagem" class="mt-4 text-green-600">{{ mensagem }}</p>
     </div>
+
+    <p v-if="mensagem">{{ mensagem }}</p>
   </div>
 
   <script>
-    const { createApp, ref } = Vue;
-
-    createApp({
-      setup() {
-        const alunos = ref([]);
-        const colunas = ref([]);
-        const mensagem = ref('');
-
-    const supabase = window.supabase.createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    const supabase = createClient(
+      'https://bkueljjvhjjojzcyodvk.supabase.co',
+      '🔑 SUA_PUBLIC_API_KEY_AQUI'
     );
 
-        function handleFile(event) {
+    const app = Vue.createApp({
+      data() {
+        return {
+          alunos: [],
+          mensagem: '',
+          modeloURL: 'https://academy-tools.netlify.app/modelo-alunos.xlsx'
+        };
+      },
+      methods: {
+        handleFile(event) {
           const file = event.target.files[0];
-          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            this.alunos = XLSX.utils.sheet_to_json(sheet);
+          };
+          reader.readAsArrayBuffer(file);
+        },
+        async salvarNoSupabase() {
+          if (!this.alunos.length) return;
 
-          Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete(results) {
-              alunos.value = results.data;
-              colunas.value = results.meta.fields;
-              mensagem.value = '';
-            }
-          });
+          const { error } = await supabase.from('users').insert(this.alunos);
+          if (error) {
+            this.mensagem = `❌ Erro ao salvar: ${error.message}`;
+          } else {
+            this.mensagem = '✅ Alunos salvos com sucesso!';
+            this.alunos = [];
+          }
         }
-
-        async function salvarAlunos() {
-          if (!alunos.value.length) return;
-          const { error } = await supabase.from('users').insert(alunos.value);
-          mensagem.value = error ? `Erro: ${error.message}` : 'Alunos salvos com sucesso! ✅';
-        }
-
-        return { alunos, colunas, handleFile, salvarAlunos, mensagem };
       }
-    }).mount('#app');
+    });
+
+    app.mount('#app');
+
+    function createClient(url, key) {
+      return supabase.createClient(url, key);
+    }
   </script>
 </body>
 </html>
