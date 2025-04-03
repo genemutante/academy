@@ -2,58 +2,89 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Área do Aluno</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Acesso à Plataforma</title>
 
-  <!-- FONTE PADRÃO -->
+  <!-- Fonte padrão -->
   <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
   <style>
     body {
-      font-family: 'Carlito', sans-serif;
-      background-color: #f8f9fc;
       margin: 0;
-      padding: 0;
+      background-color: #f5f7fa;
+      font-family: 'Carlito', sans-serif;
       color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
     }
 
-    .container {
-      max-width: 800px;
-      margin: 60px auto;
+    .login-box {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
       text-align: center;
-      padding: 20px;
     }
 
-    h1 {
-      font-size: 28px;
+    .login-box h1 {
+      font-size: 24px;
       color: #1a237e;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
     }
 
-    p {
-      font-size: 18px;
-      color: #444;
-      margin-top: 10px;
+    .login-box p {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 20px;
     }
 
-    .icon {
-      font-size: 32px;
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    button {
+      width: 100%;
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1558b0;
     }
   </style>
-
-  <!-- FAVICON / ÍCONES -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
 </head>
 <body>
-  <div class="container">
-    <h1><span class="icon">🎓</span> <span id="welcome"></span></h1>
-    <p>Aqui estão seus cursos disponíveis. Clique em <strong>"Continuar"</strong> para retomar de onde parou.</p>
+  <div class="login-box">
+    <h1>🔑 Acesso à Plataforma</h1>
+    <p>Digite o código de acesso fornecido pelo professor para entrar.</p>
+    <input type="text" id="codigo" placeholder="Ex: RA7XQ2" />
+    <button onclick="entrar()">Entrar</button>
   </div>
 
   <script type="module">
@@ -64,26 +95,26 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    async function carregarAluno() {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get("id");
-      if (!id) return;
-
-      const { data, error } = await supabase
-        .from("users")
-        .select("name")
-        .eq("id", id)
-        .single();
-
-      if (error) {
-        document.getElementById("welcome").innerText = "Erro ao carregar aluno";
+    async function entrar() {
+      const codigo = document.getElementById('codigo').value.trim();
+      if (!codigo) {
+        alert("Por favor, digite um código de acesso.");
         return;
       }
 
-      document.getElementById("welcome").innerText = `Bem-vindo, ${data.name}`;
-    }
+      const { data, error } = await supabase
+        .from("users")
+        .select("id")
+        .eq("codigo_acesso", codigo)
+        .single();
 
-    carregarAluno();
+      if (error || !data) {
+        alert("Código inválido. Verifique com o professor.");
+        return;
+      }
+
+      window.location.href = `aluno.html?id=${data.id}`;
+    }
   </script>
 </body>
 </html>
