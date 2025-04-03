@@ -1,19 +1,25 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel do Aluno</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <title>Área do Aluno</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Carlito', sans-serif;
+    }
+  </style>
 </head>
-<body class="container">
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-4xl mx-auto py-10 px-4">
+    <h1 class="text-3xl font-bold text-blue-700 mb-6">🎓 Bem-vindo, <span id="nomeAluno">Aluno</span></h1>
+    <p class="text-gray-600 mb-6">Aqui estão seus cursos disponíveis. Clique em "Continuar" para retomar de onde parou.</p>
 
-  <main id="conteudo" style="margin-top: 2rem;">
-    <h2>🎓 Olá, <span id="aluno-nome">estudante</span>!</h2>
-    <p>Veja abaixo os cursos disponíveis:</p>
-    <div id="cursos" style="margin-top: 1rem;">Carregando...</div>
-  </main>
+    <div id="cursosContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-6"></div>
+  </div>
 
   <script>
     const supabase = window.supabase.createClient(
@@ -21,50 +27,59 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const params = new URLSearchParams(window.location.search);
-    const userId = params.get('user_id');
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id');
 
     if (!userId) {
-      document.getElementById('cursos').innerHTML = `<strong>Erro:</strong> ID do aluno não encontrado na URL.`;
-      throw new Error('user_id ausente');
+      document.body.innerHTML = "<p class='text-center text-red-600 font-bold mt-20'>Erro: ID do aluno não informado na URL.</p>";
+    } else {
+      carregarAluno();
     }
 
     async function carregarAluno() {
-      const { data, error } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', userId)
-        .single();
-
-      if (data?.name) {
-        document.getElementById('aluno-nome').textContent = data.name;
-      }
-    }
-
-    async function carregarCursos() {
-      const { data, error } = await supabase.from('courses').select('*');
-
-      if (error || !data) {
-        document.getElementById('cursos').innerHTML = `<strong>Erro ao carregar cursos.</strong>`;
+      const { data: user, error } = await supabase.from('users').select('name').eq('id', userId).single();
+      if (error || !user) {
+        document.body.innerHTML = "<p class='text-center text-red-600 font-bold mt-20'>Erro ao buscar dados do aluno.</p>";
         return;
       }
 
-      const container = document.getElementById('cursos');
-      container.innerHTML = '';
+      document.getElementById('nomeAluno').textContent = user.name;
 
-      data.forEach(curso => {
-        const card = document.createElement('article');
+      // Buscar cursos e progresso
+      const { data: progresso } = await supabase
+        .from('progress')
+        .select('course_id, percent')
+        .eq('user_id', userId);
+
+      const courseIds = progresso.map(p => p.course_id);
+      const { data: cursos } = await supabase
+        .from('courses')
+        .select('id, title')
+        .in('id', courseIds);
+
+      const container = document.getElementById('cursosContainer');
+      cursos.forEach(curso => {
+        const p = progresso.find(p => p.course_id === curso.id)?.percent || 0;
+        const card = document.createElement('div');
+        card.className = "bg-white p-5 rounded-lg shadow hover:shadow-lg transition";
+
         card.innerHTML = `
-          <h3>${curso.title}</h3>
-          <p>${curso.description}</p>
-          <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="contrast">Acessar curso</a>
+          <h2 class="text-xl font-semibold text-gray-800 mb-2">${curso.title}</h2>
+          <div class="h-2 w-full bg-gray-200 rounded mb-3">
+            <div class="h-2 bg-blue-600 rounded" style="width:${p}%"></div>
+          </div>
+          <p class="text-sm text-gray-600 mb-4">Progresso: ${p}%</p>
+          <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Continuar
+          </a>
         `;
         container.appendChild(card);
       });
-    }
 
-    carregarAluno();
-    carregarCursos();
+      if (cursos.length === 0) {
+        container.innerHTML = "<p class='text-gray-600 col-span-2'>Nenhum curso encontrado para este aluno.</p>";
+      }
+    }
   </script>
 </body>
 </html>
