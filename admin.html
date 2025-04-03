@@ -3,29 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel Administrativo</title>
+  <title>Painel do Administrador</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-50 text-gray-900">
-  <div class="max-w-6xl mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-4">Painel Administrativo 📊</h1>
+<body class="bg-gray-50 text-gray-800">
+  <div class="max-w-5xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">👩‍💼 Painel do Administrador</h1>
 
-    <nav class="mb-6">
-      <button class="tab px-4 py-2 bg-blue-600 text-white rounded mr-2" onclick="mostrarAba('alunos')">👥 Alunos</button>
-      <button class="tab px-4 py-2 bg-blue-600 text-white rounded mr-2" onclick="mostrarAba('cursos')">📚 Cursos</button>
-    </nav>
-
-    <!-- Aba Alunos -->
-    <div id="aba-alunos" class="aba">
-      <input type="text" id="buscaAluno" placeholder="Buscar aluno por nome ou e-mail..." class="border p-2 rounded w-full mb-4" oninput="buscarAlunos()">
-      <ul id="listaAlunos" class="space-y-2"></ul>
+    <!-- Buscar relatório de aluno -->
+    <div class="bg-white shadow rounded p-4 mb-6">
+      <h2 class="font-semibold text-lg mb-2">🔍 Relatório por Aluno</h2>
+      <form id="formBusca" class="flex gap-4 items-end flex-wrap">
+        <div>
+          <label for="email" class="block text-sm font-medium">Email do aluno:</label>
+          <input type="email" id="email" name="email" class="border rounded px-3 py-1" required />
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Buscar</button>
+      </form>
     </div>
 
-    <!-- Aba Cursos -->
-    <div id="aba-cursos" class="aba hidden">
-      <h2 class="text-lg font-semibold mb-2">Selecione um curso:</h2>
-      <ul id="listaCursos" class="space-y-2"></ul>
+    <!-- Resultado -->
+    <div id="resultado" class="bg-white shadow rounded p-4 hidden">
+      <h2 class="text-lg font-semibold mb-3">📊 Relatório de Progresso</h2>
+      <div id="aluno-email" class="text-sm text-gray-600 mb-2"></div>
+      <div class="overflow-x-auto">
+        <table class="table-auto text-sm w-full">
+          <thead>
+            <tr class="bg-gray-200">
+              <th class="px-2 py-1 text-left">Curso</th>
+              <th class="px-2 py-1 text-left">Aula</th>
+              <th class="px-2 py-1">Ordem</th>
+              <th class="px-2 py-1">Duração</th>
+              <th class="px-2 py-1">Assistido</th>
+              <th class="px-2 py-1">%</th>
+              <th class="px-2 py-1">Status</th>
+              <th class="px-2 py-1">Retomar</th>
+              <th class="px-2 py-1">Vezes</th>
+              <th class="px-2 py-1">Último acesso</th>
+            </tr>
+          </thead>
+          <tbody id="tabela"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -35,43 +55,44 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    function mostrarAba(nome) {
-      document.querySelectorAll('.aba').forEach(div => div.classList.add('hidden'));
-      document.getElementById(`aba-${nome}`).classList.remove('hidden');
-    }
+    const form = document.getElementById('formBusca');
+    const tabela = document.getElementById('tabela');
+    const resultado = document.getElementById('resultado');
+    const alunoEmail = document.getElementById('aluno-email');
 
-    async function buscarAlunos() {
-      const termo = document.getElementById('buscaAluno').value;
-      const { data, error } = await supabase.from('users').select('*').ilike('name', `%${termo}%`);
-      const lista = document.getElementById('listaAlunos');
-      lista.innerHTML = '';
-      (data || []).forEach(aluno => {
-        const li = document.createElement('li');
-        li.className = 'bg-white p-3 rounded shadow flex justify-between';
-        li.innerHTML = `
-          <span><strong>${aluno.name}</strong> - ${aluno.email}</span>
-          <a href="/relatorio-aluno.html?email=${aluno.email}" class="text-blue-600 hover:underline">Ver progresso</a>
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      if (!email) return alert('Informe o email');
+
+      const { data, error } = await supabase.rpc('fn_relatorio_progresso', { p_email: email });
+
+      if (error || !data?.length) {
+        alert('Nenhum resultado encontrado ou erro ao consultar.');
+        return;
+      }
+
+      tabela.innerHTML = '';
+      alunoEmail.textContent = `Email: ${email}`;
+      resultado.classList.remove('hidden');
+
+      data.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="border px-2 py-1">${item.curso}</td>
+          <td class="border px-2 py-1">${item.aula}</td>
+          <td class="border px-2 py-1 text-center">${item.ordem}</td>
+          <td class="border px-2 py-1 text-center">${item.duracao_total}s</td>
+          <td class="border px-2 py-1 text-center">${item.segundos_assistidos}s</td>
+          <td class="border px-2 py-1 text-center">${item.percentual_assistido}%</td>
+          <td class="border px-2 py-1 text-center">${item.status}</td>
+          <td class="border px-2 py-1 text-center">${item.retomar_em_segundos || 0}s</td>
+          <td class="border px-2 py-1 text-center">${item.vezes_revisitada || 0}</td>
+          <td class="border px-2 py-1 text-center">${item.ultima_atividade?.split('T')[0] || '-'}</td>
         `;
-        lista.appendChild(li);
+        tabela.appendChild(tr);
       });
-    }
-
-    async function carregarCursos() {
-      const { data, error } = await supabase.from('courses').select('*');
-      const lista = document.getElementById('listaCursos');
-      lista.innerHTML = '';
-      (data || []).forEach(curso => {
-        const li = document.createElement('li');
-        li.className = 'bg-white p-3 rounded shadow flex justify-between';
-        li.innerHTML = `
-          <span><strong>${curso.title}</strong></span>
-          <a href="/relatorio-curso.html?course_id=${curso.id}" class="text-green-600 hover:underline">Analisar curso</a>
-        `;
-        lista.appendChild(li);
-      });
-    }
-
-    carregarCursos();
+    });
   </script>
 </body>
 </html>
