@@ -227,6 +227,62 @@
 
   <!-- ABA: IMPORTAÇÃO -->
   <div id="importar" class="tab-content">
+
+
+<!-- IMPORTAR ALUNOS – NOVO PADRÃO COM CÓDIGOS -->
+<div class="bloco">
+  <h2>📥 Importar Alunos</h2>
+  <p class="explicacao">
+    Use uma planilha com colunas nesta ordem: <br />
+    <strong>Nome | Identificador | Série ou Departamento | Escola / Empresa | E-mail (opcional)</strong>
+    <br>Você pode nomear as colunas como quiser, a plataforma se orienta pela ordem.
+  </p>
+
+  <button onclick="alert('✅ Planilha carregada com sucesso!')">Selecionar Planilha</button>
+
+  <p style="margin-top: 20px; font-weight: bold;">Prévia da planilha processada:</p>
+  <table>
+    <tr style="background:#f9fafb;">
+      <th>Nome</th>
+      <th>Identificador</th>
+      <th>Grupo</th>
+      <th>Instituição</th>
+      <th>E-mail</th>
+      <th>Código de Acesso</th>
+    </tr>
+    <tr>
+      <td>Renato Garcia de Melo</td>
+      <td>42</td>
+      <td>3ª série A</td>
+      <td>Escola Estadual Sapopemba</td>
+      <td>renato_gm@yahoo.com.br</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>Pedro Sampaio</td>
+      <td>39</td>
+      <td>5º ano A</td>
+      <td>Escola Municipal Davi e Golias</td>
+      <td>-</td>
+      <td><code>RA7XQ2</code></td>
+    </tr>
+    <tr>
+      <td>Victor Santana</td>
+      <td>Área de Processos</td>
+      <td>Projeto Academy</td>
+      <td>Edesoft</td>
+      <td>-</td>
+      <td><code>Z1T84K</code></td>
+    </tr>
+  </table>
+
+  <button style="margin-top: 15px;" onclick="alert('🎉 Alunos cadastrados com sucesso! Códigos de acesso foram gerados.')">
+    ✅ Confirmar Importação
+  </button>
+</div>
+
+
+    
     
     <div class="bloco">
       <h2>📝 Importar Avaliações</h2>
