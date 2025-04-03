@@ -1,88 +1,79 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Área do Aluno</title>
-
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-
-    <!-- Estilo Básico -->
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <style>
       body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Segoe UI', sans-serif;
         background-color: #f7f9fc;
         margin: 0;
         padding: 0;
         display: flex;
-        flex-direction: column;
-        align-items: center;
         justify-content: center;
-        min-height: 100vh;
-        text-align: center;
-      }
-
-      h1 {
-        color: #1e40af;
-        margin-bottom: 10px;
-      }
-
-      p {
-        font-size: 1.1rem;
+        align-items: center;
+        height: 100vh;
         color: #333;
       }
-
-      .icon {
-        font-size: 2.5rem;
-        color: #8b5cf6;
-        margin-bottom: 10px;
+      .container {
+        text-align: center;
+        max-width: 600px;
+        padding: 2rem;
+        background-color: white;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        border-radius: 12px;
+      }
+      .emoji {
+        font-size: 2rem;
+      }
+      h1 {
+        font-size: 1.8rem;
+        color: #1e40af;
+        margin-top: 1rem;
+      }
+      p {
+        margin-top: 0.5rem;
+        color: #555;
       }
     </style>
   </head>
   <body>
-    <div>
-      <div class="icon">🎓</div>
+    <div class="container">
+      <div class="emoji">🎓</div>
       <h1 id="boasVindas">Bem-vindo, Aluno</h1>
       <p>Aqui estão seus cursos. Clique em "Continuar" para acessar a próxima aula.</p>
     </div>
 
-    <!-- Supabase SDK + Inicialização -->
-    <script type="module">
-      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    <script>
+      const supabase = window.supabase.createClient(
+        'https://bkueljjvhijojzcyodvk.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+      );
 
-      const supabaseUrl = 'https://XXXX.supabase.co'; // substitua
-      const supabaseKey = 'public-anon-key'; // substitua
-      const supabase = createClient(supabaseUrl, supabaseKey);
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('id');
 
-      const params = new URLSearchParams(window.location.search);
-      const userId = params.get("id");
+      async function buscarAluno() {
+        if (!userId) return;
 
-      const boasVindas = document.getElementById("boasVindas");
+        const { data, error } = await supabase
+          .from('users')
+          .select('name')
+          .eq('id', userId)
+          .single();
 
-      if (!userId) {
-        boasVindas.innerText = "Acesso inválido";
-      } else {
-        try {
-          const { data, error } = await supabase
-            .from("users")
-            .select("name")
-            .eq("id", userId)
-            .single();
-
-          if (error || !data) {
-            boasVindas.innerText = "Aluno não encontrado.";
-          } else {
-            boasVindas.innerText = `Bem-vindo, ${data.name}`;
-          }
-        } catch (e) {
-          boasVindas.innerText = "Erro ao carregar dados.";
-          console.error(e);
+        if (data?.name) {
+          document.getElementById('boasVindas').textContent = `Bem-vindo, ${data.name}`;
+        } else {
+          console.error('Erro ao buscar aluno:', error);
         }
       }
+
+      buscarAluno();
     </script>
   </body>
 </html>
