@@ -10,9 +10,12 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Fonte Carlitos -->
+  <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
+
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Carlito', sans-serif;
       background-color: #f5f7fa;
       margin: 0;
       padding: 20px;
@@ -151,8 +154,46 @@
 
   <!-- ABA: VISÃO GERAL -->
   <div id="geral" class="tab-content active">
-    <!-- Filtros + KPIs + Gráficos -->
-    <!-- Cole aqui o conteúdo da Parte 1 enviada anteriormente -->
+<div class="bloco">
+  <h2>Filtros Rápidos</h2>
+  <p class="explicacao">Use os campos abaixo para visualizar dados por instituição, turma ou curso.</p>
+  <div class="filtros">
+    <select><option>Todas as Instituições</option></select>
+    <select><option>Todas as Turmas</option></select>
+    <select><option>Todos os Cursos</option></select>
+  </div>
+</div>
+
+<div class="bloco">
+  <h2>Resumo Geral</h2>
+  <p class="explicacao">Esses indicadores mostram uma visão rápida sobre seus alunos e cursos ativos.</p>
+  <div class="kpis">
+    <div class="kpi"><h3>Alunos Ativos</h3><p>128</p></div>
+    <div class="kpi"><h3>Conclusão Média</h3><p>72%</p></div>
+    <div class="kpi"><h3>Taxa de Abandono</h3><p>18%</p></div>
+    <div class="kpi"><h3>Tempo Médio</h3><p>12min</p></div>
+  </div>
+</div>
+
+<div class="bloco">
+  <h2>📊 Conclusão por Curso</h2>
+  <p class="explicacao">Este gráfico mostra quanto, em média, os alunos assistiram de cada curso. Assim você vê quais cursos estão sendo mais concluídos.</p>
+  <canvas id="graficoCursos"></canvas>
+</div>
+
+<div class="grid-2">
+  <div class="bloco">
+    <h2>📘 Status das Aulas</h2>
+    <p class="explicacao">Mostra quantas aulas os alunos concluíram, estão assistindo ou abandonaram.</p>
+    <canvas id="graficoStatusAulas"></canvas>
+  </div>
+  <div class="bloco">
+    <h2>👥 Alunos por Curso</h2>
+    <p class="explicacao">Visualize quantos alunos estão matriculados em cada curso.</p>
+    <canvas id="graficoAlunosCurso"></canvas>
+  </div>
+</div>
+
   </div>
 
   <!-- ABA: ACOMPANHAMENTO -->
@@ -248,6 +289,64 @@
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
+
+
+const chartOptions = {
+  maintainAspectRatio: true,
+  aspectRatio: 2,
+  responsive: true,
+  plugins: { legend: { position: 'top' } }
+};
+
+new Chart(document.getElementById('graficoCursos'), {
+  type: 'bar',
+  data: {
+    labels: ['DISC', 'Liderança', 'Feedback'],
+    datasets: [{
+      label: 'Conclusão Média (%)',
+      data: [72, 65, 58],
+      backgroundColor: ['#4ade80', '#60a5fa', '#facc15']
+    }]
+  },
+  options: { ...chartOptions, scales: { y: { beginAtZero: true, max: 100 } } }
+});
+
+new Chart(document.getElementById('graficoStatusAulas'), {
+  type: 'pie',
+  data: {
+    labels: ['Concluída', 'Em andamento', 'Abandonada'],
+    datasets: [{
+      data: [60, 25, 15],
+      backgroundColor: ['#4ade80', '#93c5fd', '#f87171']
+    }]
+  },
+  options: {
+    ...chartOptions,
+    aspectRatio: 1.5,
+    plugins: { legend: { position: 'bottom' } }
+  }
+});
+
+new Chart(document.getElementById('graficoAlunosCurso'), {
+  type: 'bar',
+  data: {
+    labels: ['DISC', 'Liderança', 'Feedback'],
+    datasets: [{
+      label: 'Alunos',
+      data: [50, 40, 38],
+      backgroundColor: ['#60a5fa', '#a78bfa', '#fcd34d']
+    }]
+  },
+  options: {
+    ...chartOptions,
+    indexAxis: 'y',
+    aspectRatio: 2.5
+  }
+});
+
+
+
+    
   </script>
 </body>
 </html>
