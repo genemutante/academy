@@ -1,56 +1,76 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard de Cursos</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="bg-gray-100 text-gray-900">
-  <div class="max-w-6xl mx-auto px-4 py-6">
-    <h1 class="text-3xl font-bold mb-4">📊 Dashboard Geral de Cursos</h1>
-    <div id="painel" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </div>
+import React, { useEffect, useState } from 'react'
+import { PieChart, Pie, Cell, Tooltip, BarChart, XAxis, YAxis, CartesianGrid, Bar, ResponsiveContainer } from 'recharts'
+import { Card, CardContent } from '@/components/ui/card'
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    );
+const COLORS = ['#4ade80', '#facc15', '#f87171']
 
-    async function carregarKPIs() {
-      const { data, error } = await supabase.rpc('fn_kpi_curso');
-      if (error) return alert('Erro ao carregar KPIs');
+const DashboardCursos = () => {
+  const [dados, setDados] = useState([])
 
-      const painel = document.getElementById('painel');
-      painel.innerHTML = '';
+  useEffect(() => {
+    fetch('https://academy-tools.netlify.app/data/kpis.json') // substitua por sua API ou JSON local
+      .then(res => res.json())
+      .then(setDados)
+  }, [])
 
-      data.forEach(kpi => {
-        const card = document.createElement('div');
-        card.className = 'bg-white p-4 shadow rounded-lg';
-        card.innerHTML = `
-          <h2 class="text-xl font-semibold mb-2">${kpi.curso}</h2>
-          <ul class="text-sm space-y-1">
-            <li><strong>Alunos:</strong> ${kpi.total_alunos}</li>
-            <li><strong>% Médio Assistido:</strong> ${kpi.percentual_medio_assistido.toFixed(1)}%</li>
-            <li><strong>Taxa de Conclusão:</strong> ${kpi.taxa_conclusao.toFixed(1)}%</li>
-            <li><strong>Taxa de Abandono:</strong> ${kpi.taxa_abandono.toFixed(1)}%</li>
-            <li><strong>Tempo Médio:</strong> ${formatarTempo(kpi.tempo_medio_assistido)}</li>
-            <li><strong>Sessões por Aula:</strong> ${kpi.media_sessoes_aula.toFixed(2)}</li>
-          </ul>
-        `;
-        painel.appendChild(card);
-      });
-    }
+  if (!dados.length) return <div className="text-center mt-20 text-gray-500">Carregando...</div>
 
-    function formatarTempo(segundos) {
-      const m = Math.floor(segundos / 60);
-      const s = segundos % 60;
-      return `${m}m ${s}s`;
-    }
+  return (
+    <div className="p-8 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">📊 Dashboard Geral de Cursos</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {dados.map((curso, i) => (
+          <Card key={i} className="shadow-xl">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4">{curso.curso}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <p><strong>Alunos:</strong> {curso.alunos}</p>
+                  <p><strong>% Médio Assistido:</strong> {curso.percentual_medio_assistido.toFixed(1)}%</p>
+                  <p><strong>Taxa de Conclusão:</strong> {curso.taxa_conclusao.toFixed(1)}%</p>
+                  <p><strong>Taxa de Abandono:</strong> {curso.taxa_abandono.toFixed(1)}%</p>
+                  <p><strong>Tempo Médio:</strong> {curso.tempo_medio_formatado}</p>
+                  <p><strong>Sessões por Aula:</strong> {curso.sessoes_por_aula.toFixed(2)}</p>
+                </div>
+                <div>
+                  <PieChart width={200} height={200}>
+                    <Pie
+                      dataKey="value"
+                      data={[
+                        { name: 'Concluído', value: curso.taxa_conclusao },
+                        { name: 'Em Andamento', value: 100 - curso.taxa_conclusao - curso.taxa_abandono },
+                        { name: 'Abandono', value: curso.taxa_abandono },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label
+                    >
+                      {COLORS.map((color, index) => <Cell key={index} fill={color} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-    carregarKPIs();
-  </script>
-</body>
-</html>
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold mb-4">⏱️ Comparativo de Tempo Médio</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={dados}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="curso" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="tempo_medio_minutos" fill="#3b82f6" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+export default DashboardCursos
