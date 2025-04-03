@@ -2,118 +2,114 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Acesso à Plataforma</title>
-
-  <!-- Fonte -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Área do Aluno | Academy</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
-      margin: 0;
-      background-color: #f5f7fa;
       font-family: 'Carlito', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    h1 {
       display: flex;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
-      color: #333;
+      font-size: 1.8rem;
+      color: #2c3e50;
     }
-
-    .login-box {
+    h1 span {
+      font-size: 2rem;
+      margin-right: 10px;
+    }
+    .curso {
       background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-      padding: 40px;
-      max-width: 420px;
-      width: 100%;
-      text-align: center;
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      margin: 1rem 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
-
-    .login-box h1 {
-      font-size: 24px;
-      color: #1a237e;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+    .curso h2 {
+      margin: 0;
+      color: #34495e;
+      font-size: 1.2rem;
     }
-
-    .login-box p {
-      font-size: 16px;
-      color: #666;
-      margin-bottom: 20px;
+    .curso p {
+      color: #7f8c8d;
+      margin: 0.5rem 0 0;
     }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-bottom: 16px;
-    }
-
-    button {
-      width: 100%;
-      background-color: #1a73e8;
+    .continuar {
+      background: #2d6cdf;
       color: white;
       border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 16px;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
       cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #1558b0;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
-  <div class="login-box">
-    <h1>🔑 Acesso à Plataforma</h1>
-    <p>Digite o código de acesso fornecido pelo professor para entrar.</p>
-    <input type="text" id="codigo" placeholder="Ex: RA7XQ2" />
-    <button onclick="entrar()">Entrar</button>
+  <div class="container">
+    <h1><span>🎓</span> Bem-vindo, <span id="aluno-nome">Aluno</span></h1>
+    <p>Aqui estão seus cursos. Clique em "Continuar" para acessar a próxima aula.</p>
+
+    <div id="cursos"></div>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <script>
+    const SUPABASE_URL = 'https://<SUA-URL>.supabase.co'
+    const SUPABASE_KEY = '<SUA-CHAVE>'
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
-    const supabase = createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    );
+    const params = new URLSearchParams(window.location.search)
+    const alunoId = params.get('id')
 
-    window.entrar = async function () {
-      const codigo = document.getElementById('codigo').value.trim();
-      if (!codigo) {
-        alert("Por favor, digite um código de acesso.");
-        return;
-      }
+    async function carregarAluno() {
+      if (!alunoId) return
 
-      const { data, error } = await supabase
-        .from("users")
-        .select("id")
-        .eq("codigo_acesso", codigo)
-        .single();
+      const { data: aluno } = await supabase.from('users').select('*').eq('id', alunoId).single()
+      document.getElementById('aluno-nome').textContent = aluno.name
 
-      if (error || !data) {
-        alert("Código inválido. Verifique com o professor.");
-        return;
-      }
+      const { data: aulas } = await supabase
+        .from('lessons')
+        .select('*, courses(title)')
+        .order('order', { ascending: true })
 
-      window.location.href = `aluno.html?id=${data.id}`;
-    };
+      const divCursos = document.getElementById('cursos')
+      const cursosAgrupados = {}
+
+      aulas.forEach(aula => {
+        const idCurso = aula.course_id
+        if (!cursosAgrupados[idCurso]) {
+          cursosAgrupados[idCurso] = {
+            titulo: aula.courses.title,
+            aulas: [],
+          }
+        }
+        cursosAgrupados[idCurso].aulas.push(aula)
+      })
+
+      Object.values(cursosAgrupados).forEach(curso => {
+        const bloco = document.createElement('div')
+        bloco.className = 'curso'
+        bloco.innerHTML = `
+          <h2>${curso.titulo}</h2>
+          <p>${curso.aulas.length} aulas | Pronto para continuar?</p>
+          <button class="continuar">Continuar</button>
+        `
+        divCursos.appendChild(bloco)
+      })
+    }
+
+    carregarAluno()
   </script>
 </body>
 </html>
