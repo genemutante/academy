@@ -1,48 +1,70 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Área do Aluno</title>
-  <link rel="icon" type="image/png" href="/favicon-32x32.png" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <title>Painel do Aluno</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100">
-  <div class="min-h-screen flex items-center justify-center">
-    <div class="bg-white shadow-xl rounded-2xl p-10 text-center max-w-xl w-full">
-      <div class="text-4xl mb-2">🎓</div>
-      <h1 id="welcome" class="text-2xl font-bold text-blue-800">Bem-vindo, Aluno</h1>
-      <p class="text-gray-600 mt-2">Aqui estão seus cursos. Clique em "Continuar" para acessar a próxima aula.</p>
-      <div id="courseList" class="mt-6 space-y-4"></div>
-    </div>
-  </div>
+<body class="container">
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <main id="conteudo" style="margin-top: 2rem;">
+    <h2>🎓 Olá, <span id="aluno-nome">estudante</span>!</h2>
+    <p>Veja abaixo os cursos disponíveis:</p>
+    <div id="cursos" style="margin-top: 1rem;">Carregando...</div>
+  </main>
 
-    const supabase = createClient(
+  <script>
+    const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get("id");
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get('user_id');
+
+    if (!userId) {
+      document.getElementById('cursos').innerHTML = `<strong>Erro:</strong> ID do aluno não encontrado na URL.`;
+      throw new Error('user_id ausente');
+    }
 
     async function carregarAluno() {
-      if (!userId) return;
-
-      const { data: user, error } = await supabase
-        .from("users")
-        .select("name")
-        .eq("id", userId)
+      const { data, error } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', userId)
         .single();
 
-      if (user?.name) {
-        document.getElementById("welcome").innerText = `Bem-vindo, ${user.name}`;
+      if (data?.name) {
+        document.getElementById('aluno-nome').textContent = data.name;
       }
     }
 
+    async function carregarCursos() {
+      const { data, error } = await supabase.from('courses').select('*');
+
+      if (error || !data) {
+        document.getElementById('cursos').innerHTML = `<strong>Erro ao carregar cursos.</strong>`;
+        return;
+      }
+
+      const container = document.getElementById('cursos');
+      container.innerHTML = '';
+
+      data.forEach(curso => {
+        const card = document.createElement('article');
+        card.innerHTML = `
+          <h3>${curso.title}</h3>
+          <p>${curso.description}</p>
+          <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="contrast">Acessar curso</a>
+        `;
+        container.appendChild(card);
+      });
+    }
+
     carregarAluno();
+    carregarCursos();
   </script>
 </body>
 </html>
