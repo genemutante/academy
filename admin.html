@@ -3,125 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Geral</title>
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/recharts/umd/Recharts.min.js"></script>
+  <title>Dashboard Geral de Cursos</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f5f6fa;
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
       margin: 0;
-      padding: 1rem;
-      color: #333;
+      padding: 20px;
     }
-    .header {
+    h1 {
+      font-size: 28px;
       display: flex;
       align-items: center;
-      font-size: 1.8rem;
-      font-weight: bold;
-      margin-bottom: 1.5rem;
+      gap: 10px;
     }
-    .header img {
-      width: 32px;
-      margin-right: 0.6rem;
-    }
-    .container {
-      max-width: 1024px;
-      margin: auto;
-    }
-    .card {
+    .curso {
       background-color: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
     }
-    .card h3 {
-      margin-top: 0;
-      font-size: 1.2rem;
-    }
-    .metric {
-      margin: 0.3rem 0;
+    canvas {
+      max-width: 100%;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <img src="https://raw.githubusercontent.com/duiker101/icons/master/icons/chart-bar.svg" alt="icon" />
-      Dashboard Geral de Cursos
-    </div>
-    <div id="app">Carregando...</div>
-  </div>
-  <script type="text/javascript">
-    const { useState, useEffect } = React;
-    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = Recharts;
+  <h1>📊 Dashboard Geral de Cursos</h1>
+  <div id="dashboard">Carregando...</div>
 
+  <script>
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const formatarTempo = (segundos) => {
-      if (!segundos || isNaN(segundos)) return '–';
-      const minutos = Math.floor(segundos / 60);
-      const restoSegundos = Math.floor(segundos % 60);
-      return `${minutos}m ${restoSegundos}s`;
-    };
+    async function carregarDados() {
+      const { data, error } = await supabase.rpc('fn_dashboard_cursos');
+      if (error) {
+        document.getElementById('dashboard').innerHTML = `<p style="color:red">Erro: ${error.message}</p>`;
+        return;
+      }
 
-    function DashboardCursos() {
-      const [dados, setDados] = useState([]);
-      const [erro, setErro] = useState(null);
+      document.getElementById('dashboard').innerHTML = '';
 
-      useEffect(() => {
-        supabase.rpc('fn_dashboard_cursos')
-          .then(({ data, error }) => {
-            if (error) setErro(error.message);
-            else {
-              const formatados = data.map((curso) => ({
-                ...curso,
-                tempo_medio_formatado: formatarTempo(curso.tempo_medio_segundos)
-              }));
-              setDados(formatados);
+      data.forEach((curso, i) => {
+        const div = document.createElement('div');
+        div.className = 'curso';
+        div.innerHTML = `
+          <h2>${curso.curso}</h2>
+          <p><strong>Alunos:</strong> ${curso.alunos}</p>
+          <canvas id="grafico-${i}" height="150"></canvas>
+        `;
+        document.getElementById('dashboard').appendChild(div);
+
+        const ctx = document.getElementById(`grafico-${i}`).getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['% Assistido', '% Conclusão', '% Abandono'],
+            datasets: [{
+              label: 'Indicadores (%)',
+              data: [
+                curso.percentual_medio_assistido,
+                curso.taxa_conclusao,
+                curso.taxa_abandono
+              ],
+              backgroundColor: ['#4ade80', '#60a5fa', '#f87171']
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100
+              }
             }
-          });
-      }, []);
-
-      if (erro) return <div className="card">Erro ao carregar dados: {erro}</div>;
-      if (!dados.length) return <div className="card">Carregando...</div>;
-
-      return (
-        <>
-          {dados.map((curso, i) => (
-            <div key={i} className="card">
-              <h3>{curso.curso}</h3>
-              <div className="metric"><strong>Alunos:</strong> {curso.alunos}</div>
-              <div className="metric"><strong>% Médio Assistido:</strong> {curso.percentual_medio_assistido.toFixed(1)}%</div>
-              <div className="metric"><strong>Taxa de Conclusão:</strong> {curso.taxa_conclusao.toFixed(1)}%</div>
-              <div className="metric"><strong>Taxa de Abandono:</strong> {curso.taxa_abandono.toFixed(1)}%</div>
-              <div className="metric"><strong>Tempo Médio:</strong> {curso.tempo_medio_formatado}</div>
-              <div className="metric"><strong>Sessões por Aula:</strong> {curso.sessoes_por_aula.toFixed(2)}</div>
-            </div>
-          ))}
-          <div className="card">
-            <h3>📊 Comparativo de Tempo Médio</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={dados.filter(c => c.tempo_medio_segundos)}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="curso" />
-                <YAxis domain={[0, (dataMax) => dataMax + 60]} />
-                <Tooltip />
-                <Bar dataKey="tempo_medio_segundos" fill="#4dade0" name="Tempo Médio (seg)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </>
-      );
+          }
+        });
+      });
     }
 
-    ReactDOM.render(<DashboardCursos />, document.getElementById('app'));
+    carregarDados();
   </script>
 </body>
 </html>
