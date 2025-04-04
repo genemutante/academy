@@ -198,14 +198,20 @@
       });
     }
 
-    async function onPlayerReady() {
-      if (!player || typeof player.getDuration !== 'function') {
-        setTimeout(onPlayerReady, 300);
-        return;
-      }
-      duration = player.getDuration();
-      interval = setInterval(trackProgress, 5000);
-    }
+async function onPlayerReady() {
+  console.log('🎬 Player pronto, iniciando monitoramento...');
+  
+  if (!player || typeof player.getDuration !== 'function') {
+    console.warn('⚠️ Player inválido, tentando novamente...');
+    setTimeout(onPlayerReady, 300);
+    return;
+  }
+
+  duration = player.getDuration();
+  console.log('⏱️ Duração total do vídeo:', duration);
+
+  interval = setInterval(trackProgress, 5000);
+}
 
 
 
