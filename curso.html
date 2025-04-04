@@ -130,8 +130,10 @@
       });
       if (data?.length > 0) {
         const pct = data[0].percentual_conclusao || 0;
-        barraProgresso.style.width = pct + '%';
-        textoProgresso.textContent = pct + '%';
+const pct = parseFloat(data?.[0]?.percentual_conclusao) || 0;
+barraProgresso.style.width = `${pct}%`;
+textoProgresso.textContent = `${pct}%`;
+
       }
     }
 
