@@ -1,0 +1,170 @@
+/* Importando fontes do Google Fonts: Inter e Carlito */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Carlito:wght@400;700&display=swap');
+
+/* Variáveis globais para cores, fontes e espaçamentos */
+:root {
+  --font-primary: 'Inter', 'Carlito', sans-serif;
+  --color-bg: #f7f7f7;
+  --color-primary: #2C3E50;
+  --color-secondary: #34495E;
+  --color-accent: #E74C3C;
+  --color-light: #ecf0f1;
+  --color-dark: #2d3436;
+  --border-radius: 8px;
+  --transition-speed: 0.3s;
+}
+
+/* Reset básico e configuração global */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--color-bg);
+  color: var(--color-primary);
+  line-height: 1.6;
+  padding: 20px;
+}
+
+/* Tipografia */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--color-secondary);
+}
+
+p {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color var(--transition-speed);
+}
+
+a:hover {
+  color: var(--color-secondary);
+  text-decoration: underline;
+}
+
+/* Container centralizado */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Card Premium */
+.card {
+  background: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 20px;
+  transition: box-shadow var(--transition-speed);
+  margin-bottom: 20px;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Grid responsivo */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px;
+}
+
+.col {
+  padding: 10px;
+  flex: 1;
+}
+
+/* Botões */
+.button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border-radius: var(--border-radius);
+  transition: background-color var(--transition-speed);
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.button:hover {
+  background-color: var(--color-secondary);
+}
+
+/* Elementos de formulário */
+input, textarea, select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-light);
+  border-radius: var(--border-radius);
+  margin-bottom: 1rem;
+  font-family: var(--font-primary);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+}
+
+/* Navegação Premium */
+.navbar {
+  background-color: var(--color-primary);
+  padding: 15px 20px;
+}
+
+.navbar a {
+  color: #fff;
+  margin-right: 15px;
+  font-weight: 500;
+}
+
+.navbar a:hover {
+  color: var(--color-accent);
+}
+
+/* Rodapé */
+.footer {
+  text-align: center;
+  padding: 20px;
+  background-color: var(--color-dark);
+  color: #fff;
+  margin-top: 20px;
+}
+
+/* Exemplo de componente de lista para aulas (ou itens similares) */
+.list-item {
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background-color: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: box-shadow var(--transition-speed);
+  margin-bottom: 10px;
+}
+
+.list-item:hover {
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+/* Utilitário para esconder elementos (pode ser usado em popups, modais, etc.) */
+.hidden {
+  display: none !important;
+}
