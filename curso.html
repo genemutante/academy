@@ -11,42 +11,34 @@
 <body class="bg-gray-50 text-gray-800 min-h-screen">
   <div class="max-w-6xl mx-auto px-4 py-6">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Coluna Esquerda -->
       <div class="lg:col-span-1">
+        <!-- Barra de progresso geral -->
         <div class="mb-6">
           <p class="text-sm mb-1"><span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span></p>
           <div class="w-full h-3 bg-gray-200 rounded">
             <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
           </div>
         </div>
+
         <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
         <p id="descricaoCurso" class="mb-4 text-gray-600 text-sm leading-relaxed"></p>
+
         <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
         <ul id="listaAulas" class="space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
-
-        <!-- Botão manual para atualizar progresso do curso -->
-        <button id="btnAtualizarProgresso" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full text-sm">
-          Atualizar Progresso do Curso
-        </button>
-
-        <!-- Modal de log -->
-        <div id="logModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-          <div class="bg-white max-w-lg w-full p-6 rounded shadow-lg relative">
-            <h2 class="text-lg font-bold mb-2">Log de Atualização</h2>
-            <pre id="logConteudo" class="bg-gray-100 p-3 rounded text-sm overflow-auto max-h-96"></pre>
-            <button id="fecharLog" class="absolute top-2 right-2 text-gray-600 hover:text-red-600">&times;</button>
-          </div>
-        </div>
       </div>
 
+      <!-- Coluna Direita -->
       <div class="lg:col-span-2">
         <div class="aspect-video w-full rounded overflow-hidden shadow mb-4">
           <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
         </div>
+
         <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
           <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
           <div class="flex items-center gap-2">
             <button id="btnMaterial" class="text-sm bg-white border border-gray-300 rounded px-3 py-2 shadow-sm hover:bg-gray-100 relative">
-              📌 Material de Apoio
+              📎 Material de Apoio
               <div id="popupMaterial" class="hidden absolute z-10 mt-2 w-64 bg-white border border-gray-300 rounded shadow-md p-4 text-sm text-gray-700">
                 <p class="mb-1 font-semibold">Links úteis:</p>
                 <ul class="list-disc list-inside">
@@ -61,6 +53,7 @@
             </button>
           </div>
         </div>
+
         <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
         <p id="infoAssistido" class="text-sm mt-2 text-gray-700"></p>
       </div>
@@ -68,228 +61,175 @@
   </div>
 
   <script>
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
+
+    const url = new URL(location.href);
+    const user_id = url.searchParams.get('user_id');
+    const course_id = url.searchParams.get('course_id');
+
+    const playerFrame = document.getElementById('videoPlayer');
+    const tituloCurso = document.getElementById('tituloCurso');
+    const descricaoCurso = document.getElementById('descricaoCurso');
+    const listaAulas = document.getElementById('listaAulas');
+    const tituloAula = document.getElementById('tituloAula');
+    const barraProgresso = document.getElementById('barraProgresso');
+    const textoProgresso = document.getElementById('textoProgresso');
+    const infoAssistido = document.getElementById('infoAssistido');
+    const btnQuiz = document.getElementById('btnQuiz');
+    const btnMaterial = document.getElementById('btnMaterial');
+    const popupMaterial = document.getElementById('popupMaterial');
+
+    let aulas = [], aulaAtual = null, player = null, interval = null;
+    let lastTime = 0, duration = 0;
+
+    function getYouTubeId(url) {
+      const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : '';
+    }
+
+    function atualizarIndicadorLocal(segundos, duracao) {
+      const pct = Math.min(100, Math.round((segundos / duracao) * 100));
+      infoAssistido.textContent = ⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%;
+    }
+
     async function carregarProgressoCurso() {
-      const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
+      const { data, error } = await supabase.rpc('fn_progresso_curso_por_usuario', {
         p_user_id: user_id,
         p_course_id: course_id
       });
-
       if (data?.length > 0) {
-        const progresso = data[0];
-        const percentual = parseFloat(
-          progresso?.percentual_concluido ?? progresso?.percentual_conclusao ?? 0
-        );
-        barraProgresso.style.width = `${percentual}%`;
-        textoProgresso.textContent = `${percentual}%`;
+        const pct = data[0].percentual_conclusao || 0;
+        barraProgresso.style.width = pct + '%';
+        textoProgresso.textContent = pct + '%';
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const btnAtualizarProgresso = document.getElementById('btnAtualizarProgresso');
-      const logModal = document.getElementById('logModal');
-      const logConteudo = document.getElementById('logConteudo');
-      const fecharLog = document.getElementById('fecharLog');
+    async function carregarDados() {
+      const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
+      tituloCurso.textContent = curso.title;
+      descricaoCurso.textContent = curso.description;
 
-      btnAtualizarProgresso.addEventListener('click', async () => {
-        if (typeof carregarProgressoCurso === 'function') {
-          try {
-            logConteudo.textContent = 'Solicitando progresso...';
-            logModal.classList.remove('hidden');
+      const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
+      aulas = lista || [];
 
-            const { data, error } = await supabase.rpc('fn_progresso_curso_por_usuario', {
-              p_user_id: user_id,
-              p_course_id: course_id
-            });
+      listarAulas();
+      if (aulas.length) selecionarAula(aulas[0]);
+      carregarProgressoCurso();
+    }
 
-            if (error) {
-              logConteudo.textContent = 'Erro ao carregar progresso:\n' + JSON.stringify(error, null, 2);
-            } else {
-              logConteudo.textContent = 'Resultado da função fn_progresso_curso_por_usuario:\n' + JSON.stringify(data, null, 2);
-              carregarProgressoCurso();
-            }
-          } catch (e) {
-            logConteudo.textContent = 'Exceção inesperada:\n' + e.message;
-          }
-        } else {
-          alert('Função carregarProgressoCurso() não encontrada.');
-        }
+    function listarAulas() {
+      listaAulas.innerHTML = '';
+      aulas.forEach(aula => {
+        const li = document.createElement('li');
+        li.className = 'cursor-pointer hover:underline';
+        li.innerHTML = ${aula.order}. ${aula.title};
+        li.onclick = () => selecionarAula(aula);
+        listaAulas.appendChild(li);
       });
+    }
 
-      fecharLog.addEventListener('click', () => {
-        logModal.classList.add('hidden');
-        logConteudo.textContent = '';
-      });
-    });
-  </script>
-</body>
-</html>
+    async function selecionarAula(aula) {
+      aulaAtual = aula;
+      tituloAula.textContent = aula.title;
+      infoAssistido.textContent = '';
+      btnQuiz.disabled = true;
+      btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+      btnQuiz.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+      clearInterval(interval);
+      lastTime = 0;
+      initPlayer();
 
-
-<script>
-  const supabase = window.supabase.createClient(
-    'https://bkueljjvhijojzcyodvk.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-  );
-
-  const url = new URL(location.href);
-  const user_id = url.searchParams.get('user_id');
-  const course_id = url.searchParams.get('course_id');
-
-  const playerFrame = document.getElementById('videoPlayer');
-  const tituloCurso = document.getElementById('tituloCurso');
-  const descricaoCurso = document.getElementById('descricaoCurso');
-  const listaAulas = document.getElementById('listaAulas');
-  const tituloAula = document.getElementById('tituloAula');
-  const barraProgresso = document.getElementById('barraProgresso');
-  const textoProgresso = document.getElementById('textoProgresso');
-  const infoAssistido = document.getElementById('infoAssistido');
-  const btnQuiz = document.getElementById('btnQuiz');
-  const btnMaterial = document.getElementById('btnMaterial');
-  const popupMaterial = document.getElementById('popupMaterial');
-
-  let aulas = [], aulaAtual = null, player = null, interval = null;
-  let lastTime = 0, duration = 0;
-
-  function getYouTubeId(url) {
-    const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
-    return match ? match[1] : '';
-  }
-
-  function atualizarIndicadorLocal(segundos, duracao) {
-    const pct = Math.min(100, Math.round((segundos / duracao) * 100));
-    infoAssistido.textContent = `⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%`;
-  }
-
-  async function carregarDados() {
-    const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
-    tituloCurso.textContent = curso.title;
-    descricaoCurso.textContent = curso.description;
-
-    const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
-    aulas = lista || [];
-
-    const promises = aulas.map(async (aula) => {
       const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
         p_lesson_id: aula.id
       });
-      aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
-      return aula;
-    });
-    aulas = await Promise.all(promises);
-    listarAulas();
-    if (aulas.length) selecionarAula(aulas[0]);
-    carregarProgressoCurso();
+
+if (progresso?.length > 0) {
+  const item = progresso[0];
+
+  // Verifica status
+  if (item.status === '✔ Concluída') {
+    infoAssistido.textContent = '✅ Aula concluída';
+    btnQuiz.disabled = false;
+    btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+    btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+  } else {
+    atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
   }
+} else {
+  atualizarIndicadorLocal(0, aula.duration);
+}
 
-  function listarAulas() {
-    listaAulas.innerHTML = '';
-    aulas.forEach(aula => {
-      const li = document.createElement('li');
-      li.className = 'cursor-pointer hover:underline flex items-center gap-2';
-      const status = aula.status === '✔ Concluída' ? '<span class="text-green-600">✅</span>' : '';
-      li.innerHTML = `${status}<span>${aula.order}. ${aula.title}</span>`;
-      li.onclick = () => selecionarAula(aula);
-      listaAulas.appendChild(li);
-    });
-  }
 
-  async function carregarProgressoCurso() {
-    const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
-      p_user_id: user_id,
-      p_course_id: course_id
-    });
 
-    if (data?.length > 0) {
-      const percentual = parseFloat(data[0].percentual_conclusao) || 0;
-      barraProgresso.style.width = `${percentual}%`;
-      textoProgresso.textContent = `${percentual}%`;
+
+      
     }
-  }
 
-  async function selecionarAula(aula) {
-    aulaAtual = aula;
-    tituloAula.textContent = aula.title;
-    infoAssistido.textContent = '';
-    btnQuiz.disabled = true;
-    btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-    btnQuiz.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-    clearInterval(interval);
-    lastTime = 0;
-    initPlayer();
-
-    const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-      p_user_id: user_id,
-      p_lesson_id: aula.id
-    });
-    if (progresso?.length > 0) {
-      const item = progresso[0];
-      if (item.status === '✔ Concluída') {
-        infoAssistido.textContent = '✅ Aula concluída';
-        btnQuiz.disabled = false;
-        btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-        btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
-      } else {
-        atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
-      }
-    } else {
-      atualizarIndicadorLocal(0, aula.duration);
-    }
-  }
-
-  function loadYouTubeAPI() {
-    return new Promise(resolve => {
-      if (window.YT && window.YT.Player) return resolve();
-      window.onYouTubeIframeAPIReady = resolve;
-    });
-  }
-
-  function initPlayer() {
-    const videoId = getYouTubeId(aulaAtual.youtube_url);
-    playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
-
-    loadYouTubeAPI().then(() => {
-      player = new YT.Player(playerFrame, {
-        events: { onReady: onPlayerReady }
+    function loadYouTubeAPI() {
+      return new Promise(resolve => {
+        if (window.YT && window.YT.Player) return resolve();
+        window.onYouTubeIframeAPIReady = resolve;
       });
-    });
-  }
-
-  async function onPlayerReady() {
-    if (!player || typeof player.getDuration !== 'function') {
-      setTimeout(onPlayerReady, 300);
-      return;
     }
-    duration = player.getDuration();
-    interval = setInterval(trackProgress, 5000);
-  }
 
-  async function trackProgress() {
-    if (!player || typeof player.getCurrentTime !== 'function') return;
-    const state = player.getPlayerState();
-    if (state !== YT.PlayerState.PLAYING) return;
+    function initPlayer() {
+      const videoId = getYouTubeId(aulaAtual.youtube_url);
+      playerFrame.src = https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin};
 
-    const current = Math.floor(player.getCurrentTime());
-    if (current <= lastTime || current - lastTime > 30) {
+      loadYouTubeAPI().then(() => {
+        player = new YT.Player(playerFrame, {
+          events: {
+            onReady: onPlayerReady
+          }
+        });
+      });
+    }
+
+    async function onPlayerReady() {
+      if (!player || typeof player.getDuration !== 'function') {
+        setTimeout(onPlayerReady, 300);
+        return;
+      }
+
+      duration = player.getDuration();
+      interval = setInterval(trackProgress, 5000);
+    }
+
+    async function trackProgress() {
+      if (!player || typeof player.getCurrentTime !== 'function') return;
+      const state = player.getPlayerState();
+      if (state !== YT.PlayerState.PLAYING) return;
+
+      const current = Math.floor(player.getCurrentTime());
+      if (current <= lastTime || current - lastTime > 30) {
+        lastTime = current;
+        return;
+      }
+
       lastTime = current;
-      return;
+
+      await supabase.from('progress_segments').insert({
+        user_id, course_id, lesson_id: aulaAtual.id,
+        duration: Math.floor(duration),
+        segment: { start: lastTime - 5, end: current }
+      });
     }
-    lastTime = current;
-    await supabase.from('progress_segments').insert({
-      user_id, course_id, lesson_id: aulaAtual.id,
-      duration: Math.floor(duration),
-      segment: { start: lastTime - 5, end: current }
+
+    btnMaterial.addEventListener('click', () => {
+      popupMaterial.classList.toggle('hidden');
     });
 
-    carregarProgressoCurso(); // ✅ Atualiza barra de progresso do curso em tempo real
-  }
+    window.addEventListener('click', (e) => {
+      if (!btnMaterial.contains(e.target) && !popupMaterial.contains(e.target)) {
+        popupMaterial.classList.add('hidden');
+      }
+    });
 
-  btnMaterial.addEventListener('click', () => popupMaterial.classList.toggle('hidden'));
-  window.addEventListener('click', (e) => {
-    if (!btnMaterial.contains(e.target) && !popupMaterial.contains(e.target)) {
-      popupMaterial.classList.add('hidden');
-    }
-  });
-
-  carregarDados();
-</script>
+    carregarDados();
+  </script>
+</body>
+</html>
