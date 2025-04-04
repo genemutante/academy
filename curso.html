@@ -85,6 +85,8 @@
     const btnMaterial = document.getElementById('btnMaterial');
     const popupMaterial = document.getElementById('popupMaterial');
 
+    let tempoInicial = 0;
+
     let aulas = [], aulaAtual = null, player = null, interval = null;
     let lastTime = 0, duration = 0;
 
@@ -165,20 +167,23 @@
         p_user_id: user_id,
         p_lesson_id: aula.id
       });
-      if (progresso?.length > 0) {
-        const item = progresso[0];
-        if (item.status === '✔ Concluída') {
-          infoAssistido.textContent = '✅ Aula concluída';
-          btnQuiz.disabled = false;
-          btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-          btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
-        } else {
-          atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
-        }
-      } else {
-        atualizarIndicadorLocal(0, aula.duration);
-      }
-    }
+      
+if (progresso?.length > 0) {
+  const item = progresso[0];
+  tempoInicial = item.status === '✔ Concluída' ? 0 : item.segundos_assistidos; // 👈 define de onde começar
+  if (item.status === '✔ Concluída') {
+    infoAssistido.textContent = '✅ Aula concluída';
+    btnQuiz.disabled = false;
+    btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+    btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+  } else {
+    atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
+  }
+} else {
+  tempoInicial = 0;
+  atualizarIndicadorLocal(0, aula.duration);
+}
+
 
     function loadYouTubeAPI() {
       return new Promise(resolve => {
@@ -204,6 +209,7 @@
         return;
       }
       duration = player.getDuration();
+      player.seekTo(tempoInicial, true); // 👈 leva direto ao ponto salvo
       interval = setInterval(trackProgress, 5000);
     }
 
