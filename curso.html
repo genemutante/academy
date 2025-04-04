@@ -1,67 +1,226 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Página Exemplo</title>
-  <style>
-    /* Estilização do corpo da página */
-    body {
-      background-color: #f2f2f2;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    /* Cabeçalho */
-    header {
-      background-color: #333;
-      color: #fff;
-      padding: 20px;
-    }
-    /* Navegação */
-    nav ul {
-      list-style: none;
-      display: flex;
-      gap: 15px;
-      padding: 0;
-    }
-    nav ul li {
-      /* Elementos da lista são exibidos em linha */
-    }
-    nav ul li a {
-      text-decoration: none;
-      color: #fff;
-    }
-    /* Conteúdo principal */
-    main {
-      padding: 20px;
-    }
-    /* Rodapé */
-    footer {
-      background-color: #333;
-      color: #fff;
-      text-align: center;
-      padding: 10px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aula</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
-<body>
-  <header>
-    <h1>Bem-vindo à Minha Página</h1>
-    <nav>
-      <ul>
-        <li><a href="#home">Home</a></li>
-        <li><a href="#sobre">Sobre</a></li>
-        <li><a href="#contato">Contato</a></li>
-      </ul>
-    </nav>
-  </header>
-  <main>
-    <h2>Seção Principal</h2>
-    <p>Este é um exemplo de página HTML com formatação básica usando CSS embutido.</p>
-  </main>
-  <footer>
-    <p>© 2025 - Todos os direitos reservados</p>
-  </footer>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-1">
+        <div class="mb-6">
+          <p class="text-sm mb-1"><span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span></p>
+          <div class="w-full h-3 bg-gray-200 rounded">
+            <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
+          </div>
+        </div>
+        <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
+        <p id="descricaoCurso" class="mb-4 text-gray-600 text-sm leading-relaxed"></p>
+        <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
+        <ul id="listaAulas" class="space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
+      </div>
+      <div class="lg:col-span-2">
+        <div class="aspect-video w-full rounded overflow-hidden shadow mb-4">
+          <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
+          <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
+          <div class="flex items-center gap-2">
+            <button id="btnMaterial" class="text-sm bg-white border border-gray-300 rounded px-3 py-2 shadow-sm hover:bg-gray-100 relative">
+              📎 Material de Apoio
+              <div id="popupMaterial" class="hidden absolute z-10 mt-2 w-64 bg-white border border-gray-300 rounded shadow-md p-4 text-sm text-gray-700">
+                <p class="mb-1 font-semibold">Links úteis:</p>
+                <ul class="list-disc list-inside">
+                  <li><a href="#" class="text-blue-600 hover:underline">PDF da aula</a></li>
+                  <li><a href="#" class="text-blue-600 hover:underline">Slides</a></li>
+                  <li><a href="#" class="text-blue-600 hover:underline">Referência externa</a></li>
+                </ul>
+              </div>
+            </button>
+            <button id="btnQuiz" disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
+              Fazer Avaliação da Aula
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
+        <p id="infoAssistido" class="text-sm mt-2 text-gray-700"></p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
+
+    const url = new URL(location.href);
+    const user_id = url.searchParams.get('user_id');
+    const course_id = url.searchParams.get('course_id');
+
+    const playerFrame = document.getElementById('videoPlayer');
+    const tituloCurso = document.getElementById('tituloCurso');
+    const descricaoCurso = document.getElementById('descricaoCurso');
+    const listaAulas = document.getElementById('listaAulas');
+    const tituloAula = document.getElementById('tituloAula');
+    const barraProgresso = document.getElementById('barraProgresso');
+    const textoProgresso = document.getElementById('textoProgresso');
+    const infoAssistido = document.getElementById('infoAssistido');
+    const btnQuiz = document.getElementById('btnQuiz');
+    const btnMaterial = document.getElementById('btnMaterial');
+    const popupMaterial = document.getElementById('popupMaterial');
+
+    let aulas = [], aulaAtual = null, player = null, interval = null;
+    let lastTime = 0, duration = 0;
+
+    function getYouTubeId(url) {
+      const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : '';
+    }
+
+    function atualizarIndicadorLocal(segundos, duracao) {
+      const pct = Math.min(100, Math.round((segundos / duracao) * 100));
+      infoAssistido.textContent = `⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%`;
+    }
+
+    async function carregarDados() {
+      const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
+      tituloCurso.textContent = curso.title;
+      descricaoCurso.textContent = curso.description;
+
+      const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
+      aulas = lista || [];
+
+      const promises = aulas.map(async (aula) => {
+        const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+          p_user_id: user_id,
+          p_lesson_id: aula.id
+        });
+        aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
+        return aula;
+      });
+      aulas = await Promise.all(promises);
+      listarAulas();
+      if (aulas.length) selecionarAula(aulas[0]);
+      carregarProgressoCurso();
+    }
+
+    function listarAulas() {
+      listaAulas.innerHTML = '';
+      aulas.forEach(aula => {
+        const li = document.createElement('li');
+        li.className = 'cursor-pointer hover:underline flex items-center gap-2';
+        const status = aula.status === '✔ Concluída' ? '<span class="text-green-600">✅</span>' : '';
+        li.innerHTML = `${status}<span>${aula.order}. ${aula.title}</span>`;
+        li.onclick = () => selecionarAula(aula);
+        listaAulas.appendChild(li);
+      });
+    }
+
+
+
+async function carregarProgressoCurso() {
+  const { data, error } = await supabase.rpc('fn_progresso_curso_por_usuario', {
+    p_user_id: user_id,
+    p_course_id: course_id
+  });
+  if (data?.length > 0) {
+    const pct = parseFloat(data[0].percentual_conclusao) || 0;
+    barraProgresso.style.width = pct + '%';
+    textoProgresso.textContent = pct + '%';
+  }
+}
+
+
+
+
+    
+    async function selecionarAula(aula) {
+      aulaAtual = aula;
+      tituloAula.textContent = aula.title;
+      infoAssistido.textContent = '';
+      btnQuiz.disabled = true;
+      btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+      btnQuiz.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+      clearInterval(interval);
+      lastTime = 0;
+      initPlayer();
+
+      const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+        p_user_id: user_id,
+        p_lesson_id: aula.id
+      });
+      if (progresso?.length > 0) {
+        const item = progresso[0];
+        if (item.status === '✔ Concluída') {
+          infoAssistido.textContent = '✅ Aula concluída';
+          btnQuiz.disabled = false;
+          btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+          btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+        } else {
+          atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
+        }
+      } else {
+        atualizarIndicadorLocal(0, aula.duration);
+      }
+    }
+
+    function loadYouTubeAPI() {
+      return new Promise(resolve => {
+        if (window.YT && window.YT.Player) return resolve();
+        window.onYouTubeIframeAPIReady = resolve;
+      });
+    }
+
+    function initPlayer() {
+      const videoId = getYouTubeId(aulaAtual.youtube_url);
+      playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
+
+      loadYouTubeAPI().then(() => {
+        player = new YT.Player(playerFrame, {
+          events: { onReady: onPlayerReady }
+        });
+      });
+    }
+
+    async function onPlayerReady() {
+      if (!player || typeof player.getDuration !== 'function') {
+        setTimeout(onPlayerReady, 300);
+        return;
+      }
+      duration = player.getDuration();
+      interval = setInterval(trackProgress, 5000);
+    }
+
+    async function trackProgress() {
+      if (!player || typeof player.getCurrentTime !== 'function') return;
+      const state = player.getPlayerState();
+      if (state !== YT.PlayerState.PLAYING) return;
+
+      const current = Math.floor(player.getCurrentTime());
+      if (current <= lastTime || current - lastTime > 30) {
+        lastTime = current;
+        return;
+      }
+      lastTime = current;
+      await supabase.from('progress_segments').insert({
+        user_id, course_id, lesson_id: aulaAtual.id,
+        duration: Math.floor(duration),
+        segment: { start: lastTime - 5, end: current }
+      });
+    }
+
+    btnMaterial.addEventListener('click', () => popupMaterial.classList.toggle('hidden'));
+    window.addEventListener('click', (e) => {
+      if (!btnMaterial.contains(e.target) && !popupMaterial.contains(e.target)) {
+        popupMaterial.classList.add('hidden');
+      }
+    });
+
+    carregarDados();
+  </script>
 </body>
 </html>
