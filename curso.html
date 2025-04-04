@@ -10,18 +10,17 @@
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
   <div class="max-w-6xl mx-auto px-4 py-6">
-    <!-- Barra de progresso geral -->
-    <div class="mb-4">
-      <p class="text-sm mb-1"><span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span></p>
-      <div class="w-full h-3 bg-gray-200 rounded">
-        <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
-      </div>
-    </div>
-
-    <!-- Título e layout geral -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Coluna Esquerda -->
       <div class="lg:col-span-1">
+        <!-- Barra de progresso geral -->
+        <div class="mb-6">
+          <p class="text-sm mb-1"><span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span></p>
+          <div class="w-full h-3 bg-gray-200 rounded">
+            <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
+          </div>
+        </div>
+
         <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
         <p id="descricaoCurso" class="mb-4 text-gray-600 text-sm leading-relaxed"></p>
 
@@ -35,11 +34,24 @@
           <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
         </div>
 
-        <div class="flex items-center justify-between mb-2">
+        <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
           <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
-          <button id="btnQuiz" disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
-            Fazer Avaliação da Aula
-          </button>
+          <div class="flex items-center gap-2">
+            <button id="btnMaterial" class="text-sm bg-white border border-gray-300 rounded px-3 py-2 shadow-sm hover:bg-gray-100 relative">
+              📎 Material de Apoio
+              <div id="popupMaterial" class="hidden absolute z-10 mt-2 w-64 bg-white border border-gray-300 rounded shadow-md p-4 text-sm text-gray-700">
+                <p class="mb-1 font-semibold">Links úteis:</p>
+                <ul class="list-disc list-inside">
+                  <li><a href="#" class="text-blue-600 hover:underline">PDF da aula</a></li>
+                  <li><a href="#" class="text-blue-600 hover:underline">Slides</a></li>
+                  <li><a href="#" class="text-blue-600 hover:underline">Referência externa</a></li>
+                </ul>
+              </div>
+            </button>
+            <button id="btnQuiz" disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
+              Fazer Avaliação da Aula
+            </button>
+          </div>
         </div>
 
         <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
@@ -67,6 +79,8 @@
     const textoProgresso = document.getElementById('textoProgresso');
     const infoAssistido = document.getElementById('infoAssistido');
     const btnQuiz = document.getElementById('btnQuiz');
+    const btnMaterial = document.getElementById('btnMaterial');
+    const popupMaterial = document.getElementById('popupMaterial');
 
     let aulas = [], aulaAtual = null, player = null, interval = null;
     let lastTime = 0, duration = 0;
@@ -123,6 +137,7 @@
       infoAssistido.textContent = '';
       btnQuiz.disabled = true;
       btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+      btnQuiz.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
       clearInterval(interval);
       lastTime = 0;
       initPlayer();
@@ -205,6 +220,16 @@
         atualizarIndicadorLocal(current, duration);
       }
     }
+
+    btnMaterial.addEventListener('click', () => {
+      popupMaterial.classList.toggle('hidden');
+    });
+
+    window.addEventListener('click', (e) => {
+      if (!btnMaterial.contains(e.target) && !popupMaterial.contains(e.target)) {
+        popupMaterial.classList.add('hidden');
+      }
+    });
 
     carregarDados();
   </script>
