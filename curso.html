@@ -70,8 +70,6 @@
     const user_id = url.searchParams.get('user_id');
     const course_id = url.searchParams.get('course_id');
 
-    let user_email = null;
-
     const playerFrame = document.getElementById('videoPlayer');
     const tituloCurso = document.getElementById('tituloCurso');
     const descricaoCurso = document.getElementById('descricaoCurso');
@@ -88,11 +86,6 @@
     let lastTime = 0, duration = 0;
     let progressoPorAula = {};
 
-    async function getUserEmail() {
-      const { data, error } = await supabase.from('users').select('email').eq('id', user_id).single();
-      if (data?.email) user_email = data.email;
-    }
-
     function getYouTubeId(url) {
       const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
       return match ? match[1] : '';
@@ -103,15 +96,7 @@
       infoAssistido.textContent = `⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%`;
     }
 
-    async function consultarProgresso() {
-      if (!user_email) return;
-      const { data } = await supabase.rpc('fn_base_progresso', { p_email: user_email });
-      return data;
-    }
-
     async function carregarDados() {
-      await getUserEmail();
-
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
       tituloCurso.textContent = curso.title;
       descricaoCurso.textContent = curso.description;
@@ -119,24 +104,8 @@
       const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
       aulas = lista || [];
 
-      const progressoData = await consultarProgresso();
-      progressoData?.forEach(p => {
-        if (p.percentual_assistido >= 97 && p.course_id === course_id) {
-          progressoPorAula[p.lesson_id] = true;
-        }
-      });
-
-      atualizarProgressoGeral();
       listarAulas();
       if (aulas.length) selecionarAula(aulas[0]);
-    }
-
-    function atualizarProgressoGeral() {
-      const total = aulas.length;
-      const concluidas = Object.keys(progressoPorAula).length;
-      const pct = Math.round((concluidas / total) * 100);
-      barraProgresso.style.width = `${pct}%`;
-      textoProgresso.textContent = `${pct}%`;
     }
 
     function listarAulas() {
@@ -144,7 +113,7 @@
       aulas.forEach(aula => {
         const li = document.createElement('li');
         li.className = 'cursor-pointer hover:underline';
-        li.innerHTML = `${aula.order}. ${aula.title} ${progressoPorAula[aula.id] ? '✔️' : ''}`;
+        li.innerHTML = `${aula.order}. ${aula.title}`;
         li.onclick = () => selecionarAula(aula);
         listaAulas.appendChild(li);
       });
@@ -161,9 +130,15 @@
       lastTime = 0;
       initPlayer();
 
-      const progressoData = await consultarProgresso();
-      const registro = progressoData?.find(p => p.lesson_id === aula.id);
-      if (registro) atualizarIndicadorLocal(registro.segundos_assistidos, registro.duracao_total);
+      const { data: progresso, error } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+        p_user_id: user_id,
+        p_lesson_id: aula.id
+      });
+
+      if (progresso?.length > 0) {
+        const item = progresso[0];
+        atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
+      }
     }
 
     function loadYouTubeAPI() {
