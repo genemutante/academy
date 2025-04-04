@@ -123,17 +123,23 @@
       });
     }
 
-    async function carregarProgressoCurso() {
-      const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
-        p_user_id: user_id,
-        p_course_id: course_id
-      });
-      if (data?.length > 0) {
-        const pct = data[0].percentual_conclusao || 0;
-        barraProgresso.style.width = pct + '%';
-        textoProgresso.textContent = pct + '%';
-      }
-    }
+
+
+async function carregarProgressoCurso() {
+  const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
+    p_user_id: user_id,
+    p_course_id: course_id
+  });
+
+  if (data?.length > 0) {
+    const percentual = parseFloat(data[0].percentual_conclusao) || 0;
+    barraProgresso.style.width = `${percentual}%`;
+    textoProgresso.textContent = `${percentual}%`;
+  }
+}
+
+
+	  
 
     async function selecionarAula(aula) {
       aulaAtual = aula;
