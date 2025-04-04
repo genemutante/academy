@@ -1,8 +1,14 @@
 // logger.js
 
-const logArea = document.getElementById('log');
-
 export function log(mensagem, tipo = 'info') {
+  const logArea = document.getElementById('log');
+
+  // 🔒 Garante que o elemento exista para evitar erro
+  if (!logArea) {
+    console.warn('⚠️ Elemento de log (#log) não encontrado no DOM.');
+    return;
+  }
+
   const linha = document.createElement('div');
 
   switch (tipo) {
@@ -24,5 +30,12 @@ export function log(mensagem, tipo = 'info') {
 }
 
 export function limparLog() {
+  const logArea = document.getElementById('log');
+
+  if (!logArea) {
+    console.warn('⚠️ Elemento de log (#log) não encontrado ao tentar limpar.');
+    return;
+  }
+
   logArea.innerHTML = '';
 }
