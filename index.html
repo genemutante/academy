@@ -52,14 +52,41 @@
         <div id="log" class="bg-gray-900 text-green-400 text-sm font-mono p-4 mt-6 rounded overflow-y-auto max-h-96 shadow-inner">
           <span class="text-orange-400">📜 Logs de execução aparecerão aqui...</span>
         </div>
+
+        <!-- Resultado detalhado -->
+        <div id="relatorioExecucao" class="mt-6 bg-white p-4 rounded shadow text-sm text-gray-700 whitespace-pre-wrap"></div>
       </div>
     </section>
 
-    <!-- Outras seções (carga, dashboard...) mantidas como estão -->
-    <!-- ... (não modificado aqui por brevidade, mas você mantém as demais seções iguais) ... -->
+    <!-- Carga -->
+    <section id="carga" class="tab-content hidden">
+      <div class="bg-white p-6 rounded shadow max-w-3xl">
+        <h2 class="text-xl font-semibold mb-4">📈 Simulador de Carga</h2>
+        <form class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <label>👤 Alunos: <input id="numAlunos" type="number" value="1000" class="input" /></label>
+          <label>📘 Cursos: <input id="numCursos" type="number" value="50" class="input" /></label>
+          <label>🎓 Aulas/Curso: <input id="aulasPorCurso" type="number" value="10" class="input" /></label>
+          <label>⏱️ Duração Aula (min): <input id="duracaoMinutos" type="number" value="15" class="input" /></label>
+          <label>🔁 Fragmentação (%): <input id="fatorFragmentacao" type="number" value="30" class="input" /></label>
+        </form>
+        <div class="bg-gray-100 p-4 rounded border">
+          <h3 class="font-semibold text-sm mb-2">📊 Resultado estimado</h3>
+          <pre id="resultadoCarga" class="text-sm text-gray-800 whitespace-pre-wrap"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard (demais seções mantidas) -->
+    <section id="dashboard" class="tab-content hidden">
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold mb-4">📊 Dashboard de Resultados</h2>
+        <canvas id="graficoResultado" height="300"></canvas>
+      </div>
+    </section>
+
   </main>
 
-  <!-- Tabs e comportamento -->
+  <!-- Scripts -->
   <script type="module">
     import { renderizarDashboard } from './dashboard.js';
 
@@ -73,14 +100,16 @@
     }
 
     function calcularCarga() {
-      const alunos = +document.getElementById('numAlunos').value;
+      const alunos = document.getElementById('numAlunos');
+      if (!alunos) return; // garante que só execute quando a aba carga estiver ativa
+
       const cursos = +document.getElementById('numCursos').value;
       const aulas = +document.getElementById('aulasPorCurso').value;
       const duracao = +document.getElementById('duracaoMinutos').value * 60;
       const frag = 1 + (+document.getElementById('fatorFragmentacao').value / 100);
 
       const registrosAula = Math.ceil((duracao / 5) * frag);
-      const total = registrosAula * cursos * aulas * alunos;
+      const total = registrosAula * cursos * aulas * +alunos.value;
       const mb = (total * 0.5) / (1024 * 1024);
 
       document.getElementById('resultadoCarga').textContent = `
@@ -88,10 +117,6 @@ Registros por aluno: ~${registrosAula * cursos * aulas}
 Registros totais: ~${total.toLocaleString()}
 Espaço estimado: ~${mb.toFixed(2)} MB`;
     }
-
-    document.querySelectorAll('#carga input').forEach(input =>
-      input.addEventListener('input', calcularCarga)
-    );
 
     document.querySelectorAll('.tab-link').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -103,15 +128,12 @@ Espaço estimado: ~${mb.toFixed(2)} MB`;
         document.getElementById(id).classList.remove('hidden');
 
         if (id === 'dashboard') setTimeout(() => renderizarDashboard(), 150);
-        if (id === 'carga') calcularCarga();
+        if (id === 'carga') setTimeout(() => calcularCarga(), 100);
         if (id === 'simulador') carregarModulo('simulador.js');
       });
     });
-
-    calcularCarga();
   </script>
 
-  <!-- Executar cenário -->
   <script type="module">
     import { executarCenario } from './simulador.js';
 
