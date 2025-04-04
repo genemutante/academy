@@ -4,13 +4,23 @@ export function renderizarDashboard(canvasId = 'graficoResultado') {
   const canvas = document.getElementById(canvasId);
 
   if (!canvas) {
-    console.warn(`Canvas com ID '${canvasId}' não encontrado.`);
+    console.warn(`❗ Canvas com ID '${canvasId}' não encontrado.`);
     return;
   }
 
   const ctx = canvas.getContext('2d');
 
-  // Dados fictícios para visualização
+  try {
+    // Se já existe um gráfico, destrói corretamente
+    if (window._graficoDashboard instanceof Chart) {
+      window._graficoDashboard.destroy();
+      console.log('🧹 Gráfico anterior destruído com sucesso.');
+    }
+  } catch (error) {
+    console.warn('⚠️ Erro ao tentar destruir gráfico anterior:', error);
+  }
+
+  // Dados de exemplo (pode tornar dinâmico depois)
   const dados = {
     labels: ['Aula 1', 'Aula 2', 'Aula 3', 'Aula 4'],
     datasets: [
@@ -48,11 +58,7 @@ export function renderizarDashboard(canvasId = 'graficoResultado') {
     }
   };
 
-  // ✅ Destroi instância antiga se já existir
-  if (window._graficoDashboard instanceof Chart) {
-    window._graficoDashboard.destroy();
-  }
-
-  // ✅ Cria nova instância
+  // Criar nova instância e salvar globalmente
   window._graficoDashboard = new Chart(ctx, config);
+  console.log('✅ Novo gráfico renderizado com sucesso!');
 }
