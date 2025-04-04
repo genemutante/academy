@@ -94,6 +94,8 @@
       const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
       aulas = lista || [];
 
+      carregarProgressoCurso();
+      
       const promises = aulas.map(async (aula) => {
         const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
           p_user_id: user_id,
@@ -104,8 +106,8 @@
       });
       aulas = await Promise.all(promises);
       listarAulas();
-      if (aulas.length) selecionarAula(aulas[0]);
-      carregarProgressoCurso();
+ 
+      
     }
 
     function listarAulas() {
