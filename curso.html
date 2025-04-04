@@ -56,7 +56,6 @@
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
-	
     const url = new URL(location.href);
     const user_id = url.searchParams.get('user_id');
     const course_id = url.searchParams.get('course_id');
@@ -83,7 +82,7 @@
 
     function atualizarIndicadorLocal(segundos, duracao) {
       const pct = Math.min(100, Math.round((segundos / duracao) * 100));
-      infoAssistido.textContent = ⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%;
+      infoAssistido.textContent = `⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%`;
     }
 
     async function carregarDados() {
@@ -114,29 +113,23 @@
         const li = document.createElement('li');
         li.className = 'cursor-pointer hover:underline flex items-center gap-2';
         const status = aula.status === '✔ Concluída' ? '<span class="text-green-600">✅</span>' : '';
-        li.innerHTML = ${status}<span>${aula.order}. ${aula.title}</span>;
+        li.innerHTML = `${status}<span>${aula.order}. ${aula.title}</span>`;
         li.onclick = () => selecionarAula(aula);
         listaAulas.appendChild(li);
       });
     }
 
-
-
-async function carregarProgressoCurso() {
-  const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
-    p_user_id: user_id,
-    p_course_id: course_id
-  });
-
-  if (data?.length > 0) {
-    const percentual = parseFloat(data[0].percentual_conclusao) || 0;
-    barraProgresso.style.width = ${percentual}%;
-    textoProgresso.textContent = ${percentual}%;
-  }
-}
-
-
-	  
+    async function carregarProgressoCurso() {
+      const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
+        p_user_id: user_id,
+        p_course_id: course_id
+      });
+      if (data?.length > 0) {
+        const pct = data[0].percentual_conclusao || 0;
+        barraProgresso.style.width = pct + '%';
+        textoProgresso.textContent = pct + '%';
+      }
+    }
 
     async function selecionarAula(aula) {
       aulaAtual = aula;
@@ -177,7 +170,7 @@ async function carregarProgressoCurso() {
 
     function initPlayer() {
       const videoId = getYouTubeId(aulaAtual.youtube_url);
-      playerFrame.src = https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin};
+      playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
 
       loadYouTubeAPI().then(() => {
         player = new YT.Player(playerFrame, {
@@ -224,5 +217,3 @@ async function carregarProgressoCurso() {
   </script>
 </body>
 </html>
-
-
