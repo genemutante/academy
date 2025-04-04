@@ -6,7 +6,6 @@
   <title>Simulador de Plataforma</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
@@ -36,7 +35,8 @@
     <section id="simulador" class="tab-content">
       <div class="bg-white p-6 rounded shadow">
         <h2 class="text-xl font-semibold mb-2">🧠 Simulador de Progresso</h2>
-        <p class="text-gray-600">Carregue o módulo <code>simulador.js</code> para iniciar os testes de simulação de progresso de vídeo.</p>
+        <p class="text-gray-600">Carregando o módulo <code>simulador.js</code>...</p>
+        <div id="conteudoSimulador" class="mt-4 text-sm text-gray-700"></div>
       </div>
     </section>
 
@@ -100,21 +100,31 @@
     </section>
   </main>
 
-  <script>
-    const tabs = document.querySelectorAll('.tab-link');
-    const contents = document.querySelectorAll('.tab-content');
+  <!-- Comportamento das abas -->
+  <script type="module">
+    import { renderizarDashboard } from './dashboard.js';
 
-    tabs.forEach(tab => {
+    function carregarModulo(m) {
+      if (!m) return;
+      import(`./${m}`).then(() => {
+        console.log(`✅ Módulo ${m} carregado`);
+      }).catch(err => {
+        console.error(`❌ Erro ao carregar ${m}`, err);
+      });
+    }
+
+    document.querySelectorAll('.tab-link').forEach(tab => {
       tab.addEventListener('click', () => {
-        tabs.forEach(btn => btn.classList.remove('bg-blue-600', 'text-white'));
-        tab.classList.add('bg-blue-600', 'text-white');
+        document.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('bg-blue-600', 'text-white'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
 
-        contents.forEach(c => c.classList.add('hidden'));
+        tab.classList.add('bg-blue-600', 'text-white');
         const id = tab.dataset.tab;
         document.getElementById(id).classList.remove('hidden');
 
-        if (id === 'dashboard') renderChart();
+        if (id === 'dashboard') setTimeout(() => renderizarDashboard(), 150);
         if (id === 'carga') calcularCarga();
+        if (id === 'simulador') carregarModulo('simulador.js');
       });
     });
 
@@ -139,46 +149,9 @@ Espaço estimado: ~${mb.toFixed(2)} MB`;
       input.addEventListener('input', calcularCarga)
     );
 
-    function renderChart() {
-      const ctx = document.getElementById('graficoResultado').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Aula 1', 'Aula 2', 'Aula 3', 'Aula 4'],
-          datasets: [{
-            label: 'Percentual Concluído',
-            data: [75, 50, 98, 30],
-            backgroundColor: '#2563eb'
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: { beginAtZero: true, max: 100 }
-          }
-        }
-      });
-    }
-
-    // Inicializar com carga
+    // Inicialização padrão
     calcularCarga();
   </script>
-  
-  
-<script type="module">
-  import { renderizarDashboard } from './dashboard.js';
 
-  document.querySelectorAll('.tab-link').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.tab;
-      if (id === 'dashboard') {
-        setTimeout(() => renderizarDashboard(), 200); // Espera a aba renderizar
-      }
-    });
-  });
-</script>
-
-  <script type="module" src="simulador.js"></script>
-  
 </body>
 </html>
