@@ -22,6 +22,12 @@
         <p id="descricaoCurso" class="mb-4 text-gray-600 text-sm leading-relaxed"></p>
         <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
         <ul id="listaAulas" class="space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
+
+        <!-- Botão manual para atualizar progresso do curso -->
+        <button id="btnAtualizarProgresso" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full text-sm">
+          Atualizar Progresso do Curso
+        </button>
+
       </div>
       <div class="lg:col-span-2">
         <div class="aspect-video w-full rounded overflow-hidden shadow mb-4">
@@ -51,6 +57,22 @@
       </div>
     </div>
   </div>
+
+  <!-- Script completo foi adicionado com ajuste -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnAtualizarProgresso = document.getElementById('btnAtualizarProgresso');
+      btnAtualizarProgresso.addEventListener('click', () => {
+        if (typeof carregarProgressoCurso === 'function') {
+          carregarProgressoCurso();
+        } else {
+          console.warn('Função carregarProgressoCurso() não encontrada.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
 
 <script>
   const supabase = window.supabase.createClient(
