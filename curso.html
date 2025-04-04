@@ -9,11 +9,22 @@
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
+  <!-- Cabeçalho estreito com altura fixa (3 linhas aproximadas) -->
+  <header class="bg-blue-600 text-white h-12 flex items-center">
+    <div class="max-w-6xl mx-auto px-4">
+      <h1 class="text-lg font-bold truncate">
+        Plataforma de Cursos Online
+      </h1>
+    </div>
+  </header>
+
   <div class="max-w-6xl mx-auto px-4 py-6">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-1">
         <div class="mb-6">
-          <p class="text-sm mb-1"><span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span></p>
+          <p class="text-sm mb-1">
+            <span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span>
+          </p>
           <div class="w-full h-3 bg-gray-200 rounded">
             <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
           </div>
@@ -21,7 +32,7 @@
         <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
         <p id="descricaoCurso" class="mb-4 text-gray-600 text-sm leading-relaxed"></p>
         <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
-        <!-- Removi as bolinhas padrão da lista com list-none -->
+        <!-- Removendo as bolinhas padrão da lista -->
         <ul id="listaAulas" class="list-none space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
       </div>
       <div class="lg:col-span-2">
@@ -52,6 +63,7 @@
       </div>
     </div>
   </div>
+
   <script>
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
