@@ -46,15 +46,28 @@
 
     input {
       font-size: 14px;
-      height: 42px;
+      height: 38px;
+      width: 220px;
       margin-bottom: 1rem;
+      border-radius: 6px;
+      padding-inline: 0.5rem;
       text-align: center;
     }
 
     button {
-      font-size: 15px;
-      height: 42px;
-      border-radius: 8px;
+      font-size: 14px;
+      padding: 0.4rem 1.2rem;
+      height: auto;
+      border-radius: 6px;
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      margin-top: 0.25rem;
+    }
+
+    button:hover {
+      background-color: #0369a1;
+      cursor: pointer;
     }
 
     #msg {
@@ -70,6 +83,7 @@
     <p>Digite seu código de acesso fornecido pelo professor:</p>
 
     <input type="text" id="codigo" placeholder="Ex: AR1X92" />
+    <br>
     <button id="btnEntrar">Entrar</button>
     <p id="msg"></p>
   </main>
