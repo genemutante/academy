@@ -4,54 +4,66 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aula</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Importa o CSS premium universal -->
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
-  <div class="max-w-6xl mx-auto px-4 py-6">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-1">
-        <div class="mb-6">
-          <p class="text-sm mb-1"><span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span></p>
-          <div class="w-full h-3 bg-gray-200 rounded">
-            <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
+<body>
+  <div class="container">
+    <div class="row">
+      <!-- Coluna esquerda (aprox. 1/3 da tela) -->
+      <div class="col" style="flex: 1;">
+        <div class="card">
+          <p>
+            <span>📊</span> Progresso do curso: 
+            <span id="textoProgresso">0%</span>
+          </p>
+          <!-- Barra de progresso personalizada -->
+          <div style="background-color: var(--color-light); height: 10px; border-radius: var(--border-radius); margin: 10px 0;">
+            <div id="barraProgresso" style="height: 10px; background-color: var(--color-primary); width: 0%; border-radius: var(--border-radius); transition: width var(--transition-speed);"></div>
           </div>
+          <h1 id="tituloCurso">Carregando curso...</h1>
+          <p id="descricaoCurso"></p>
         </div>
-        <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
-        <p id="descricaoCurso" class="mb-4 text-gray-600 text-sm leading-relaxed"></p>
-        <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
-        <!-- Removi as bolinhas padrão da lista com list-none -->
-        <ul id="listaAulas" class="list-none space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
+        <h2>📚 Aulas</h2>
+        <!-- Lista de aulas sem marcadores -->
+        <ul id="listaAulas" style="list-style: none; padding: 0;"></ul>
       </div>
-      <div class="lg:col-span-2">
-        <div class="aspect-video w-full rounded overflow-hidden shadow mb-4">
-          <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
-        </div>
-        <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
-          <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
-          <div class="flex items-center gap-2">
-            <button id="btnMaterial" class="text-sm bg-white border border-gray-300 rounded px-3 py-2 shadow-sm hover:bg-gray-100 relative">
-              📎 Material de Apoio
-              <div id="popupMaterial" class="hidden absolute z-10 mt-2 w-64 bg-white border border-gray-300 rounded shadow-md p-4 text-sm text-gray-700">
-                <p class="mb-1 font-semibold">Links úteis:</p>
-                <ul class="list-disc list-inside">
-                  <li><a href="#" class="text-blue-600 hover:underline">PDF da aula</a></li>
-                  <li><a href="#" class="text-blue-600 hover:underline">Slides</a></li>
-                  <li><a href="#" class="text-blue-600 hover:underline">Referência externa</a></li>
+      
+      <!-- Coluna direita (aprox. 2/3 da tela) -->
+      <div class="col" style="flex: 2;">
+        <div class="card">
+          <!-- Vídeo com proporção 16:9 -->
+          <div style="position: relative; padding-top: 56.25%; overflow: hidden; border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <iframe id="videoPlayer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
+          </div>
+          <div style="margin-top: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+            <h3 id="tituloAula">Título da Aula</h3>
+            <div style="position: relative;">
+              <button id="btnMaterial" class="button" style="margin-right: 10px;">📎 Material de Apoio</button>
+              <div id="popupMaterial" class="hidden" style="position: absolute; z-index: 10; margin-top: 10px; width: 250px; background: #fff; border: 1px solid var(--color-light); border-radius: var(--border-radius); padding: 15px;">
+                <p style="font-weight: bold; margin-bottom: 10px;">Links úteis:</p>
+                <ul style="list-style: disc; padding-left: 20px;">
+                  <li><a href="#">PDF da aula</a></li>
+                  <li><a href="#">Slides</a></li>
+                  <li><a href="#">Referência externa</a></li>
                 </ul>
               </div>
-            </button>
-            <button id="btnQuiz" disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
-              Fazer Avaliação da Aula
-            </button>
+              <button id="btnQuiz" class="button" disabled style="background-color: var(--color-light); color: #aaa; cursor: not-allowed;">
+                Fazer Avaliação da Aula
+              </button>
+            </div>
           </div>
+          <p style="font-size: 0.8rem; color: var(--color-secondary); margin-top: 10px;">
+            ⚙️ Progresso salvo automaticamente durante a reprodução
+          </p>
+          <p id="infoAssistido"></p>
         </div>
-        <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
-        <p id="infoAssistido" class="text-sm mt-2 text-gray-700"></p>
       </div>
     </div>
   </div>
+  
   <script>
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
@@ -112,10 +124,7 @@
       listaAulas.innerHTML = '';
       aulas.forEach(aula => {
         const li = document.createElement('li');
-        // Utilizando grid com duas colunas:
-        // - Primeira coluna fixa (20px) para o ícone.
-        // - Segunda coluna flexível para o texto.
-        li.className = 'cursor-pointer hover:underline grid grid-cols-[20px_1fr] items-center gap-2';
+        li.className = 'list-item';
         const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
         li.innerHTML = `
           <span class="text-center">${statusIcon}</span>
@@ -143,8 +152,9 @@
       tituloAula.textContent = aula.title;
       infoAssistido.textContent = '';
       btnQuiz.disabled = true;
-      btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-      btnQuiz.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+      btnQuiz.style.backgroundColor = 'var(--color-light)';
+      btnQuiz.style.color = '#aaa';
+      btnQuiz.style.cursor = 'not-allowed';
       clearInterval(interval);
       lastTime = 0;
       initPlayer();
@@ -158,8 +168,9 @@
         if (item.status === '✔ Concluída') {
           infoAssistido.textContent = '✅ Aula concluída';
           btnQuiz.disabled = false;
-          btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-          btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+          btnQuiz.style.backgroundColor = 'var(--color-primary)';
+          btnQuiz.style.color = '#fff';
+          btnQuiz.style.cursor = 'pointer';
         } else {
           atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
         }
