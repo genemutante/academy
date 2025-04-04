@@ -28,7 +28,16 @@
           Atualizar Progresso do Curso
         </button>
 
+        <!-- Modal de log -->
+        <div id="logModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+          <div class="bg-white max-w-lg w-full p-6 rounded shadow-lg relative">
+            <h2 class="text-lg font-bold mb-2">Log de Atualização</h2>
+            <pre id="logConteudo" class="bg-gray-100 p-3 rounded text-sm overflow-auto max-h-96"></pre>
+            <button id="fecharLog" class="absolute top-2 right-2 text-gray-600 hover:text-red-600">&times;</button>
+          </div>
+        </div>
       </div>
+
       <div class="lg:col-span-2">
         <div class="aspect-video w-full rounded overflow-hidden shadow mb-4">
           <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
@@ -58,16 +67,41 @@
     </div>
   </div>
 
-  <!-- Script completo foi adicionado com ajuste -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const btnAtualizarProgresso = document.getElementById('btnAtualizarProgresso');
-      btnAtualizarProgresso.addEventListener('click', () => {
+      const logModal = document.getElementById('logModal');
+      const logConteudo = document.getElementById('logConteudo');
+      const fecharLog = document.getElementById('fecharLog');
+
+      btnAtualizarProgresso.addEventListener('click', async () => {
         if (typeof carregarProgressoCurso === 'function') {
-          carregarProgressoCurso();
+          try {
+            logConteudo.textContent = 'Solicitando progresso...';
+            logModal.classList.remove('hidden');
+
+            const { data, error } = await supabase.rpc('fn_progresso_curso_por_usuario', {
+              p_user_id: user_id,
+              p_course_id: course_id
+            });
+
+            if (error) {
+              logConteudo.textContent = 'Erro ao carregar progresso:\n' + JSON.stringify(error, null, 2);
+            } else {
+              logConteudo.textContent = 'Resultado da função fn_progresso_curso_por_usuario:\n' + JSON.stringify(data, null, 2);
+              carregarProgressoCurso();
+            }
+          } catch (e) {
+            logConteudo.textContent = 'Exceção inesperada:\n' + e.message;
+          }
         } else {
-          console.warn('Função carregarProgressoCurso() não encontrada.');
+          alert('Função carregarProgressoCurso() não encontrada.');
         }
+      });
+
+      fecharLog.addEventListener('click', () => {
+        logModal.classList.add('hidden');
+        logConteudo.textContent = '';
       });
     });
   </script>
