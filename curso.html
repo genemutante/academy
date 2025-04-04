@@ -95,6 +95,18 @@
       infoAssistido.textContent = `⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%`;
     }
 
+    async function carregarProgressoCurso() {
+      const { data, error } = await supabase.rpc('fn_progresso_por_usuario', {
+        p_user_id: user_id,
+        p_course_id: course_id
+      });
+      if (data?.length > 0) {
+        const pct = data[0].percentual_conclusao || 0;
+        barraProgresso.style.width = pct + '%';
+        textoProgresso.textContent = pct + '%';
+      }
+    }
+
     async function carregarDados() {
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
       tituloCurso.textContent = curso.title;
@@ -105,6 +117,7 @@
 
       listarAulas();
       if (aulas.length) selecionarAula(aulas[0]);
+      carregarProgressoCurso();
     }
 
     function listarAulas() {
@@ -129,7 +142,7 @@
       lastTime = 0;
       initPlayer();
 
-      const { data: progresso, error } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+      const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
         p_lesson_id: aula.id
       });
@@ -138,7 +151,7 @@
         const item = progresso[0];
         atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
       } else {
-        atualizarIndicadorLocal(0, aula.duration); // fallback para garantir que apareça
+        atualizarIndicadorLocal(0, aula.duration);
       }
     }
 
@@ -169,7 +182,6 @@
       }
 
       duration = player.getDuration();
-
       interval = setInterval(trackProgress, 5000);
     }
 
