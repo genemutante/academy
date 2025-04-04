@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -9,9 +9,12 @@
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
+  <!-- Cabeçalho estreito com altura fixa (3 linhas aproximadas) -->
   <header class="bg-blue-600 text-white h-12 flex items-center">
     <div class="max-w-6xl mx-auto px-4">
-      <h1 class="text-lg font-bold truncate">Plataforma de Cursos Online</h1>
+      <h1 class="text-lg font-bold truncate">
+        Plataforma de Cursos Online
+      </h1>
     </div>
   </header>
 
@@ -19,7 +22,9 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-1">
         <div class="mb-6">
-          <p class="text-sm mb-1">📊 Progresso do curso: <span id="textoProgresso">0%</span></p>
+          <p class="text-sm mb-1">
+            <span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span>
+          </p>
           <div class="w-full h-3 bg-gray-200 rounded">
             <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
           </div>
@@ -27,14 +32,13 @@
         <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
         <p id="descricaoCurso" class="mb-4 text-gray-600 text-sm leading-relaxed"></p>
         <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
+        <!-- Removendo as bolinhas padrão da lista -->
         <ul id="listaAulas" class="list-none space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
       </div>
-
       <div class="lg:col-span-2">
         <div class="aspect-video w-full rounded overflow-hidden shadow mb-4">
           <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
         </div>
-
         <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
           <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
           <div class="flex items-center gap-2">
@@ -54,7 +58,6 @@
             </button>
           </div>
         </div>
-
         <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
         <p id="infoAssistido" class="text-sm mt-2 text-gray-700"></p>
       </div>
@@ -66,7 +69,6 @@
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
-
     const url = new URL(location.href);
     const user_id = url.searchParams.get('user_id');
     const course_id = url.searchParams.get('course_id');
@@ -83,7 +85,6 @@
     const btnMaterial = document.getElementById('btnMaterial');
     const popupMaterial = document.getElementById('popupMaterial');
 
-    let tempoInicial = 0;
     let aulas = [], aulaAtual = null, player = null, interval = null;
     let lastTime = 0, duration = 0;
 
@@ -114,7 +115,6 @@
         return aula;
       });
       aulas = await Promise.all(promises);
-
       listarAulas();
       if (aulas.length) selecionarAula(aulas[0]);
       carregarProgressoCurso();
@@ -124,9 +124,15 @@
       listaAulas.innerHTML = '';
       aulas.forEach(aula => {
         const li = document.createElement('li');
+        // Utilizando grid com duas colunas:
+        // - Primeira coluna fixa (20px) para o ícone.
+        // - Segunda coluna flexível para o texto.
         li.className = 'cursor-pointer hover:underline grid grid-cols-[20px_1fr] items-center gap-2';
         const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
-        li.innerHTML = `<span class="text-center">${statusIcon}</span><span>${aula.order}. ${aula.title}</span>`;
+        li.innerHTML = `
+          <span class="text-center">${statusIcon}</span>
+          <span>${aula.order}. ${aula.title}</span>
+        `;
         li.onclick = () => selecionarAula(aula);
         listaAulas.appendChild(li);
       });
@@ -138,7 +144,7 @@
         p_course_id: course_id
       });
       if (data?.length > 0) {
-        const pct = data[0].percentual_concluido || 0;
+        const pct = data[0].percentual_conclusao || 0;
         barraProgresso.style.width = pct + '%';
         textoProgresso.textContent = pct + '%';
       }
@@ -153,15 +159,14 @@
       btnQuiz.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
       clearInterval(interval);
       lastTime = 0;
+      initPlayer();
 
       const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
         p_lesson_id: aula.id
       });
-
       if (progresso?.length > 0) {
         const item = progresso[0];
-        tempoInicial = item.status === '✔ Concluída' ? 0 : item.segundos_assistidos;
         if (item.status === '✔ Concluída') {
           infoAssistido.textContent = '✅ Aula concluída';
           btnQuiz.disabled = false;
@@ -171,11 +176,8 @@
           atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
         }
       } else {
-        tempoInicial = 0;
         atualizarIndicadorLocal(0, aula.duration);
       }
-
-      initPlayer();
     }
 
     function loadYouTubeAPI() {
@@ -202,54 +204,57 @@
         return;
       }
       duration = player.getDuration();
-      if (tempoInicial > 0 && tempoInicial < duration) {
-        player.seekTo(tempoInicial, true);
-      }
       interval = setInterval(trackProgress, 5000);
     }
 
-    async function trackProgress() {
-      if (!player || typeof player.getCurrentTime !== 'function') return;
-      const state = player.getPlayerState();
-      if (state !== YT.PlayerState.PLAYING) return;
+async function trackProgress() {
+  if (!player || typeof player.getCurrentTime !== 'function') return;
+  const state = player.getPlayerState();
+  if (state !== YT.PlayerState.PLAYING) return;
 
-      const current = Math.floor(player.getCurrentTime());
-      if (current <= lastTime || current - lastTime > 30) {
-        lastTime = current;
-        return;
-      }
-      lastTime = current;
+  const current = Math.floor(player.getCurrentTime());
+  if (current <= lastTime || current - lastTime > 30) {
+    lastTime = current;
+    return;
+  }
 
-      await supabase.from('progress_segments').insert({
-        user_id,
-        course_id,
-        lesson_id: aulaAtual.id,
-        duration: Math.floor(duration),
-        segment: { start: lastTime - 5, end: current }
-      });
+  lastTime = current;
+  await supabase.from('progress_segments').insert({
+    user_id,
+    course_id,
+    lesson_id: aulaAtual.id,
+    duration: Math.floor(duration),
+    segment: { start: lastTime - 5, end: current }
+  });
 
-      const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-        p_user_id: user_id,
-        p_lesson_id: aulaAtual.id
-      });
+  // 🔁 Atualiza status da aula e da barra de progresso
+  const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+    p_user_id: user_id,
+    p_lesson_id: aulaAtual.id
+  });
 
-      if (progressoAtualizado?.length > 0) {
-        const novoStatus = progressoAtualizado[0].status;
-        aulaAtual.status = novoStatus;
+  if (progressoAtualizado?.length > 0) {
+    const novoStatus = progressoAtualizado[0].status;
+    aulaAtual.status = novoStatus;
 
-        if (novoStatus === '✔ Concluída') {
-          infoAssistido.textContent = '✅ Aula concluída';
-          btnQuiz.disabled = false;
-          btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-          btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
-        } else {
-          atualizarIndicadorLocal(progressoAtualizado[0].segundos_assistidos, progressoAtualizado[0].duracao_total);
-        }
-
-        listarAulas();
-        carregarProgressoCurso();
-      }
+    if (novoStatus === '✔ Concluída') {
+      infoAssistido.textContent = '✅ Aula concluída';
+      btnQuiz.disabled = false;
+      btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+      btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+    } else {
+      atualizarIndicadorLocal(progressoAtualizado[0].segundos_assistidos, progressoAtualizado[0].duracao_total);
     }
+
+    listarAulas();
+    carregarProgressoCurso();
+  }
+}
+
+
+
+
+    
 
     btnMaterial.addEventListener('click', () => popupMaterial.classList.toggle('hidden'));
     window.addEventListener('click', (e) => {
