@@ -84,7 +84,6 @@
 
     let aulas = [], aulaAtual = null, player = null, interval = null;
     let lastTime = 0, duration = 0;
-    let progressoPorAula = {};
 
     function getYouTubeId(url) {
       const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -138,6 +137,8 @@
       if (progresso?.length > 0) {
         const item = progresso[0];
         atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
+      } else {
+        atualizarIndicadorLocal(0, aula.duration); // fallback para garantir que apareça
       }
     }
 
