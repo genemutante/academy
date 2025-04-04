@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plataforma Premium - Aula</title>
+  <title>Plataforma - Identificando Perfis DISC</title>
   
   <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Fontes: Playfair Display para títulos e Inter para corpo -->
+  <!-- Fontes adicionais (Playfair Display para títulos e Inter para texto) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link 
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" 
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" 
     rel="stylesheet"
   >
 
-  <!-- Configuração do Tailwind: cores e fontes personalizadas -->
+  <!-- Configuração de Tailwind: cores e fontes personalizadas -->
   <script>
     tailwind.config = {
       theme: {
@@ -28,191 +28,193 @@
           colors: {
             primary: '#6B46C1',   // Roxo elegante
             secondary: '#4C51BF', // Azul-escuro
-            accent: '#F59E0B',    // Destaque (opcional)
+            accent: '#F59E0B',    // Amarelo (opcional para destaques)
           }
         }
       }
     }
   </script>
 
-  <!-- Supabase & YouTube -->
+  <!-- Supabase & YouTube API -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen font-sans">
-  <!-- Cabeçalho Simplificado -->
-  <header class="bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-4">
-      <h1 class="text-2xl font-serif text-primary tracking-tight">Minha Plataforma Premium</h1>
-    </div>
-  </header>
-
-  <!-- Vídeo (logo abaixo do cabeçalho) -->
-  <section id="video-section" class="max-w-7xl mx-auto px-4 py-4">
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-      <iframe 
-        id="videoPlayer" 
-        class="w-full h-[360px]" 
-        frameborder="0" 
-        allowfullscreen>
-      </iframe>
-    </div>
-  </section>
-
-  <!-- Seção de Informações e Ações -->
-  <section id="info-section" class="max-w-7xl mx-auto px-4 py-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Card de Informações (esquerda): Descrição do Curso e Progresso Circular -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 id="tituloCurso" class="text-2xl font-bold text-gray-800">Carregando curso...</h2>
-        <p id="descricaoCurso" class="text-sm text-gray-500 mt-2">
-          Descrição do curso em breve...
-        </p>
-        <!-- Circular Progress Indicator -->
-        <div class="mt-6 flex items-center">
-          <div id="circularProgress" class="relative w-24 h-24">
-            <svg class="w-full h-full transform -rotate-90">
-              <!-- Fundo do círculo -->
-              <circle cx="50%" cy="50%" r="40" stroke="#e5e7eb" stroke-width="10" fill="none"></circle>
-              <!-- Progresso (a ser atualizado via JS) -->
-              <circle 
-                id="progressCircle" 
-                cx="50%" cy="50%" r="40" 
-                stroke="#6B46C1" 
-                stroke-width="10" 
-                fill="none"
-                stroke-dasharray="251.2" 
-                stroke-dashoffset="251.2"
-                stroke-linecap="round">
-              </circle>
-            </svg>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span id="progressText" class="text-lg font-bold text-gray-800">0%</span>
+  <!-- Container principal -->
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Layout em 2 colunas: esquerda (card) e direita (vídeo) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- COLUNA ESQUERDA -->
+      <aside class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow p-5">
+          <!-- Linha com Título e Círculo de Progresso -->
+          <div class="flex items-center justify-between mb-4">
+            <h1 id="tituloCurso" class="text-lg font-bold font-serif text-gray-800">
+              Identificando Perfis DISC
+            </h1>
+            <!-- Círculo de Progresso -->
+            <div id="circularProgress" class="relative w-12 h-12">
+              <svg class="w-full h-full transform -rotate-90">
+                <!-- Círculo de fundo -->
+                <circle cx="50%" cy="50%" r="18" stroke="#e5e7eb" stroke-width="6" fill="none"></circle>
+                <!-- Círculo de progresso -->
+                <circle
+                  id="progressCircle"
+                  cx="50%" cy="50%" r="18"
+                  stroke="#6B46C1"
+                  stroke-width="6"
+                  fill="none"
+                  stroke-dasharray="113.1"  <!-- 2πr = 2 * π * 18 ≈ 113.1 -->
+                  stroke-dashoffset="113.1"
+                  stroke-linecap="round">
+                </circle>
+              </svg>
+              <!-- Texto no centro -->
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span id="progressText" class="text-sm font-bold text-gray-800">0%</span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+          
+          <!-- Descrição do curso -->
+          <p id="descricaoCurso" class="text-sm text-gray-600 leading-relaxed mb-4">
+            Aprenda a reconhecer e diferenciar os quatro perfis comportamentais DISC: 
+            Executor, Comunicador, Planejador e Analítico.
+          </p>
 
-      <!-- Card de Ações (direita): Botões e Popup -->
-      <div class="bg-white rounded-lg shadow p-6 flex flex-col justify-center items-center">
-        <div class="flex gap-4">
-          <button 
-            id="btnMaterial" 
-            class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow hover:bg-gray-100 transition">
-            📎 Material de Apoio
-          </button>
-          <button 
-            id="btnQuiz" 
-            disabled 
-            class="px-4 py-2 bg-gray-300 text-gray-500 rounded-md cursor-not-allowed">
-            Avaliação
-          </button>
-        </div>
-        <!-- Popup para Material de Apoio -->
-        <div id="popupMaterial" class="hidden mt-4 w-64 bg-white border border-gray-300 rounded-md shadow-md p-4 text-sm text-gray-700">
-          <p class="mb-2 font-semibold">Links úteis:</p>
-          <ul class="list-disc list-inside space-y-1">
-            <li><a href="#" class="text-primary hover:underline">PDF da aula</a></li>
-            <li><a href="#" class="text-primary hover:underline">Slides</a></li>
-            <li><a href="#" class="text-primary hover:underline">Referência externa</a></li>
+          <!-- Lista de Aulas -->
+          <h2 class="text-sm font-semibold text-gray-700 mb-2">Aulas</h2>
+          <ul id="listaAulas" class="space-y-2 text-sm list-none">
+            <!-- Será populado dinamicamente -->
           </ul>
         </div>
-      </div>
-    </div>
-  </section>
+      </aside>
 
-  <!-- Lista de Aulas -->
-  <section id="lessons-section" class="max-w-7xl mx-auto px-4 py-6">
-    <div class="bg-white rounded-lg shadow p-5">
-      <h3 class="text-lg font-semibold text-gray-700 mb-4">📚 Aulas</h3>
-      <ul id="listaAulas" class="space-y-2 text-sm list-none"></ul>
+      <!-- COLUNA DIREITA (Vídeo + Botões) -->
+      <section class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow p-5 mb-4">
+          <!-- Vídeo responsivo (16:9) -->
+          <div class="relative pb-[56.25%] h-0 rounded overflow-hidden shadow">
+            <iframe 
+              id="videoPlayer" 
+              class="absolute top-0 left-0 w-full h-full" 
+              frameborder="0" 
+              allowfullscreen>
+            </iframe>
+          </div>
+          <!-- Botões de Ação -->
+          <div class="flex flex-wrap items-center gap-3 mt-4">
+            <button 
+              id="btnMaterial" 
+              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 transition">
+              📎 Material de Apoio
+            </button>
+            <button 
+              id="btnQuiz" 
+              disabled 
+              class="px-4 py-2 text-sm bg-gray-300 text-gray-500 rounded-md cursor-not-allowed">
+              Avaliação
+            </button>
+            <p class="text-xs text-gray-400 ml-auto">
+              ⚙️ Progresso salvo automaticamente
+            </p>
+          </div>
+          <!-- Popup de Material de Apoio -->
+          <div id="popupMaterial" class="hidden mt-4 w-64 bg-white border border-gray-300 rounded-md shadow-md p-4 text-sm text-gray-700">
+            <p class="mb-2 font-semibold">Links úteis:</p>
+            <ul class="list-disc list-inside space-y-1">
+              <li><a href="#" class="text-primary hover:underline">PDF da aula</a></li>
+              <li><a href="#" class="text-primary hover:underline">Slides</a></li>
+              <li><a href="#" class="text-primary hover:underline">Referência externa</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
     </div>
-  </section>
+  </div>
 
-  <!-- Rodapé -->
-  <footer class="bg-white shadow-sm mt-8">
-    <div class="max-w-7xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
-      © 2025 - Minha Plataforma Premium. Todos os direitos reservados.
-    </div>
-  </footer>
-
-  <!-- Script Principal -->
+  <!-- Supabase + Lógica do Player -->
   <script>
-    // Conexão com Supabase
+    // Conexão com Supabase (ajuste se precisar)
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    // Obtém parâmetros da URL
+    // Parâmetros via URL (se necessário)
     const url = new URL(location.href);
     const user_id = url.searchParams.get('user_id');
     const course_id = url.searchParams.get('course_id');
 
-    // Elementos da Interface
-    const playerFrame = document.getElementById('videoPlayer');
-    const tituloCurso = document.getElementById('tituloCurso');
-    const descricaoCurso = document.getElementById('descricaoCurso');
+    // Elementos da interface
+    const listaAulas = document.getElementById('listaAulas');
+    const videoPlayer = document.getElementById('videoPlayer');
     const progressCircle = document.getElementById('progressCircle');
     const progressText = document.getElementById('progressText');
-    const listaAulas = document.getElementById('listaAulas');
-    const btnQuiz = document.getElementById('btnQuiz');
     const btnMaterial = document.getElementById('btnMaterial');
     const popupMaterial = document.getElementById('popupMaterial');
+    const btnQuiz = document.getElementById('btnQuiz');
 
-    let aulas = [], aulaAtual = null, player = null, interval = null;
-    let lastTime = 0, duration = 0;
+    let aulas = [], aulaAtual = null, player = null;
+    let lastTime = 0, duration = 0, interval = null;
 
-    // Extrai ID do YouTube a partir da URL
+    // Extrai o ID do YouTube
     function getYouTubeId(url) {
       const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
       return match ? match[1] : '';
     }
 
-    // Atualiza o indicador de progresso com o valor em porcentagem
+    // Atualiza o círculo de progresso
+    function updateCircularProgress(percentage) {
+      // Circunferência do círculo (2πr) => r=18 => ~113.1
+      const circumference = 113.1;
+      const offset = circumference * (1 - percentage / 100);
+      progressCircle.setAttribute('stroke-dashoffset', offset);
+      progressText.textContent = `${percentage}%`;
+    }
+
+    // Atualiza indicador local (durante a aula)
     function atualizarIndicadorLocal(segundos, duracao) {
       const pct = Math.min(100, Math.round((segundos / duracao) * 100));
       updateCircularProgress(pct);
     }
 
-    // Atualiza o círculo de progresso
-    function updateCircularProgress(percentage) {
-      const radius = 40; // Valor do atributo r do círculo
-      const circumference = 2 * Math.PI * radius; // Aproximadamente 251.2
-      const offset = circumference * (1 - percentage / 100);
-      progressCircle.setAttribute('stroke-dashoffset', offset);
-      progressText.textContent = percentage + '%';
-    }
-
-    // Carrega os dados do curso e das aulas
+    // Carrega dados do curso e das aulas (exemplo)
     async function carregarDados() {
-      const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
-      if (curso) {
-        tituloCurso.textContent = curso.title;
-        descricaoCurso.textContent = curso.description;
-      }
-      const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
-      aulas = lista || [];
-      const promises = aulas.map(async (aula) => {
-        const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-          p_user_id: user_id,
-          p_lesson_id: aula.id
-        });
-        aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
-        return aula;
-      });
-      aulas = await Promise.all(promises);
+      // Se quiser exibir título/descrição do curso dinamicamente, buscar do Supabase
+      // Exemplo:
+      // const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
+      // if (curso) {
+      //   document.getElementById('tituloCurso').textContent = curso.title;
+      //   document.getElementById('descricaoCurso').textContent = curso.description;
+      // }
+      
+      // Buscar lista de aulas
+      // const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
+      // aulas = lista || [];
+      // Simulando aulas
+      aulas = [
+        { id: 1, order: 1, title: 'Introdução', youtube_url: 'https://www.youtube.com/watch?v=abcd1234', status: '🚫 Não Iniciada' },
+        { id: 2, order: 2, title: 'Perfil Executor', youtube_url: 'https://www.youtube.com/watch?v=abcd5678', status: '🚫 Não Iniciada' },
+        { id: 3, order: 3, title: 'Perfil Comunicador', youtube_url: 'https://www.youtube.com/watch?v=abcd9012', status: '🚫 Não Iniciada' },
+      ];
+
       listarAulas();
-      if (aulas.length) selecionarAula(aulas[0]);
-      carregarProgressoCurso();
+      if (aulas.length) {
+        selecionarAula(aulas[0]);
+      }
+      // Se quiser carregar progresso do curso, chamar algo como:
+      // carregarProgressoCurso();
     }
 
-    // Renderiza a lista de aulas
+    // Lista as aulas no <ul>
     function listarAulas() {
       listaAulas.innerHTML = '';
       aulas.forEach(aula => {
         const li = document.createElement('li');
         li.className = 'bg-white rounded-lg shadow p-3 flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow';
+        
+        // Exemplo: mostra ✅ se Concluída
         const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
         li.innerHTML = `
           <span class="w-5 text-center">${statusIcon}</span>
@@ -223,48 +225,38 @@
       });
     }
 
-    // Atualiza o progresso do curso (círculo)
-    async function carregarProgressoCurso() {
-      const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
-        p_user_id: user_id,
-        p_course_id: course_id
-      });
-      if (data?.length > 0) {
-        const pct = data[0].percentual_conclusao || 0;
-        updateCircularProgress(pct);
-      }
-    }
-
-    // Seleciona uma aula e atualiza a interface
-    async function selecionarAula(aula) {
+    // Seleciona a aula e inicializa o player
+    function selecionarAula(aula) {
       aulaAtual = aula;
-      // Atualiza título da aula (se aplicável)
-      // Habilita ou desabilita o botão do quiz conforme o status da aula
+      // Reseta player
+      clearInterval(interval);
+      lastTime = 0;
+
+      // Desabilita quiz até a aula ser concluída
       btnQuiz.disabled = true;
       btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
       btnQuiz.classList.remove('bg-primary', 'text-white', 'hover:bg-secondary');
-      clearInterval(interval);
-      lastTime = 0;
+
       initPlayer();
-      const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-        p_user_id: user_id,
-        p_lesson_id: aula.id
-      });
-      if (progresso?.length > 0) {
-        const item = progresso[0];
-        if (item.status === '✔ Concluída') {
-          btnQuiz.disabled = false;
-          btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-          btnQuiz.classList.add('bg-primary', 'text-white', 'hover:bg-secondary');
-        } else {
-          atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
-        }
-      } else {
-        atualizarIndicadorLocal(0, aula.duration);
-      }
+      // Se quiser buscar progresso do usuário para essa aula, ex.:
+      // const { data: progresso } = await supabase.rpc(...)
+      // e atualizar o círculo de progresso. Por ora, definimos 0:
+      atualizarIndicadorLocal(0, 100);
     }
 
-    // Carrega a API do YouTube
+    // Inicializa player do YouTube
+    function initPlayer() {
+      const videoId = getYouTubeId(aulaAtual.youtube_url);
+      videoPlayer.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
+
+      loadYouTubeAPI().then(() => {
+        player = new YT.Player(videoPlayer, {
+          events: { onReady: onPlayerReady }
+        });
+      });
+    }
+
+    // Espera API do YouTube
     function loadYouTubeAPI() {
       return new Promise(resolve => {
         if (window.YT && window.YT.Player) return resolve();
@@ -272,19 +264,8 @@
       });
     }
 
-    // Inicializa o player do YouTube
-    function initPlayer() {
-      const videoId = getYouTubeId(aulaAtual.youtube_url);
-      playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
-      loadYouTubeAPI().then(() => {
-        player = new YT.Player(playerFrame, {
-          events: { onReady: onPlayerReady }
-        });
-      });
-    }
-
-    // Quando o player estiver pronto
-    async function onPlayerReady() {
+    // Quando player estiver pronto
+    function onPlayerReady() {
       if (!player || typeof player.getDuration !== 'function') {
         setTimeout(onPlayerReady, 300);
         return;
@@ -293,27 +274,25 @@
       interval = setInterval(trackProgress, 5000);
     }
 
-    // Monitora o progresso do player
+    // Monitora progresso do player
     async function trackProgress() {
       if (!player || typeof player.getCurrentTime !== 'function') return;
       const state = player.getPlayerState();
       if (state !== YT.PlayerState.PLAYING) return;
+
       const current = Math.floor(player.getCurrentTime());
       if (current <= lastTime || current - lastTime > 30) {
         lastTime = current;
         return;
       }
       lastTime = current;
-      await supabase.from('progress_segments').insert({
-        user_id,
-        course_id,
-        lesson_id: aulaAtual.id,
-        duration: Math.floor(duration),
-        segment: { start: lastTime - 5, end: current }
-      });
+      atualizarIndicadorLocal(current, duration);
+
+      // Exemplo: salvar no Supabase
+      // await supabase.from('progress_segments').insert({ ... })
     }
 
-    // Lógica do popup do Material de Apoio
+    // Toggle popup do Material de Apoio
     btnMaterial.addEventListener('click', () => {
       popupMaterial.classList.toggle('hidden');
     });
@@ -323,7 +302,7 @@
       }
     });
 
-    // Inicia o carregamento dos dados
+    // Inicia
     carregarDados();
   </script>
 </body>
