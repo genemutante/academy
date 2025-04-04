@@ -6,7 +6,7 @@
   <title>Acesso à Plataforma</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
-<style>
+  <style>
     body {
       font-family: 'Carlito', sans-serif;
       background-color: #f3f4f6;
@@ -44,36 +44,37 @@
       margin-bottom: 1.25rem;
     }
 
-    input {
+    /* Estilos personalizados que ignoram o Pico */
+    .compacto {
+      all: unset;
+      font-family: 'Carlito', sans-serif;
       font-size: 14px;
-      height: 36px; /* Reduzido */
-      width: 180px; /* Reduzido */
-      margin-bottom: 1rem;
+      padding: 0.4rem 1rem;
       border-radius: 6px;
-      padding-inline: 0.5rem;
+      display: inline-block;
       text-align: center;
-      display: block; /* Para centralizar */
-      margin-left: auto; /* Para centralizar */
-      margin-right: auto; /* Para centralizar */
+      margin: 0.25rem auto;
     }
 
-    button {
-      font-size: 14px;
-      padding: 0.4rem 1rem; /* Ajustado para ser mais compacto */
-      height: auto;
-      border-radius: 6px;
+    input.compacto {
+      background-color: white;
+      border: 1px solid #ccc;
+      width: 160px;
+      height: 36px;
+      color: #111;
+      display: block;
+    }
+
+    button.compacto {
       background-color: #0284c7;
       color: white;
       border: none;
-      margin-top: 0.25rem;
-      display: block; /* Para centralizar */
-      margin-left: auto; /* Para centralizar */
-      margin-right: auto; /* Para centralizar */
+      cursor: pointer;
+      display: block;
     }
 
-    button:hover {
+    button.compacto:hover {
       background-color: #0369a1;
-      cursor: pointer;
     }
 
     #msg {
@@ -88,9 +89,8 @@
     <h2>Acesso à Plataforma</h2>
     <p>Digite seu código de acesso fornecido pelo professor:</p>
 
-    <input type="text" id="codigo" placeholder="Ex: AR1X92" />
-    <br>
-    <button id="btnEntrar">Entrar</button>
+    <input type="text" id="codigo" class="compacto" placeholder="Ex: AR1X92" />
+    <button id="btnEntrar" class="compacto">Entrar</button>
     <p id="msg"></p>
   </main>
 
