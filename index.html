@@ -1,12 +1,142 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Academy Tools</title>
-  </head>
-  <body>
-    <h1>✅ Deploy Funcionando!</h1>
-    <p>Este é um ponto de partida simples. A partir daqui vamos montar o app completo.</p>
-  </body>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acesso à Plataforma</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Carlito', sans-serif;
+      background-color: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    main {
+      background-color: white;
+      padding: 2rem 1.5rem;
+      border-radius: 14px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 36px;
+      margin-bottom: 0.75rem;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0 0 0.5rem;
+      color: #1f2937;
+    }
+
+    p {
+      font-size: 14px;
+      color: #4b5563;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Estilos personalizados que ignoram o Pico */
+    .compacto {
+      all: unset;
+      font-family: 'Carlito', sans-serif;
+      font-size: 14px;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      display: inline-block;
+      text-align: center;
+      margin: 0.25rem auto;
+    }
+
+    input.compacto {
+      background-color: white;
+      border: 1px solid #ccc;
+      width: 160px;
+      height: 36px;
+      color: #111;
+      display: block;
+    }
+
+    button.compacto {
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: block;
+    }
+
+    button.compacto:hover {
+      background-color: #0369a1;
+    }
+
+    #msg {
+      font-size: 13px;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="logo">🎓</div>
+    <h2>Acesso à Plataforma</h2>
+    <p>Digite seu código de acesso fornecido pelo professor:</p>
+
+    <input type="text" id="codigo" class="compacto" placeholder="Ex: AR1X92" />
+    <button id="btnEntrar" class="compacto">Entrar</button>
+    <p id="msg"></p>
+  </main>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
+
+    document.getElementById('btnEntrar').addEventListener('click', async () => {
+      const codigo = document.getElementById('codigo').value.trim().toUpperCase();
+      const msg = document.getElementById('msg');
+      msg.textContent = '';
+      msg.style.color = '#4b5563';
+
+      if (!codigo || codigo.length < 4) {
+        msg.textContent = 'Por favor, informe um código válido.';
+        msg.style.color = 'red';
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, role')
+        .eq('codigo_acesso', codigo)
+        .maybeSingle();
+
+      if (error || !data) {
+        msg.textContent = 'Código não encontrado. Verifique com seu professor.';
+        msg.style.color = 'red';
+        return;
+      }
+
+      msg.textContent = 'Acesso liberado! Redirecionando...';
+      msg.style.color = 'green';
+
+      const destino =
+        data.role === 'admin' ? 'admin.html' :
+        data.role === 'teacher' ? 'professor.html' :
+        'aluno.html';
+
+      setTimeout(() => {
+        window.location.href = `${destino}?user_id=${data.id}`;
+      }, 1000);
+    });
+  </script>
+</body>
 </html>
