@@ -8,63 +8,40 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
+<body class="bg-white text-gray-800 p-6">
+  <div class="max-w-4xl mx-auto">
+    <a href="javascript:history.back()" class="text-purple-600 hover:underline text-sm">← Voltar</a>
 
-<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <h1 id="tituloCurso" class="text-2xl font-bold mt-4 mb-1">Carregando curso...</h1>
+    <p id="descricaoCurso" class="mb-4 text-gray-600"></p>
 
-  <!-- Cabeçalho fixo -->
-  <header class="bg-sky-600 text-white py-3 px-6 shadow-sm flex justify-between items-center sticky top-0 z-10">
-    <h1 class="text-lg font-semibold flex items-center gap-2">🎓 Academy Tools</h1>
-    <a href="javascript:history.back()" class="text-sm hover:underline text-white/80">← Voltar</a>
-  </header>
-
-  <!-- Conteúdo principal -->
-  <div class="max-w-6xl mx-auto p-6">
-    <!-- Título e descrição -->
-    <div class="mb-6 border-b pb-4">
-      <h2 id="tituloCurso" class="text-2xl font-bold mb-1">Carregando curso...</h2>
-      <p id="descricaoCurso" class="text-gray-600 text-base">Descrição da aula</p>
+    <div class="mb-4">
+      <p class="text-sm mb-1"><span class="inline-block">📊</span> Progresso: <span id="textoProgresso">0%</span></p>
+      <div class="w-full h-3 bg-gray-200 rounded">
+        <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
+      </div>
     </div>
 
-    <!-- Área de conteúdo dividida -->
-    <div class="flex flex-col lg:flex-row gap-8">
-      
-      <!-- Lado esquerdo: lista de aulas -->
-      <aside class="lg:w-1/4 w-full">
-        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">📚 Aulas</h3>
-        <ul id="listaAulas" class="space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
-      </aside>
+    <div class="flex gap-8">
+      <div class="w-1/3">
+        <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
+        <ul id="listaAulas" class="space-y-1 text-sm"></ul>
+      </div>
 
-      <!-- Lado direito: vídeo e progresso -->
-      <section class="flex-1">
-        <!-- Progresso -->
-        <div class="mb-4">
-          <p class="text-sm mb-1"><span>📊</span> Progresso: <span id="textoProgresso">0%</span></p>
-          <div class="w-full h-3 bg-gray-200 rounded overflow-hidden">
-            <div id="barraProgresso" class="h-3 bg-blue-600 transition-all" style="width: 0%"></div>
-          </div>
-        </div>
-
-        <!-- Título da aula -->
-        <h4 id="tituloAula" class="text-lg font-semibold mb-2">Título da Aula</h4>
-
-        <!-- Player de vídeo -->
-        <div class="aspect-video w-full rounded overflow-hidden shadow mb-2">
+      <div class="flex-1">
+        <h3 id="tituloAula" class="text-lg font-semibold mb-2">Título da Aula</h3>
+        <div class="aspect-video w-full rounded overflow-hidden mb-2">
           <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
         </div>
-
-        <!-- Informações de progresso -->
         <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
         <p id="infoAssistido" class="text-sm mt-2 text-gray-700"></p>
-
-        <!-- Link para quiz -->
         <div id="quizContainer" class="mt-4 hidden">
           <a id="linkQuiz" href="#" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">Fazer Avaliação do Curso</a>
         </div>
-      </section>
+      </div>
     </div>
   </div>
 
-  <!-- Script original mantido -->
   <script>
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
@@ -93,6 +70,11 @@
     function getYouTubeId(url) {
       const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
       return match ? match[1] : '';
+    }
+
+    function atualizarIndicadorLocal(current, duration) {
+      const pct = Math.min(100, Math.round((current / duration) * 100));
+      infoAssistido.textContent = `⏱️ ${current}s / ${Math.floor(duration)}s 📊 ${pct}%`;
     }
 
     async function carregarDados() {
@@ -158,7 +140,9 @@
 
       loadYouTubeAPI().then(() => {
         player = new YT.Player(playerFrame, {
-          events: { onReady: onPlayerReady }
+          events: {
+            onReady: onPlayerReady
+          }
         });
       });
     }
@@ -170,6 +154,9 @@
       }
 
       duration = player.getDuration();
+
+      const current = await player.getCurrentTime();
+      atualizarIndicadorLocal(current, duration);
 
       if (!aulaAtual.duration || aulaAtual.duration === 0) {
         const { error } = await supabase
@@ -207,8 +194,7 @@
         atualizarProgressoGeral();
         infoAssistido.innerHTML = '<span class="text-green-700">✔️ Aula concluída!</span>';
       } else {
-        const pct = Math.min(100, Math.round((current / duration) * 100));
-        infoAssistido.textContent = `⏱️ ${current}s / ${Math.floor(duration)}s 📊 ${pct}%`;
+        atualizarIndicadorLocal(current, duration);
       }
     }
 
