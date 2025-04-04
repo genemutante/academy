@@ -1,70 +1,84 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Painel do Aluno</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Carlito', sans-serif;
+      background-color: #f9fafb;
+      padding: 1rem;
+    }
+
+    header {
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .logo {
+      font-size: 1.6rem;
+    }
+
+    header p {
+      font-size: 0.95rem;
+      color: #4b5563;
+    }
+
+    .card {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.2rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .card p {
+      font-size: 0.95rem;
+      line-height: 1.4;
+      margin-bottom: 0.75rem;
+    }
+
+    .card a {
+      font-size: 0.95rem;
+      color: #0284c7;
+      font-weight: 500;
+    }
+  </style>
 </head>
-<body class="container">
-
-  <main id="conteudo" style="margin-top: 2rem;">
-    <h2>🎓 Olá, <span id="aluno-nome">estudante</span>!</h2>
+<body>
+  <header>
+    <h1><span class="logo">🎓</span> Olá, Renato Melo!</h1>
     <p>Veja abaixo os cursos disponíveis:</p>
-    <div id="cursos" style="margin-top: 1rem;">Carregando...</div>
-  </main>
+  </header>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    );
+  <section class="card">
+    <h2>Identificando Perfis DISC</h2>
+    <p>
+      Aprenda a reconhecer e diferenciar os quatro perfis comportamentais DISC:
+      Executor, Comunicador, Planejador e Analítico.
+    </p>
+    <a href="curso.html?curso_id=1">Acessar curso</a>
+  </section>
 
-    const params = new URLSearchParams(window.location.search);
-    const userId = params.get('user_id');
-
-    if (!userId) {
-      document.getElementById('cursos').innerHTML = `<strong>Erro:</strong> ID do aluno não encontrado na URL.`;
-      throw new Error('user_id ausente');
-    }
-
-    async function carregarAluno() {
-      const { data, error } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', userId)
-        .single();
-
-      if (data?.name) {
-        document.getElementById('aluno-nome').textContent = data.name;
-      }
-    }
-
-    async function carregarCursos() {
-      const { data, error } = await supabase.from('courses').select('*');
-
-      if (error || !data) {
-        document.getElementById('cursos').innerHTML = `<strong>Erro ao carregar cursos.</strong>`;
-        return;
-      }
-
-      const container = document.getElementById('cursos');
-      container.innerHTML = '';
-
-      data.forEach(curso => {
-        const card = document.createElement('article');
-        card.innerHTML = `
-          <h3>${curso.title}</h3>
-          <p>${curso.description}</p>
-          <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="contrast">Acessar curso</a>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    carregarAluno();
-    carregarCursos();
-  </script>
 </body>
 </html>
