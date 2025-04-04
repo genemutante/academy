@@ -207,27 +207,29 @@
       interval = setInterval(trackProgress, 5000);
     }
 
+
+
 async function trackProgress() {
   if (!player || typeof player.getCurrentTime !== 'function') return;
   const state = player.getPlayerState();
   if (state !== YT.PlayerState.PLAYING) return;
 
   const current = Math.floor(player.getCurrentTime());
-  if (current <= lastTime || current - lastTime > 30) {
-    lastTime = current;
-    return;
-  }
+  const diff = current - lastTime;
 
-  lastTime = current;
+  if (diff <= 0 || diff > 30) return;
+
   await supabase.from('progress_segments').insert({
     user_id,
     course_id,
     lesson_id: aulaAtual.id,
     duration: Math.floor(duration),
-    segment: { start: lastTime - 5, end: current }
+    segment: { start: lastTime, end: current }
   });
 
-  // 🔁 Atualiza status da aula e da barra de progresso
+  lastTime = current;
+
+  // Atualiza status e indicadores
   const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
     p_user_id: user_id,
     p_lesson_id: aulaAtual.id
@@ -250,6 +252,7 @@ async function trackProgress() {
     carregarProgressoCurso();
   }
 }
+
 
 
 
