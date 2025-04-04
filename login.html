@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login do Aluno</title>
+  <title>Login por Código de Acesso</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
 </head>
 <body class="container">
-  <main style="margin-top: 4rem; max-width: 400px; margin-inline: auto;">
-    <h2>🔐 Acesso do Aluno</h2>
-    <p>Informe seu código de acesso:</p>
+
+  <main style="margin-top: 5rem; max-width: 400px; margin-inline: auto;">
+    <h2>🔐 Acesso à Plataforma</h2>
+    <p>Digite seu código de acesso fornecido pelo professor:</p>
+
     <input type="text" id="codigo" placeholder="Ex: AR1X92" />
     <button id="btnEntrar">Entrar</button>
-    <p id="msg" style="color: red;"></p>
+    <p id="msg" style="margin-top: 1rem;"></p>
   </main>
 
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -23,26 +25,40 @@
     );
 
     document.getElementById('btnEntrar').addEventListener('click', async () => {
-      const codigo = document.getElementById('codigo').value.trim();
+      const codigo = document.getElementById('codigo').value.trim().toUpperCase();
       const msg = document.getElementById('msg');
+      msg.textContent = '';
+      msg.style.color = 'inherit';
 
       if (!codigo) {
         msg.textContent = 'Por favor, informe seu código de acesso.';
+        msg.style.color = 'red';
         return;
       }
 
       const { data, error } = await supabase
         .from('users')
-        .select('id')
+        .select('id, role')
         .eq('codigo_acesso', codigo)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         msg.textContent = 'Código não encontrado. Verifique com seu professor.';
+        msg.style.color = 'red';
         return;
       }
 
-      window.location.href = `aluno.html?user_id=${data.id}`;
+      msg.textContent = 'Acesso liberado! Redirecionando...';
+      msg.style.color = 'green';
+
+      const destino =
+        data.role === 'admin' ? 'admin.html' :
+        data.role === 'teacher' ? 'professor.html' :
+        'aluno.html';
+
+      setTimeout(() => {
+        window.location.href = `${destino}?user_id=${data.id}`;
+      }, 1000);
     });
   </script>
 </body>
