@@ -1,69 +1,137 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aula</title>
-  <!-- Importa o CSS premium universal -->
-  <link rel="stylesheet" href="styles.css">
+  <title>Aula Premium</title>
+  <!-- CDN Tailwind para estilização -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Script do Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Script para API do YouTube -->
   <script src="https://www.youtube.com/iframe_api"></script>
+
+  <!-- Configuração básica do Tailwind para cores customizadas (opcional) -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6B46C1',   // Cor principal (roxo)
+            secondary: '#4C51BF', // Cor secundária (azul)
+            accent: '#F59E0B',    // Cor de destaque (amarelo)
+          },
+          fontFamily: {
+            sans: ['Inter', 'Carlito', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body>
-  <div class="container">
-    <div class="row">
-      <!-- Coluna esquerda (aprox. 1/3 da tela) -->
-      <div class="col" style="flex: 1;">
-        <div class="card">
-          <p>
-            <span>📊</span> Progresso do curso: 
+<body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
+  <!-- Container geral -->
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Grid principal: coluna esquerda (1/3) e coluna direita (2/3) em telas grandes -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- COLUNA ESQUERDA -->
+      <div class="lg:col-span-1">
+        <!-- Card para informações do curso e progresso -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+          <p class="text-sm font-medium flex items-center gap-1 mb-3">
+            <span class="text-accent">📊</span> 
+            Progresso do curso: 
             <span id="textoProgresso">0%</span>
           </p>
-          <!-- Barra de progresso personalizada -->
-          <div style="background-color: var(--color-light); height: 10px; border-radius: var(--border-radius); margin: 10px 0;">
-            <div id="barraProgresso" style="height: 10px; background-color: var(--color-primary); width: 0%; border-radius: var(--border-radius); transition: width var(--transition-speed);"></div>
+          <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              id="barraProgresso" 
+              class="h-3 bg-primary rounded-full transition-all duration-300" 
+              style="width: 0%">
+            </div>
           </div>
-          <h1 id="tituloCurso">Carregando curso...</h1>
-          <p id="descricaoCurso"></p>
         </div>
-        <h2>📚 Aulas</h2>
-        <!-- Lista de aulas sem marcadores -->
-        <ul id="listaAulas" style="list-style: none; padding: 0;"></ul>
+        <!-- Título e descrição do curso -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+          <h1 id="tituloCurso" class="text-xl font-bold mb-2">
+            Carregando curso...
+          </h1>
+          <p id="descricaoCurso" class="text-sm text-gray-600 leading-relaxed"></p>
+        </div>
+        <!-- Lista de aulas -->
+        <div>
+          <h2 class="text-lg font-semibold mb-3 flex items-center gap-2">
+            📚 Aulas
+          </h2>
+          <ul 
+            id="listaAulas" 
+            class="space-y-2 text-sm list-none"
+          ></ul>
+        </div>
       </div>
       
-      <!-- Coluna direita (aprox. 2/3 da tela) -->
-      <div class="col" style="flex: 2;">
-        <div class="card">
-          <!-- Vídeo com proporção 16:9 -->
-          <div style="position: relative; padding-top: 56.25%; overflow: hidden; border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <iframe id="videoPlayer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
+      <!-- COLUNA DIREITA -->
+      <div class="lg:col-span-2">
+        <!-- Card para o vídeo -->
+        <div class="bg-white rounded-lg shadow p-6 mb-4">
+          <!-- Container responsivo do vídeo (16:9) -->
+          <div class="relative pb-[56.25%] h-0 mb-4">
+            <iframe 
+              id="videoPlayer" 
+              class="absolute top-0 left-0 w-full h-full rounded" 
+              frameborder="0" 
+              allowfullscreen>
+            </iframe>
           </div>
-          <div style="margin-top: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-            <h3 id="tituloAula">Título da Aula</h3>
-            <div style="position: relative;">
-              <button id="btnMaterial" class="button" style="margin-right: 10px;">📎 Material de Apoio</button>
-              <div id="popupMaterial" class="hidden" style="position: absolute; z-index: 10; margin-top: 10px; width: 250px; background: #fff; border: 1px solid var(--color-light); border-radius: var(--border-radius); padding: 15px;">
-                <p style="font-weight: bold; margin-bottom: 10px;">Links úteis:</p>
-                <ul style="list-style: disc; padding-left: 20px;">
-                  <li><a href="#">PDF da aula</a></li>
-                  <li><a href="#">Slides</a></li>
-                  <li><a href="#">Referência externa</a></li>
+          <!-- Título da aula e botões -->
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+            <h3 id="tituloAula" class="text-lg font-semibold">
+              Título da Aula
+            </h3>
+            <div class="flex items-center gap-2 relative">
+              <button 
+                id="btnMaterial" 
+                class="px-3 py-2 text-sm bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-100"
+              >
+                📎 Material de Apoio
+              </button>
+              <!-- Popup do material -->
+              <div 
+                id="popupMaterial" 
+                class="hidden absolute top-full mt-2 w-64 bg-white border border-gray-300 rounded shadow-md p-4 text-sm text-gray-700 z-10"
+              >
+                <p class="mb-2 font-semibold">Links úteis:</p>
+                <ul class="list-disc list-inside space-y-1">
+                  <li><a href="#" class="text-primary hover:underline">PDF da aula</a></li>
+                  <li><a href="#" class="text-primary hover:underline">Slides</a></li>
+                  <li><a href="#" class="text-primary hover:underline">Referência externa</a></li>
                 </ul>
               </div>
-              <button id="btnQuiz" class="button" disabled style="background-color: var(--color-light); color: #aaa; cursor: not-allowed;">
+              <!-- Botão para quiz (desabilitado por padrão) -->
+              <button 
+                id="btnQuiz" 
+                disabled 
+                class="px-4 py-2 text-sm bg-gray-300 text-gray-500 rounded cursor-not-allowed"
+              >
                 Fazer Avaliação da Aula
               </button>
             </div>
           </div>
-          <p style="font-size: 0.8rem; color: var(--color-secondary); margin-top: 10px;">
+          <p class="text-xs text-gray-500">
             ⚙️ Progresso salvo automaticamente durante a reprodução
           </p>
-          <p id="infoAssistido"></p>
+          <p 
+            id="infoAssistido" 
+            class="text-sm mt-2 text-gray-700"
+          ></p>
         </div>
       </div>
     </div>
   </div>
-  
+
+  <!-- Script principal -->
   <script>
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
@@ -100,8 +168,10 @@
 
     async function carregarDados() {
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
-      tituloCurso.textContent = curso.title;
-      descricaoCurso.textContent = curso.description;
+      if (curso) {
+        tituloCurso.textContent = curso.title;
+        descricaoCurso.textContent = curso.description;
+      }
 
       const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
       aulas = lista || [];
@@ -115,8 +185,11 @@
         return aula;
       });
       aulas = await Promise.all(promises);
+
       listarAulas();
-      if (aulas.length) selecionarAula(aulas[0]);
+      if (aulas.length) {
+        selecionarAula(aulas[0]);
+      }
       carregarProgressoCurso();
     }
 
@@ -124,10 +197,13 @@
       listaAulas.innerHTML = '';
       aulas.forEach(aula => {
         const li = document.createElement('li');
-        li.className = 'list-item';
+        // Classe base do Tailwind para um card de lista
+        li.className = 'bg-white rounded-lg shadow p-3 flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow';
+
+        // Ícone de status
         const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
         li.innerHTML = `
-          <span class="text-center">${statusIcon}</span>
+          <span class="w-5 text-center">${statusIcon}</span>
           <span>${aula.order}. ${aula.title}</span>
         `;
         li.onclick = () => selecionarAula(aula);
@@ -143,7 +219,8 @@
       if (data?.length > 0) {
         const pct = data[0].percentual_conclusao || 0;
         barraProgresso.style.width = pct + '%';
-        textoProgresso.textContent = pct + '%';
+        // Se quiser exibir em texto, descomente ou adicione no layout
+        // textoProgresso.textContent = pct + '%';
       }
     }
 
@@ -152,9 +229,9 @@
       tituloAula.textContent = aula.title;
       infoAssistido.textContent = '';
       btnQuiz.disabled = true;
-      btnQuiz.style.backgroundColor = 'var(--color-light)';
-      btnQuiz.style.color = '#aaa';
-      btnQuiz.style.cursor = 'not-allowed';
+      btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+      btnQuiz.classList.remove('bg-primary', 'text-white');
+
       clearInterval(interval);
       lastTime = 0;
       initPlayer();
@@ -168,9 +245,8 @@
         if (item.status === '✔ Concluída') {
           infoAssistido.textContent = '✅ Aula concluída';
           btnQuiz.disabled = false;
-          btnQuiz.style.backgroundColor = 'var(--color-primary)';
-          btnQuiz.style.color = '#fff';
-          btnQuiz.style.cursor = 'pointer';
+          btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+          btnQuiz.classList.add('bg-primary', 'text-white', 'hover:bg-secondary');
         } else {
           atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
         }
@@ -218,19 +294,25 @@
       }
       lastTime = current;
       await supabase.from('progress_segments').insert({
-        user_id, course_id, lesson_id: aulaAtual.id,
+        user_id,
+        course_id,
+        lesson_id: aulaAtual.id,
         duration: Math.floor(duration),
         segment: { start: lastTime - 5, end: current }
       });
     }
 
-    btnMaterial.addEventListener('click', () => popupMaterial.classList.toggle('hidden'));
+    // Lógica do popup de Material de Apoio
+    btnMaterial.addEventListener('click', () => {
+      popupMaterial.classList.toggle('hidden');
+    });
     window.addEventListener('click', (e) => {
       if (!btnMaterial.contains(e.target) && !popupMaterial.contains(e.target)) {
         popupMaterial.classList.add('hidden');
       }
     });
 
+    // Carrega os dados ao iniciar
     carregarDados();
   </script>
 </body>
