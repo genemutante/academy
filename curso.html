@@ -96,6 +96,28 @@
       infoAssistido.textContent = `⏱️ ${current}s / ${Math.floor(duration)}s 📊 ${pct}%`;
     }
 
+    async function carregarProgressoDaAula() {
+      const { data: segmentos } = await supabase
+        .from('progress_segments')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('course_id', course_id)
+        .eq('lesson_id', aulaAtual.id);
+
+      if (!segmentos || segmentos.length === 0) {
+        infoAssistido.textContent = '⏱️ 0s / ?s 📊 0%';
+        return;
+      }
+
+      const assistido = segmentos.reduce((total, seg) => {
+        return total + (seg.segment.end - seg.segment.start);
+      }, 0);
+
+      const tempo = segmentos[0].duration || 0;
+      const pct = tempo ? Math.round((assistido / tempo) * 100) : 0;
+      infoAssistido.textContent = `⏱️ ${assistido}s / ${tempo}s 📊 ${pct}%`;
+    }
+
     async function carregarDados() {
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
       tituloCurso.textContent = curso.title;
@@ -134,13 +156,13 @@
     function selecionarAula(aula) {
       aulaAtual = aula;
       tituloAula.textContent = aula.title;
-      infoAssistido.textContent = '';
       btnQuiz.disabled = true;
       btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
       btnQuiz.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
       clearInterval(interval);
       lastTime = 0;
       initPlayer();
+      carregarProgressoDaAula();
     }
 
     function loadYouTubeAPI() {
