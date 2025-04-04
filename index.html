@@ -3,140 +3,180 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acesso à Plataforma</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Carlito', sans-serif;
-      background-color: #f3f4f6;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
+  <title>Simulador de Plataforma</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    main {
-      background-color: white;
-      padding: 2rem 1.5rem;
-      border-radius: 14px;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
-      width: 100%;
-      max-width: 360px;
-      text-align: center;
-    }
-
-    .logo {
-      font-size: 36px;
-      margin-bottom: 0.75rem;
-    }
-
-    h2 {
-      font-size: 20px;
-      margin: 0 0 0.5rem;
-      color: #1f2937;
-    }
-
-    p {
-      font-size: 14px;
-      color: #4b5563;
-      margin-bottom: 1.25rem;
-    }
-
-    /* Estilos personalizados que ignoram o Pico */
-    .compacto {
-      all: unset;
-      font-family: 'Carlito', sans-serif;
-      font-size: 14px;
-      padding: 0.4rem 1rem;
-      border-radius: 6px;
-      display: inline-block;
-      text-align: center;
-      margin: 0.25rem auto;
-    }
-
-    input.compacto {
-      background-color: white;
-      border: 1px solid #ccc;
-      width: 160px;
-      height: 36px;
-      color: #111;
-      display: block;
-    }
-
-    button.compacto {
-      background-color: #0284c7;
-      color: white;
-      border: none;
-      cursor: pointer;
-      display: block;
-    }
-
-    button.compacto:hover {
-      background-color: #0369a1;
-    }
-
-    #msg {
-      font-size: 13px;
-      margin-top: 1rem;
-    }
-  </style>
 </head>
-<body>
-  <main>
-    <div class="logo">🎓</div>
-    <h2>Acesso à Plataforma</h2>
-    <p>Digite seu código de acesso fornecido pelo professor:</p>
+<body class="bg-gray-100 text-gray-800 font-sans">
 
-    <input type="text" id="codigo" class="compacto" placeholder="Ex: AR1X92" />
-    <button id="btnEntrar" class="compacto">Entrar</button>
-    <p id="msg"></p>
+  <!-- Header -->
+  <header class="bg-blue-600 text-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-xl font-bold">🎓 Simulador de Plataforma de Cursos</h1>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Navegação -->
+    <nav class="mb-6">
+      <ul class="flex flex-wrap gap-2 text-sm font-medium text-gray-600">
+        <li><button data-tab="simulador" class="tab-link px-4 py-2 rounded bg-blue-600 text-white">🧠 Progresso</button></li>
+        <li><button data-tab="carga" class="tab-link px-4 py-2 rounded hover:bg-blue-100">📈 Carga</button></li>
+        <li><button data-tab="dashboard" class="tab-link px-4 py-2 rounded hover:bg-blue-100">📊 Dashboard</button></li>
+        <li><button data-tab="cenario" class="tab-link px-4 py-2 rounded hover:bg-blue-100">🛠 Criar Cenário</button></li>
+        <li><button data-tab="relatorio" class="tab-link px-4 py-2 rounded hover:bg-blue-100">🧾 Exportar</button></li>
+        <li><button data-tab="validador" class="tab-link px-4 py-2 rounded hover:bg-blue-100">🔍 Validar SQL</button></li>
+        <li><button data-tab="estresse" class="tab-link px-4 py-2 rounded hover:bg-blue-100">🧪 Estresse</button></li>
+        <li><button data-tab="tempo" class="tab-link px-4 py-2 rounded hover:bg-blue-100">📆 Temporal</button></li>
+      </ul>
+    </nav>
+
+    <!-- Conteúdo -->
+    <section id="simulador" class="tab-content">
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold mb-2">🧠 Simulador de Progresso</h2>
+        <p class="text-gray-600">Carregue o módulo <code>simulador.js</code> para iniciar os testes de simulação de progresso de vídeo.</p>
+      </div>
+    </section>
+
+    <section id="carga" class="tab-content hidden">
+      <div class="bg-white p-6 rounded shadow max-w-3xl">
+        <h2 class="text-xl font-semibold mb-4">📈 Simulador de Carga</h2>
+        <form class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <label>👤 Alunos: <input id="numAlunos" type="number" value="1000" class="input" /></label>
+          <label>📘 Cursos: <input id="numCursos" type="number" value="50" class="input" /></label>
+          <label>🎓 Aulas/Curso: <input id="aulasPorCurso" type="number" value="10" class="input" /></label>
+          <label>⏱️ Duração Aula (min): <input id="duracaoMinutos" type="number" value="15" class="input" /></label>
+          <label>🔁 Fragmentação (%): <input id="fatorFragmentacao" type="number" value="30" class="input" /></label>
+        </form>
+        <div class="bg-gray-100 p-4 rounded border">
+          <h3 class="font-semibold text-sm mb-2">📊 Resultado estimado</h3>
+          <pre id="resultadoCarga" class="text-sm text-gray-800 whitespace-pre-wrap"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard" class="tab-content hidden">
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold mb-4">📊 Dashboard de Resultados</h2>
+        <canvas id="graficoResultado" height="300"></canvas>
+      </div>
+    </section>
+
+    <section id="cenario" class="tab-content hidden">
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold">🛠 Criador de Cenários</h2>
+        <p class="text-gray-600">Funcionalidade futura para criar manualmente aulas e simulações de progresso detalhado.</p>
+      </div>
+    </section>
+
+    <section id="relatorio" class="tab-content hidden">
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold">🧾 Exportar Relatório</h2>
+        <p class="text-gray-600">Em breve: exportar todos os testes e dados em arquivos Markdown, PDF, HTML.</p>
+      </div>
+    </section>
+
+    <section id="validador" class="tab-content hidden">
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold">🔍 Validador de Função SQL</h2>
+        <p class="text-gray-600">Comparar a execução da função `fn_progresso_por_usuario_e_aula` com dados esperados do cenário.</p>
+      </div>
+    </section>
+
+    <section id="estresse" class="tab-content hidden">
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold">🧪 Modo Estresse</h2>
+        <p class="text-gray-600">Teste pesado com dados em tempo real simulando múltiplos alunos assistindo vídeos simultaneamente.</p>
+      </div>
+    </section>
+
+    <section id="tempo" class="tab-content hidden">
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold">📆 Simulação Temporal</h2>
+        <p class="text-gray-600">Projeção de crescimento de dados ao longo do tempo com múltiplos usuários e cursos.</p>
+      </div>
+    </section>
   </main>
 
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    const supabase = window.supabase.createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    const tabs = document.querySelectorAll('.tab-link');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(btn => btn.classList.remove('bg-blue-600', 'text-white'));
+        tab.classList.add('bg-blue-600', 'text-white');
+
+        contents.forEach(c => c.classList.add('hidden'));
+        const id = tab.dataset.tab;
+        document.getElementById(id).classList.remove('hidden');
+
+        if (id === 'dashboard') renderChart();
+        if (id === 'carga') calcularCarga();
+      });
+    });
+
+    function calcularCarga() {
+      const alunos = +document.getElementById('numAlunos').value;
+      const cursos = +document.getElementById('numCursos').value;
+      const aulas = +document.getElementById('aulasPorCurso').value;
+      const duracao = +document.getElementById('duracaoMinutos').value * 60;
+      const frag = 1 + (+document.getElementById('fatorFragmentacao').value / 100);
+
+      const registrosAula = Math.ceil((duracao / 5) * frag);
+      const total = registrosAula * cursos * aulas * alunos;
+      const mb = (total * 0.5) / (1024 * 1024);
+
+      document.getElementById('resultadoCarga').textContent = `
+Registros por aluno: ~${registrosAula * cursos * aulas}
+Registros totais: ~${total.toLocaleString()}
+Espaço estimado: ~${mb.toFixed(2)} MB`;
+    }
+
+    document.querySelectorAll('#carga input').forEach(input =>
+      input.addEventListener('input', calcularCarga)
     );
 
-    document.getElementById('btnEntrar').addEventListener('click', async () => {
-      const codigo = document.getElementById('codigo').value.trim().toUpperCase();
-      const msg = document.getElementById('msg');
-      msg.textContent = '';
-      msg.style.color = '#4b5563';
+    function renderChart() {
+      const ctx = document.getElementById('graficoResultado').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Aula 1', 'Aula 2', 'Aula 3', 'Aula 4'],
+          datasets: [{
+            label: 'Percentual Concluído',
+            data: [75, 50, 98, 30],
+            backgroundColor: '#2563eb'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          }
+        }
+      });
+    }
 
-      if (!codigo || codigo.length < 4) {
-        msg.textContent = 'Por favor, informe um código válido.';
-        msg.style.color = 'red';
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, role')
-        .eq('codigo_acesso', codigo)
-        .maybeSingle();
-
-      if (error || !data) {
-        msg.textContent = 'Código não encontrado. Verifique com seu professor.';
-        msg.style.color = 'red';
-        return;
-      }
-
-      msg.textContent = 'Acesso liberado! Redirecionando...';
-      msg.style.color = 'green';
-
-      const destino =
-        data.role === 'admin' ? 'admin.html' :
-        data.role === 'teacher' ? 'professor.html' :
-        'aluno.html';
-
-      setTimeout(() => {
-        window.location.href = `${destino}?user_id=${data.id}`;
-      }, 1000);
-    });
+    // Inicializar com carga
+    calcularCarga();
   </script>
+  
+  
+<script type="module">
+  import { renderizarDashboard } from './dashboard.js';
+
+  document.querySelectorAll('.tab-link').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.tab;
+      if (id === 'dashboard') {
+        setTimeout(() => renderizarDashboard(), 200); // Espera a aba renderizar
+      }
+    });
+  });
+</script>
+  
 </body>
 </html>
