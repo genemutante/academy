@@ -153,5 +153,43 @@ Espaço estimado: ~${mb.toFixed(2)} MB`;
     calcularCarga();
   </script>
 
+
+<script type="module">
+  import { executarCenario } from './simulador.js';
+
+  const container = document.getElementById('simulador');
+
+  container.innerHTML = `
+    <div class="bg-white p-6 rounded shadow">
+      <h2 class="text-xl font-semibold mb-4">🧠 Simulador de Progresso</h2>
+      <p class="mb-4 text-gray-700">Selecione um cenário para simular automaticamente a visualização de aulas e validar a função de progresso.</p>
+      <select id="selectCenario" class="input px-3 py-2 rounded border border-gray-300">
+        <option value="" disabled selected>Selecione um cenário...</option>
+        <option value="simples">Simples</option>
+        <option value="intermediario">Intermediário</option>
+        <option value="avancado">Avançado</option>
+        <option value="forcaBruta">Força Bruta</option>
+      </select>
+      <button id="btnExecutar" class="ml-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50" disabled>▶️ Executar</button>
+    </div>
+  `;
+
+  const select = document.getElementById('selectCenario');
+  const button = document.getElementById('btnExecutar');
+
+  select.addEventListener('change', () => {
+    button.disabled = !select.value;
+  });
+
+  button.addEventListener('click', () => {
+    if (select.value) {
+      executarCenario(select.value);
+    }
+  });
+
+  console.log('✅ Módulo simulador.js carregado');
+</script>
+
+  
 </body>
 </html>
