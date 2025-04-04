@@ -1,7 +1,14 @@
 // dashboard.js
 
 export function renderizarDashboard(canvasId = 'graficoResultado') {
-  const ctx = document.getElementById(canvasId).getContext('2d');
+  const canvas = document.getElementById(canvasId);
+
+  if (!canvas) {
+    console.warn(`Canvas com ID '${canvasId}' não encontrado.`);
+    return;
+  }
+
+  const ctx = canvas.getContext('2d');
 
   // Dados fictícios para visualização
   const dados = {
@@ -41,10 +48,11 @@ export function renderizarDashboard(canvasId = 'graficoResultado') {
     }
   };
 
-  // Destroi instância antiga se já existir
-  if (window._graficoDashboard) {
+  // ✅ Destroi instância antiga se já existir
+  if (window._graficoDashboard instanceof Chart) {
     window._graficoDashboard.destroy();
   }
 
+  // ✅ Cria nova instância
   window._graficoDashboard = new Chart(ctx, config);
 }
