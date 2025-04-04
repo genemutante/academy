@@ -1,5 +1,5 @@
 // simulador.js
-
+import { supabase } from './supabaseClient.js';
 import { CENARIOS } from './cenarios.js';
 import { log } from './logger.js';
 import {
