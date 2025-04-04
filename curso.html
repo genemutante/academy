@@ -8,7 +8,7 @@
   <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Fonte adicional para títulos (Playfair Display) -->
+  <!-- Fontes: Playfair Display para títulos e Inter para corpo -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link 
@@ -16,7 +16,7 @@
     rel="stylesheet"
   >
 
-  <!-- Configuração básica do Tailwind para fontes e cores personalizadas -->
+  <!-- Configuração do Tailwind: cores e fontes personalizadas -->
   <script>
     tailwind.config = {
       theme: {
@@ -28,7 +28,7 @@
           colors: {
             primary: '#6B46C1',   // Roxo elegante
             secondary: '#4C51BF', // Azul-escuro
-            accent: '#F59E0B',    // Amarelo (opcional para destaques)
+            accent: '#F59E0B',    // Destaque (opcional)
           }
         }
       }
@@ -40,64 +40,47 @@
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen font-sans">
-  <!-- Cabeçalho (pode ser fixo ou não) -->
+  <!-- Cabeçalho simplificado -->
   <header class="bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center sm:justify-between">
-      <div>
-        <h1 class="text-2xl font-serif text-primary tracking-tight">Minha Plataforma Premium</h1>
-        <p class="text-sm text-gray-500">Cursos Online com Qualidade Internacional</p>
-      </div>
-      <!-- Espaço para um possível menu ou perfil do usuário -->
-      <div class="mt-3 sm:mt-0">
-        <!-- Exemplo: Botão de perfil ou logout -->
-        <button class="text-sm bg-primary text-white px-4 py-2 rounded-md shadow hover:bg-secondary transition">
-          Meu Perfil
-        </button>
-      </div>
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <h1 class="text-2xl font-serif text-primary tracking-tight">Minha Plataforma Premium</h1>
     </div>
   </header>
 
   <!-- Conteúdo Principal -->
   <main class="max-w-7xl mx-auto px-4 py-6">
-    <!-- Título do curso e barra de progresso -->
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
-      <div class="mb-4 md:mb-0">
-        <h2 id="tituloCurso" class="text-2xl font-bold text-gray-800">Carregando curso...</h2>
-        <p id="descricaoCurso" class="text-sm text-gray-500 mt-1">
-          Descrição do curso em breve...
-        </p>
-      </div>
-      <!-- Progresso do curso -->
-      <div class="md:text-right">
-        <p class="text-sm font-medium flex items-center gap-2 mb-1 justify-end">
-          <span class="text-accent text-lg">📊</span> 
-          Progresso do curso: 
-          <span id="textoProgresso" class="font-semibold">0%</span>
-        </p>
-        <div class="w-full md:w-64 h-3 bg-gray-200 rounded-full overflow-hidden">
-          <div 
-            id="barraProgresso" 
-            class="h-3 bg-primary rounded-full transition-all duration-300" 
-            style="width: 0%">
-          </div>
+    <!-- Seção do Curso com Título, Descrição e Barra de Progresso (reduzida e estratégica) -->
+    <section class="mb-6">
+      <h2 id="tituloCurso" class="text-2xl font-bold text-gray-800">
+        Carregando curso...
+      </h2>
+      <p id="descricaoCurso" class="text-sm text-gray-500 mt-1">
+        Descrição do curso em breve...
+      </p>
+      <!-- Barra de Progresso (estilizada, mas compacta) -->
+      <div class="mt-3 w-full md:w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div 
+          id="barraProgresso" 
+          class="h-2 bg-primary rounded-full transition-all duration-300" 
+          style="width: 0%">
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Layout com 2 colunas: Lista de aulas (1/3) e conteúdo principal (2/3) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Coluna ESQUERDA: Lista de aulas -->
-      <div class="lg:col-span-1">
+      <aside class="lg:col-span-1">
         <div class="bg-white rounded-lg shadow p-5">
           <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
             📚 Aulas
           </h3>
           <ul id="listaAulas" class="space-y-2 text-sm list-none"></ul>
         </div>
-      </div>
+      </aside>
 
       <!-- Coluna DIREITA: Vídeo e informações da aula -->
-      <div class="lg:col-span-2">
+      <section class="lg:col-span-2">
         <div class="bg-white rounded-lg shadow p-5 mb-4">
           <!-- Vídeo responsivo (16:9) -->
           <div class="relative pb-[56.25%] h-0 rounded overflow-hidden shadow">
@@ -108,7 +91,7 @@
               allowfullscreen>
             </iframe>
           </div>
-          <!-- Infos da aula -->
+          <!-- Infos da aula: Título, Botões e Popup -->
           <div class="flex flex-wrap items-center justify-between mt-4 mb-2 gap-2">
             <h4 id="tituloAula" class="text-xl font-semibold text-gray-800">
               Título da Aula
@@ -116,7 +99,7 @@
             <div class="relative flex items-center gap-2">
               <button 
                 id="btnMaterial" 
-                class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 transition relative"
+                class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 transition"
               >
                 📎 Material de Apoio
               </button>
@@ -142,13 +125,12 @@
               </button>
             </div>
           </div>
-          <!-- Observação e indicador de progresso -->
           <p class="text-xs text-gray-500">
             ⚙️ Progresso salvo automaticamente durante a reprodução
           </p>
           <p id="infoAssistido" class="text-sm mt-2 text-gray-700"></p>
         </div>
-      </div>
+      </section>
     </div>
   </main>
 
@@ -179,7 +161,6 @@
     const listaAulas = document.getElementById('listaAulas');
     const tituloAula = document.getElementById('tituloAula');
     const barraProgresso = document.getElementById('barraProgresso');
-    const textoProgresso = document.getElementById('textoProgresso');
     const infoAssistido = document.getElementById('infoAssistido');
     const btnQuiz = document.getElementById('btnQuiz');
     const btnMaterial = document.getElementById('btnMaterial');
@@ -194,13 +175,13 @@
       return match ? match[1] : '';
     }
 
-    // Atualiza texto de progresso local
+    // Atualiza indicador de progresso local
     function atualizarIndicadorLocal(segundos, duracao) {
       const pct = Math.min(100, Math.round((segundos / duracao) * 100));
       infoAssistido.textContent = `⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%`;
     }
 
-    // Carrega dados do curso e aulas
+    // Carrega dados do curso e das aulas
     async function carregarDados() {
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
       if (curso) {
@@ -232,9 +213,7 @@
       listaAulas.innerHTML = '';
       aulas.forEach(aula => {
         const li = document.createElement('li');
-        // Classes Tailwind para card da lista
-        li.className = 'bg-white rounded shadow p-3 flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow';
-
+        li.className = 'bg-white rounded-lg shadow p-3 flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow';
         const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
         li.innerHTML = `
           <span class="w-5 text-center">${statusIcon}</span>
@@ -245,7 +224,7 @@
       });
     }
 
-    // Carrega progresso do curso
+    // Atualiza barra de progresso do curso
     async function carregarProgressoCurso() {
       const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
         p_user_id: user_id,
@@ -254,17 +233,16 @@
       if (data?.length > 0) {
         const pct = data[0].percentual_conclusao || 0;
         barraProgresso.style.width = pct + '%';
-        textoProgresso.textContent = pct + '%';
       }
     }
 
-    // Seleciona aula e atualiza UI
+    // Seleciona a aula e atualiza a interface
     async function selecionarAula(aula) {
       aulaAtual = aula;
       tituloAula.textContent = aula.title;
       infoAssistido.textContent = '';
 
-      // Desabilita quiz por padrão
+      // Desabilita o botão do quiz inicialmente
       btnQuiz.disabled = true;
       btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
       btnQuiz.classList.remove('bg-primary', 'text-white', 'hover:bg-secondary');
@@ -281,7 +259,6 @@
         const item = progresso[0];
         if (item.status === '✔ Concluída') {
           infoAssistido.textContent = '✅ Aula concluída';
-          // Habilita quiz
           btnQuiz.disabled = false;
           btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
           btnQuiz.classList.add('bg-primary', 'text-white', 'hover:bg-secondary');
@@ -301,7 +278,7 @@
       });
     }
 
-    // Inicializa o player
+    // Inicializa o player do YouTube
     function initPlayer() {
       const videoId = getYouTubeId(aulaAtual.youtube_url);
       playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
@@ -323,7 +300,7 @@
       interval = setInterval(trackProgress, 5000);
     }
 
-    // Monitora progresso do player
+    // Monitora o progresso do player
     async function trackProgress() {
       if (!player || typeof player.getCurrentTime !== 'function') return;
       const state = player.getPlayerState();
@@ -344,7 +321,7 @@
       });
     }
 
-    // Lógica do popup do Material de Apoio
+    // Lógica para o popup do Material de Apoio
     btnMaterial.addEventListener('click', () => {
       popupMaterial.classList.toggle('hidden');
     });
@@ -354,7 +331,7 @@
       }
     });
 
-    // Carrega dados iniciais
+    // Inicia o carregamento dos dados
     carregarDados();
   </script>
 </body>
