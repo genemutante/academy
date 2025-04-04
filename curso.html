@@ -96,12 +96,12 @@
     }
 
     async function carregarProgressoCurso() {
-      const { data, error } = await supabase.rpc('fn_progresso_curso_por_usuario', {
+      const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
         p_user_id: user_id,
         p_course_id: course_id
       });
       if (data?.length > 0) {
-        const pct = data[0].percentual_concluido || 0;
+        const pct = data[0].percentual_conclusao || 0;
         barraProgresso.style.width = pct + '%';
         textoProgresso.textContent = pct + '%';
       }
@@ -115,6 +115,17 @@
       const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
       aulas = lista || [];
 
+      // Obtem status de cada aula
+      const promises = aulas.map(async (aula) => {
+        const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+          p_user_id: user_id,
+          p_lesson_id: aula.id
+        });
+        aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
+        return aula;
+      });
+
+      aulas = await Promise.all(promises);
       listarAulas();
       if (aulas.length) selecionarAula(aulas[0]);
       carregarProgressoCurso();
@@ -124,8 +135,9 @@
       listaAulas.innerHTML = '';
       aulas.forEach(aula => {
         const li = document.createElement('li');
-        li.className = 'cursor-pointer hover:underline';
-        li.innerHTML = `${aula.order}. ${aula.title}`;
+        li.className = 'cursor-pointer hover:underline flex justify-between items-center';
+        const status = aula.status === '✔ Concluída' ? '✅' : '';
+        li.innerHTML = `<span>${aula.order}. ${aula.title}</span><span>${status}</span>`;
         li.onclick = () => selecionarAula(aula);
         listaAulas.appendChild(li);
       });
@@ -149,7 +161,6 @@
 
       if (progresso?.length > 0) {
         const item = progresso[0];
-
         if (item.status === '✔ Concluída') {
           infoAssistido.textContent = '✅ Aula concluída';
           btnQuiz.disabled = false;
@@ -176,9 +187,7 @@
 
       loadYouTubeAPI().then(() => {
         player = new YT.Player(playerFrame, {
-          events: {
-            onReady: onPlayerReady
-          }
+          events: { onReady: onPlayerReady }
         });
       });
     }
@@ -188,7 +197,6 @@
         setTimeout(onPlayerReady, 300);
         return;
       }
-
       duration = player.getDuration();
       interval = setInterval(trackProgress, 5000);
     }
@@ -203,7 +211,6 @@
         lastTime = current;
         return;
       }
-
       lastTime = current;
 
       await supabase.from('progress_segments').insert({
