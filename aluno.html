@@ -7,99 +7,109 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <style>
 
-   
+  <style>
     body {
       font-family: 'Carlito', sans-serif;
       background-color: #f9fafb;
-      padding: 0 1.5rem; /* remove o espaço de cima */
+      margin: 0;
     }
 
-    header {
-      margin-top: 0.5rem !important; /* sobe o header */
-      margin-bottom: 0.5rem;
+    header.topo {
+      background-color: #0ea5e9;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    header h2 {
-      font-size: 1.35rem;
+    header.topo h1 {
+      font-size: 1.25rem;
       margin: 0;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    header p {
-      font-size: 1rem;
+    .painel {
+      max-width: 880px;
+      margin: 2rem auto;
+      padding: 0 1.25rem;
+    }
+
+    .saudacao {
+      margin-bottom: 1.5rem;
+    }
+
+    .saudacao h2 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+
+    .saudacao p {
+      margin: 0.4rem 0 0;
       color: #4b5563;
-      margin: 0.3rem 0 0.8rem 0;
     }
 
-    main {
-      max-width: 820px;
-      margin: auto;
-    }
-
-    section {
+    .card-curso {
       background-color: white;
       border-radius: 10px;
       padding: 1rem 1.25rem;
       margin-bottom: 1rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s;
     }
 
-    section h3 {
+    .card-curso:hover {
+      transform: translateY(-3px);
+    }
+
+    .card-curso h3 {
       font-size: 1.15rem;
       margin-bottom: 0.4rem;
     }
 
-    section p {
+    .card-curso p {
       font-size: 0.95rem;
       margin-bottom: 0.6rem;
       line-height: 1.4;
     }
 
-    a {
-      font-size: 0.95rem;
+    .card-curso a {
+      font-weight: 500;
     }
 
     @media (max-width: 600px) {
-      header h2 {
-        font-size: 1.2rem;
+      header.topo h1 {
+        font-size: 1.1rem;
       }
-      section h3 {
-        font-size: 1.05rem;
+
+      .saudacao h2 {
+        font-size: 1.3rem;
       }
     }
-
-/* Reduz espaçamento entre saudação e lista de cursos */
-header {
-  margin-bottom: 0.5rem !important;
-  padding-bottom: 0 !important;
-}
-
-main#cursos {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-main#cursos > section:first-of-type {
-  margin-top: 0 !important;
-}
-
-
-    
   </style>
 </head>
 <body>
-  <header>
-    <h2>🎓 Olá, <span id="aluno-nome">estudante</span>!</h2>
-    <p>Veja abaixo os cursos disponíveis:</p>
+
+  <!-- Cabeçalho -->
+  <header class="topo">
+    <h1>🎓 Academy Tools</h1>
+    <span id="user-role">Aluno</span>
   </header>
 
-  <main id="cursos">
-    <p>Carregando cursos...</p>
-  </main>
+  <!-- Conteúdo -->
+  <div class="painel">
+    <div class="saudacao">
+      <h2>Olá, <span id="aluno-nome">Estudante</span>!</h2>
+      <p>Veja abaixo os cursos disponíveis:</p>
+    </div>
+
+    <main id="cursos">
+      <p>Carregando cursos...</p>
+    </main>
+  </div>
 
   <script>
     const supabase = window.supabase.createClient(
@@ -146,11 +156,12 @@ main#cursos > section:first-of-type {
         const curso = entry.courses;
         if (!curso) return;
 
-        const card = document.createElement('section');
+        const card = document.createElement('div');
+        card.className = 'card-curso';
         card.innerHTML = `
           <h3>${curso.title}</h3>
           <p>${curso.description || 'Sem descrição disponível.'}</p>
-          <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="contrast">Acessar curso</a>
+          <a href="curso.html?user_id=${userId}&course_id=${curso.id}">Acessar curso</a>
         `;
         container.appendChild(card);
       });
