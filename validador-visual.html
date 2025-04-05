@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Validador Visual de Progresso</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -16,20 +17,22 @@
       background: #f3f4f6;
       padding: 6px 10px;
       font-family: monospace;
-      border-left: 4px solid #facc15;
+      border-left: 4px solid #3b82f6;
       border-radius: 4px;
     }
-    .tempo {
+    .tempo-highlight span {
       font-weight: bold;
     }
-    .tempo .h { color: #facc15; }  /* amarelo */
-    .tempo .m { color: #f97316; }  /* laranja */
-    .tempo .s { color: #22c55e; }  /* verde */
+    .tempo-highlight .h { color: #fbbf24; } /* amarelo */
+    .tempo-highlight .m { color: #f97316; } /* laranja */
+    .tempo-highlight .s { color: #eab308; } /* amarelo escuro */
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans p-6">
 
-  <h1 class="text-2xl font-bold mb-6 flex items-center gap-2">🔍 Validador Visual de Progresso</h1>
+  <h1 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    🔍 Validador Visual de Progresso
+  </h1>
 
   <div class="flex flex-wrap gap-4 items-center mb-6">
     <div>
@@ -44,20 +47,52 @@
       <label class="block font-semibold mb-1">📊 Aula</label>
       <select id="aula" class="px-3 py-2 border rounded w-64"></select>
     </div>
-    <button id="btnCalcular" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded h-fit mt-6">🔎 Calcular Progresso</button>
+    <button id="btnCalcular" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded h-fit mt-6">
+      🔎 Calcular Progresso
+    </button>
   </div>
 
   <section id="resultado" class="bg-white p-6 rounded shadow hidden">
     <h2 class="text-lg font-semibold mb-4">📊 Resultado</h2>
+
     <div>
       <h3 class="font-semibold text-gray-600 mb-2">⏱️ Segmentos assistidos:</h3>
       <div id="listaSegmentos" class="grid-segmentos"></div>
     </div>
-    <div class="mt-6 text-sm space-y-2">
-      <p>📕 <strong>Duração total da aula:</strong> <span id="duracao"></span></p>
-      <p>✅ <strong>Algoritmo com lacunas:</strong> <span id="algoritmo"></span></p>
-      <p>🔄 <strong>Função SQL atual:</strong> <span id="sql"></span></p>
-      <p class="text-green-600 mt-2 font-medium" id="diagnostico"></p>
+
+    <div class="mt-6 text-sm overflow-x-auto">
+      <table class="min-w-full border border-black text-sm text-center">
+        <thead class="bg-purple-900 text-white">
+          <tr>
+            <th class="py-2 px-4 border border-black text-left">🧪 Indicador</th>
+            <th class="py-2 px-4 border border-black">⏱ Tempo</th>
+            <th class="py-2 px-4 border border-black">📊 %</th>
+            <th class="py-2 px-4 border border-black">📌 Status</th>
+          </tr>
+        </thead>
+        <tbody class="bg-black text-white">
+          <tr>
+            <td class="py-2 px-4 border border-black text-left font-bold bg-white text-gray-800">📕 Duração total da aula</td>
+            <td class="py-2 px-4 border border-black text-green-500 tempo-highlight" colspan="3" id="duracaoPainel">00h00m00s</td>
+          </tr>
+          <tr>
+            <td class="py-2 px-4 border border-black text-left font-bold bg-white text-gray-800">✅ Algoritmo com lacunas</td>
+            <td class="py-2 px-4 border border-black text-green-500 tempo-highlight" id="tempoLacuna">00h00m00s</td>
+            <td class="py-2 px-4 border border-black text-white" id="percentLacuna">0%</td>
+            <td class="py-2 px-4 border border-black" id="statusLacuna">❌ Incompleta</td>
+          </tr>
+          <tr>
+            <td class="py-2 px-4 border border-black text-left font-bold bg-white text-gray-800">🔄 Função SQL atual</td>
+            <td class="py-2 px-4 border border-black text-green-500 tempo-highlight" id="tempoSQL">00h00m00s</td>
+            <td class="py-2 px-4 border border-black text-white" id="percentSQL">0%</td>
+            <td class="py-2 px-4 border border-black" id="statusSQL">❌ Em andamento</td>
+          </tr>
+          <tr>
+            <td class="py-2 px-4 border border-black font-bold bg-white text-gray-800 text-left">📋 Avaliação</td>
+            <td class="py-2 px-4 border border-black bg-white text-gray-800 text-left" colspan="3" id="avaliacaoFinal">⚠️ Aguardando cálculo...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
@@ -70,6 +105,7 @@
     const alunoSelect = document.getElementById('aluno');
     const cursoSelect = document.getElementById('curso');
     const aulaSelect = document.getElementById('aula');
+    const btn = document.getElementById('btnCalcular');
 
     async function carregarDadosIniciais() {
       const { data: users } = await supabase.from('users').select('id, name');
@@ -79,6 +115,7 @@
       cursoSelect.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
 
       cursoSelect.addEventListener('change', carregarAulas);
+      alunoSelect.addEventListener('change', carregarAulas);
       carregarAulas();
     }
 
@@ -92,7 +129,7 @@
       const h = Math.floor(segundos / 3600);
       const m = Math.floor((segundos % 3600) / 60);
       const s = Math.floor(segundos % 60);
-      return `<span class="tempo"><span class="h">${String(h).padStart(2, '0')}h</span><span class="m">${String(m).padStart(2, '0')}m</span><span class="s">${String(s).padStart(2, '0')}s</span></span>`;
+      return `<span class="h">${String(h).padStart(2, '0')}h</span><span class="m">${String(m).padStart(2, '0')}m</span><span class="s">${String(s).padStart(2, '0')}s</span>`;
     }
 
     function mergeSegmentos(segmentos) {
@@ -112,10 +149,12 @@
       return result;
     }
 
-    document.getElementById('btnCalcular').addEventListener('click', async () => {
+    btn.addEventListener('click', async () => {
       const user_id = alunoSelect.value;
       const lesson_id = aulaSelect.value;
+
       const { data: aula } = await supabase.from('lessons').select('duration').eq('id', lesson_id).single();
+      const duracaoTotal = aula.duration;
 
       const { data: segmentos } = await supabase
         .from('progress_segments')
@@ -123,19 +162,10 @@
         .eq('user_id', user_id)
         .eq('lesson_id', lesson_id);
 
-      const brutos = segmentos
-        .map(s => s.segment)
-        .filter(s => s && typeof s.start === 'number' && typeof s.end === 'number');
-
-      const container = document.getElementById('listaSegmentos');
-      if (brutos.length === 0) {
-        container.innerHTML = `<div class="text-red-600 font-semibold">⚠️ Nenhum segmento válido encontrado.</div>`;
-        return;
-      }
-
+      const brutos = segmentos.map(s => ({ start: s.segment.start, end: s.segment.end }));
       const tratados = mergeSegmentos(brutos);
       const segundosValidos = tratados.reduce((acc, s) => acc + (s.end - s.start), 0);
-      const percentual = (segundosValidos / aula.duration) * 100;
+      const percentual = (segundosValidos / duracaoTotal) * 100;
 
       const { data: resultadoSql } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
@@ -145,17 +175,25 @@
       const sql = resultadoSql?.[0] || { segundos_assistidos: 0, percentual_assistido: 0, status: 'desconhecido' };
 
       document.getElementById('resultado').classList.remove('hidden');
-      document.getElementById('duracao').innerHTML = formatarTempo(aula.duration);
-      document.getElementById('algoritmo').innerHTML = `${formatarTempo(segundosValidos)} → ${percentual.toFixed(1)}% → ${percentual >= 97 ? '✅ Concluída' : '❌ Incompleta'}`;
-      document.getElementById('sql').innerHTML = `${formatarTempo(sql.segundos_assistidos)} → ${sql.percentual_assistido?.toFixed(1) || 0}% → ${sql.status}`;
-      document.getElementById('diagnostico').textContent = percentual >= 97
-        ? '✅ O aluno pode ser considerado como tendo concluído a aula.'
-        : '❌ A aula ainda não pode ser considerada como concluída.';
+      document.getElementById('listaSegmentos').innerHTML =
+        `<ul class="grid-segmentos">` +
+        tratados.map(s => `<li>${formatarTempo(s.start)} → ${formatarTempo(s.end)}</li>`).join('') +
+        `</ul>`;
 
-      const htmlLista = tratados.map(s =>
-        `<li>${formatarTempo(s.start)} → ${formatarTempo(s.end)}</li>`
-      ).join('');
-      container.innerHTML = `<ul class="grid-segmentos">${htmlLista}</ul>`;
+      document.getElementById('duracaoPainel').innerHTML = formatarTempo(duracaoTotal);
+      document.getElementById('tempoLacuna').innerHTML = formatarTempo(segundosValidos);
+      document.getElementById('percentLacuna').textContent = `${percentual.toFixed(1)}%`;
+      document.getElementById('statusLacuna').innerHTML = percentual >= 97 ? '✔️ Concluída' : '❌ Incompleta';
+
+      document.getElementById('tempoSQL').innerHTML = formatarTempo(sql.segundos_assistidos);
+      document.getElementById('percentSQL').textContent = `${sql.percentual_assistido?.toFixed(1) || 0}%`;
+      document.getElementById('statusSQL').innerHTML =
+        sql.status === 'concluida' ? '✔️ Concluída' : sql.status === 'em andamento' ? '🕒 Em andamento' : '❓ Desconhecido';
+
+      document.getElementById('avaliacaoFinal').textContent =
+        percentual >= 97
+          ? '✅ O aluno pode ser considerado como tendo concluído a aula.'
+          : '❌ A aula ainda não pode ser considerada como concluída.';
     });
 
     carregarDadosIniciais();
