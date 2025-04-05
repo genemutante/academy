@@ -50,7 +50,7 @@
     <h2 class="text-lg font-semibold mb-4">📊 Resultado</h2>
     <div>
       <h3 class="font-semibold text-gray-600 mb-2">⏱️ Segmentos assistidos:</h3>
-      <div id="listaSegmentos" class="grid-segmentos"></div>
+      <ul id="listaSegmentos" class="grid-segmentos"></ul>
     </div>
     <div class="mt-6 text-sm space-y-2">
       <p>📕 <strong>Duração total da aula:</strong> <span id="duracao"></span></p>
@@ -147,7 +147,8 @@
       const htmlLista = tratados.map(s =>
         `<li>${formatarTempo(s.start)} → ${formatarTempo(s.end)}</li>`
       ).join('');
-      document.getElementById('listaSegmentos').innerHTML = `<ul class="grid-segmentos">${htmlLista}</ul>`;
+      document.getElementById('listaSegmentos').innerHTML = htmlLista;
+
     });
 
     carregarDadosIniciais();
