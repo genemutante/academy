@@ -3,38 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <title>Validador Visual de Progresso</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     .grid-segmentos {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       gap: 8px;
+      margin-top: 1rem;
     }
     .grid-segmentos li {
-      background: #f9fafb;
-      padding: 6px 12px;
+      background: #f3f4f6;
+      padding: 6px 10px;
       font-family: monospace;
       border-left: 4px solid #facc15;
       border-radius: 4px;
     }
-    .tempo span {
+    .tempo {
       font-weight: bold;
     }
-    .tempo .h { color: #facc15; }
-    .tempo .m { color: #fb923c; }
-    .tempo .s { color: #4ade80; }
+    .tempo .h { color: #facc15; }  /* amarelo */
+    .tempo .m { color: #f97316; }  /* laranja */
+    .tempo .s { color: #22c55e; }  /* verde */
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans p-6">
 
-  <h1 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-800">
-    🔍 Validador Visual de Progresso
-  </h1>
+  <h1 class="text-2xl font-bold mb-6 flex items-center gap-2">🔍 Validador Visual de Progresso</h1>
 
-  <!-- Filtros -->
-  <div class="flex flex-wrap gap-4 items-end mb-6">
+  <div class="flex flex-wrap gap-4 items-center mb-6">
     <div>
       <label class="block font-semibold mb-1">👤 Aluno</label>
       <select id="aluno" class="px-3 py-2 border rounded w-64"></select>
@@ -44,28 +41,23 @@
       <select id="curso" class="px-3 py-2 border rounded w-64"></select>
     </div>
     <div>
-      <label class="block font-semibold mb-1">📚 Aula</label>
+      <label class="block font-semibold mb-1">📊 Aula</label>
       <select id="aula" class="px-3 py-2 border rounded w-64"></select>
     </div>
-    <button id="btnCalcular" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-      🔎 Calcular Progresso
-    </button>
+    <button id="btnCalcular" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded h-fit mt-6">🔎 Calcular Progresso</button>
   </div>
 
-  <!-- Resultado -->
   <section id="resultado" class="bg-white p-6 rounded shadow hidden">
     <h2 class="text-lg font-semibold mb-4">📊 Resultado</h2>
-
     <div>
       <h3 class="font-semibold text-gray-600 mb-2">⏱️ Segmentos assistidos:</h3>
       <div id="listaSegmentos" class="grid-segmentos"></div>
     </div>
-
-    <div class="mt-6 text-sm grid md:grid-cols-2 gap-4">
-      <p>📕 <strong>Duração total da aula:</strong> <span id="duracao" class="tempo"></span></p>
-      <p>✅ <strong>Algoritmo com lacunas:</strong> <span id="algoritmo" class="tempo"></span></p>
-      <p>📘 <strong>Função SQL atual:</strong> <span id="sql" class="tempo"></span></p>
-      <p id="diagnostico" class="font-medium"></p>
+    <div class="mt-6 text-sm space-y-2">
+      <p>📕 <strong>Duração total da aula:</strong> <span id="duracao"></span></p>
+      <p>✅ <strong>Algoritmo com lacunas:</strong> <span id="algoritmo"></span></p>
+      <p>🔄 <strong>Função SQL atual:</strong> <span id="sql"></span></p>
+      <p class="text-green-600 mt-2 font-medium" id="diagnostico"></p>
     </div>
   </section>
 
@@ -87,20 +79,20 @@
       cursoSelect.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
 
       cursoSelect.addEventListener('change', carregarAulas);
-      alunoSelect.addEventListener('change', carregarAulas);
       carregarAulas();
     }
 
     async function carregarAulas() {
-      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', cursoSelect.value);
+      const course_id = cursoSelect.value;
+      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', course_id);
       aulaSelect.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
     }
 
     function formatarTempo(segundos) {
-      const h = String(Math.floor(segundos / 3600)).padStart(2, '0');
-      const m = String(Math.floor((segundos % 3600) / 60)).padStart(2, '0');
-      const s = String(Math.floor(segundos % 60)).padStart(2, '0');
-      return `<span class="h">${h}h</span><span class="m">${m}m</span><span class="s">${s}s</span>`;
+      const h = Math.floor(segundos / 3600);
+      const m = Math.floor((segundos % 3600) / 60);
+      const s = Math.floor(segundos % 60);
+      return `<span class="tempo"><span class="h">${String(h).padStart(2, '0')}h</span><span class="m">${String(m).padStart(2, '0')}m</span><span class="s">${String(s).padStart(2, '0')}s</span></span>`;
     }
 
     function mergeSegmentos(segmentos) {
@@ -123,10 +115,7 @@
     document.getElementById('btnCalcular').addEventListener('click', async () => {
       const user_id = alunoSelect.value;
       const lesson_id = aulaSelect.value;
-      if (!user_id || !lesson_id) return;
-
       const { data: aula } = await supabase.from('lessons').select('duration').eq('id', lesson_id).single();
-      const duracaoTotal = aula?.duration || 0;
 
       const { data: segmentos } = await supabase
         .from('progress_segments')
@@ -134,10 +123,19 @@
         .eq('user_id', user_id)
         .eq('lesson_id', lesson_id);
 
-      const brutos = segmentos.map(s => s.segment).filter(Boolean);
+      const brutos = segmentos
+        .map(s => s.segment)
+        .filter(s => s && typeof s.start === 'number' && typeof s.end === 'number');
+
+      const container = document.getElementById('listaSegmentos');
+      if (brutos.length === 0) {
+        container.innerHTML = `<div class="text-red-600 font-semibold">⚠️ Nenhum segmento válido encontrado.</div>`;
+        return;
+      }
+
       const tratados = mergeSegmentos(brutos);
       const segundosValidos = tratados.reduce((acc, s) => acc + (s.end - s.start), 0);
-      const percentual = (segundosValidos / duracaoTotal) * 100;
+      const percentual = (segundosValidos / aula.duration) * 100;
 
       const { data: resultadoSql } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
@@ -147,17 +145,17 @@
       const sql = resultadoSql?.[0] || { segundos_assistidos: 0, percentual_assistido: 0, status: 'desconhecido' };
 
       document.getElementById('resultado').classList.remove('hidden');
-      document.getElementById('duracao').innerHTML = formatarTempo(duracaoTotal);
+      document.getElementById('duracao').innerHTML = formatarTempo(aula.duration);
       document.getElementById('algoritmo').innerHTML = `${formatarTempo(segundosValidos)} → ${percentual.toFixed(1)}% → ${percentual >= 97 ? '✅ Concluída' : '❌ Incompleta'}`;
-      document.getElementById('sql').innerHTML = `${formatarTempo(sql.segundos_assistidos)} → ${sql.percentual_assistido}% → ${sql.status === 'concluida' ? '✅ Concluída' : '🕒 Em andamento'}`;
-      document.getElementById('diagnostico').innerHTML = percentual >= 97
+      document.getElementById('sql').innerHTML = `${formatarTempo(sql.segundos_assistidos)} → ${sql.percentual_assistido?.toFixed(1) || 0}% → ${sql.status}`;
+      document.getElementById('diagnostico').textContent = percentual >= 97
         ? '✅ O aluno pode ser considerado como tendo concluído a aula.'
         : '❌ A aula ainda não pode ser considerada como concluída.';
 
       const htmlLista = tratados.map(s =>
-        `<li><span class="tempo">${formatarTempo(s.start)}</span> → <span class="tempo">${formatarTempo(s.end)}</span></li>`
+        `<li>${formatarTempo(s.start)} → ${formatarTempo(s.end)}</li>`
       ).join('');
-      document.getElementById('listaSegmentos').innerHTML = `<ul class="grid-segmentos">${htmlLista}</ul>`;
+      container.innerHTML = `<ul class="grid-segmentos">${htmlLista}</ul>`;
     });
 
     carregarDadosIniciais();
