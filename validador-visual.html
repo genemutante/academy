@@ -7,25 +7,19 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    .grid-segmentos {
+    .grid-bruta {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 8px;
-      margin-top: 1rem;
     }
-    .grid-segmentos li {
-      background: #f3f4f6;
-      padding: 6px 10px;
+    .bloco-bruto {
+      background: #fff;
+      border-left: 4px solid #facc15; /* amarelo */
+      padding: 8px 12px;
       font-family: monospace;
-      border-left: 4px solid #3b82f6;
       border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     }
-    .tempo-highlight span {
-      font-weight: bold;
-    }
-    .tempo-highlight .h { color: #fbbf24; } /* amarelo */
-    .tempo-highlight .m { color: #f97316; } /* laranja */
-    .tempo-highlight .s { color: #eab308; } /* amarelo escuro */
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans p-6">
@@ -57,41 +51,46 @@
 
     <div>
       <h3 class="font-semibold text-gray-600 mb-2">⏱️ Segmentos assistidos:</h3>
-      <div id="listaSegmentos" class="grid-segmentos"></div>
+      <div id="blocosBrutos" class="grid-bruta mb-4"></div>
     </div>
 
-    <div class="mt-6 text-sm overflow-x-auto">
-      <table class="min-w-full border border-black text-sm text-center">
-        <thead class="bg-purple-900 text-white">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm text-left border border-collapse">
+        <thead class="bg-purple-800 text-white">
           <tr>
-            <th class="py-2 px-4 border border-black text-left">🧪 Indicador</th>
-            <th class="py-2 px-4 border border-black">⏱ Tempo</th>
-            <th class="py-2 px-4 border border-black">📊 %</th>
-            <th class="py-2 px-4 border border-black">📌 Status</th>
+            <th class="p-2 border text-left">📋 Indicador</th>
+            <th class="p-2 border text-center">⏱ Tempo</th>
+            <th class="p-2 border text-center">📊 %</th>
+            <th class="p-2 border text-center">📌 Status</th>
           </tr>
         </thead>
         <tbody class="bg-black text-white">
           <tr>
-            <td class="py-2 px-4 border border-black text-left font-bold bg-white text-gray-800">📕 Duração total da aula</td>
-            <td class="py-2 px-4 border border-black text-green-500 tempo-highlight" colspan="3" id="duracaoPainel">00h00m00s</td>
+            <td class="border p-2 font-semibold">🟥 Duração total da aula</td>
+            <td id="duracao" class="border p-2 text-orange-400 text-center"></td>
+            <td class="border p-2 text-center">—</td>
+            <td class="border p-2 text-center">—</td>
           </tr>
           <tr>
-            <td class="py-2 px-4 border border-black text-left font-bold bg-white text-gray-800">✅ Algoritmo com lacunas</td>
-            <td class="py-2 px-4 border border-black text-green-500 tempo-highlight" id="tempoLacuna">00h00m00s</td>
-            <td class="py-2 px-4 border border-black text-white" id="percentLacuna">0%</td>
-            <td class="py-2 px-4 border border-black" id="statusLacuna">❌ Incompleta</td>
+            <td class="border p-2 font-semibold">✅ Algoritmo com lacunas</td>
+            <td id="algoritmoTempo" class="border p-2 text-green-400 text-center"></td>
+            <td id="algoritmoPercentual" class="border p-2 text-center"></td>
+            <td id="algoritmoStatus" class="border p-2 text-center"></td>
           </tr>
           <tr>
-            <td class="py-2 px-4 border border-black text-left font-bold bg-white text-gray-800">🔄 Função SQL atual</td>
-            <td class="py-2 px-4 border border-black text-green-500 tempo-highlight" id="tempoSQL">00h00m00s</td>
-            <td class="py-2 px-4 border border-black text-white" id="percentSQL">0%</td>
-            <td class="py-2 px-4 border border-black" id="statusSQL">❌ Em andamento</td>
-          </tr>
-          <tr>
-            <td class="py-2 px-4 border border-black font-bold bg-white text-gray-800 text-left">📋 Avaliação</td>
-            <td class="py-2 px-4 border border-black bg-white text-gray-800 text-left" colspan="3" id="avaliacaoFinal">⚠️ Aguardando cálculo...</td>
+            <td class="border p-2 font-semibold">🧮 Função SQL atual</td>
+            <td id="sqlTempo" class="border p-2 text-cyan-400 text-center"></td>
+            <td id="sqlPercentual" class="border p-2 text-center"></td>
+            <td id="sqlStatus" class="border p-2 text-center"></td>
           </tr>
         </tbody>
+        <tfoot>
+          <tr>
+            <td class="border p-2 font-semibold bg-white" colspan="4">
+              <p id="diagnostico" class="text-sm font-medium mt-2 text-center text-red-600"></p>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </section>
@@ -99,7 +98,7 @@
   <script type="module">
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ey...SUATOKENAQUI...'
     );
 
     const alunoSelect = document.getElementById('aluno');
@@ -115,38 +114,39 @@
       cursoSelect.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
 
       cursoSelect.addEventListener('change', carregarAulas);
-      alunoSelect.addEventListener('change', carregarAulas);
       carregarAulas();
     }
 
     async function carregarAulas() {
-      const course_id = cursoSelect.value;
-      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', course_id);
+      const { data: aulas } = await supabase
+        .from('lessons')
+        .select('id, title')
+        .eq('course_id', cursoSelect.value);
+
       aulaSelect.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
     }
 
     function formatarTempo(segundos) {
-      const h = Math.floor(segundos / 3600);
-      const m = Math.floor((segundos % 3600) / 60);
-      const s = Math.floor(segundos % 60);
-      return `<span class="h">${String(h).padStart(2, '0')}h</span><span class="m">${String(m).padStart(2, '0')}m</span><span class="s">${String(s).padStart(2, '0')}s</span>`;
+      const h = Math.floor(segundos / 3600).toString().padStart(2, '0');
+      const m = Math.floor((segundos % 3600) / 60).toString().padStart(2, '0');
+      const s = Math.floor(segundos % 60).toString().padStart(2, '0');
+      return `${h}h${m}m${s}s`;
     }
 
     function mergeSegmentos(segmentos) {
-      const sorted = [...segmentos].sort((a, b) => a.start - b.start);
-      const result = [];
-      let atual = sorted[0];
-      for (let i = 1; i < sorted.length; i++) {
-        const seg = sorted[i];
-        if (seg.start <= atual.end) {
-          atual.end = Math.max(atual.end, seg.end);
+      const ordenados = [...segmentos].sort((a, b) => a.start - b.start);
+      const unidos = [];
+      let atual = ordenados[0];
+      for (let i = 1; i < ordenados.length; i++) {
+        if (ordenados[i].start <= atual.end) {
+          atual.end = Math.max(atual.end, ordenados[i].end);
         } else {
-          result.push(atual);
-          atual = seg;
+          unidos.push(atual);
+          atual = ordenados[i];
         }
       }
-      result.push(atual);
-      return result;
+      unidos.push(atual);
+      return unidos;
     }
 
     btn.addEventListener('click', async () => {
@@ -162,38 +162,41 @@
         .eq('user_id', user_id)
         .eq('lesson_id', lesson_id);
 
-      const brutos = segmentos.map(s => ({ start: s.segment.start, end: s.segment.end }));
+      const brutos = segmentos.map(s => s.segment);
       const tratados = mergeSegmentos(brutos);
-      const segundosValidos = tratados.reduce((acc, s) => acc + (s.end - s.start), 0);
-      const percentual = (segundosValidos / duracaoTotal) * 100;
+      const tempoValido = tratados.reduce((soma, seg) => soma + (seg.end - seg.start), 0);
+      const percentualValido = +(tempoValido / duracaoTotal * 100).toFixed(1);
+      const statusValido = percentualValido >= 97 ? '✅ Concluída' : '❌ Incompleta';
 
-      const { data: resultadoSql } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+      const { data: sqlData } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
         p_lesson_id: lesson_id
       });
 
-      const sql = resultadoSql?.[0] || { segundos_assistidos: 0, percentual_assistido: 0, status: 'desconhecido' };
+      const sql = sqlData?.[0] || { segundos_assistidos: 0, percentual_assistido: 0, status: 'desconhecido' };
 
       document.getElementById('resultado').classList.remove('hidden');
-      document.getElementById('listaSegmentos').innerHTML =
-        `<ul class="grid-segmentos">` +
-        tratados.map(s => `<li>${formatarTempo(s.start)} → ${formatarTempo(s.end)}</li>`).join('') +
-        `</ul>`;
+      document.getElementById('duracao').textContent = formatarTempo(duracaoTotal);
+      document.getElementById('algoritmoTempo').textContent = formatarTempo(tempoValido);
+      document.getElementById('algoritmoPercentual').textContent = `${percentualValido}%`;
+      document.getElementById('algoritmoStatus').textContent = statusValido;
 
-      document.getElementById('duracaoPainel').innerHTML = formatarTempo(duracaoTotal);
-      document.getElementById('tempoLacuna').innerHTML = formatarTempo(segundosValidos);
-      document.getElementById('percentLacuna').textContent = `${percentual.toFixed(1)}%`;
-      document.getElementById('statusLacuna').innerHTML = percentual >= 97 ? '✔️ Concluída' : '❌ Incompleta';
+      document.getElementById('sqlTempo').textContent = formatarTempo(sql.segundos_assistidos);
+      document.getElementById('sqlPercentual').textContent = `${sql.percentual_assistido}%`;
+      document.getElementById('sqlStatus').textContent = sql.status === 'concluida' ? '✅ Concluída' : '❓ Desconhecido';
 
-      document.getElementById('tempoSQL').innerHTML = formatarTempo(sql.segundos_assistidos);
-      document.getElementById('percentSQL').textContent = `${sql.percentual_assistido?.toFixed(1) || 0}%`;
-      document.getElementById('statusSQL').innerHTML =
-        sql.status === 'concluida' ? '✔️ Concluída' : sql.status === 'em andamento' ? '🕒 Em andamento' : '❓ Desconhecido';
+      document.getElementById('diagnostico').textContent = percentualValido >= 97
+        ? '✅ O aluno pode ser considerado como tendo concluído a aula.'
+        : '❌ A aula ainda não pode ser considerada como concluída.';
 
-      document.getElementById('avaliacaoFinal').textContent =
-        percentual >= 97
-          ? '✅ O aluno pode ser considerado como tendo concluído a aula.'
-          : '❌ A aula ainda não pode ser considerada como concluída.';
+      const blocos = document.getElementById('blocosBrutos');
+      blocos.innerHTML = '';
+      brutos.forEach(s => {
+        const el = document.createElement('div');
+        el.className = 'bloco-bruto';
+        el.textContent = `${formatarTempo(s.start)} → ${formatarTempo(s.end)}`;
+        blocos.appendChild(el);
+      });
     });
 
     carregarDadosIniciais();
