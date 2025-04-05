@@ -6,32 +6,38 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    .grid-segmentos {
+    .bloco {
+      width: 14px;
+      height: 14px;
+      display: inline-block;
+      margin: 1px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .grid-blocos {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 6px;
+      grid-template-columns: repeat(auto-fit, minmax(12px, 1fr));
+      gap: 1px;
+      max-width: 100%;
     }
-    .segmento {
-      background-color: #eff6ff;
-      border-left: 4px solid #2563eb;
-      font-family: monospace;
-      padding: 4px 8px;
-      border-radius: 4px;
-    }
-    .segmento-invalido {
-      background-color: #fef2f2;
-      border-left: 4px solid #dc2626;
-      color: #991b1b;
+    .tooltip {
+      position: absolute;
+      background: #000;
+      color: #fff;
+      padding: 4px 6px;
+      font-size: 10px;
+      border-radius: 3px;
+      pointer-events: none;
+      z-index: 10;
+      display: none;
     }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans p-6">
+<body class="bg-gray-100 text-gray-900 p-6 font-sans">
+  <h1 class="text-2xl font-bold mb-6">🔍 Validador Visual de Progresso</h1>
 
-  <h1 class="text-2xl font-bold mb-6 flex items-center gap-2">
-    🔍 Validador Visual de Progresso
-  </h1>
-
-  <div class="flex flex-wrap gap-4 items-center mb-6">
+  <!-- Controles -->
+  <div class="flex flex-wrap gap-4 items-end mb-6">
     <div>
       <label class="block font-semibold mb-1">👤 Aluno</label>
       <select id="aluno" class="px-3 py-2 border rounded w-64"></select>
@@ -44,143 +50,163 @@
       <label class="block font-semibold mb-1">📚 Aula</label>
       <select id="aula" class="px-3 py-2 border rounded w-64"></select>
     </div>
-    <button id="btnCalcular" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded h-fit mt-6">
+    <button id="btnCalcular" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 h-fit">
       🔎 Calcular Progresso
     </button>
   </div>
 
-  <section id="resultado" class="bg-white p-6 rounded shadow hidden">
-    <h2 class="text-lg font-semibold mb-4">📊 Resultado</h2>
-
-    <div>
-      <h3 class="font-semibold text-gray-600 mb-2">⏱️ Segmentos assistidos:</h3>
-      <div id="listaSegmentos" class="grid-segmentos mb-2"></div>
-      <button id="toggleInvalid" class="text-sm text-blue-600 underline">👁️ Mostrar registros inválidos</button>
-      <div id="segmentosInvalidos" class="grid-segmentos hidden mt-2"></div>
-    </div>
-
-    <div class="mt-6 text-sm space-y-2">
-      <p>📕 <strong>Duração total da aula:</strong> <span id="duracao"></span></p>
-      <p>✅ <strong>Algoritmo com lacunas:</strong> <span id="algoritmo"></span></p>
-      <p>🧮 <strong>Função SQL atual:</strong> <span id="sql"></span></p>
-      <p class="text-green-600 mt-2 font-medium" id="diagnostico"></p>
-    </div>
+  <!-- Resultado -->
+  <section id="resultado" class="hidden">
+    <h2 class="text-xl font-semibold mb-4">📊 Resultado</h2>
+    <button id="toggleTracking" class="mb-4 text-blue-600 underline">👁️ Mostrar Visual de Segmentos</button>
+    <div id="trackingGrid" class="grid-blocos mb-6 hidden relative"></div>
+    <div class="tooltip" id="tooltip"></div>
+    <table class="w-full text-sm border">
+      <thead class="bg-purple-900 text-white">
+        <tr>
+          <th class="text-left p-2">🧠 Indicador</th>
+          <th class="text-center p-2">⏱ Tempo</th>
+          <th class="text-center p-2">📊 %</th>
+          <th class="text-center p-2">📌 Status</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaResultados" class="bg-white text-center"></tbody>
+    </table>
   </section>
 
+  <!-- Script -->
   <script>
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...S3Y'
     );
 
-    const alunoSelect = document.getElementById('aluno');
-    const cursoSelect = document.getElementById('curso');
-    const aulaSelect = document.getElementById('aula');
-    const btn = document.getElementById('btnCalcular');
+    const alunoSel = document.getElementById('aluno');
+    const cursoSel = document.getElementById('curso');
+    const aulaSel = document.getElementById('aula');
+    const resultado = document.getElementById('resultado');
+    const grid = document.getElementById('trackingGrid');
+    const tooltip = document.getElementById('tooltip');
 
     async function carregarDadosIniciais() {
       const { data: users } = await supabase.from('users').select('id, name');
-      alunoSelect.innerHTML = users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
-
+      alunoSel.innerHTML = users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
       const { data: cursos } = await supabase.from('courses').select('id, title');
-      cursoSelect.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
-
-      cursoSelect.addEventListener('change', carregarAulas);
+      cursoSel.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+      cursoSel.addEventListener('change', carregarAulas);
       carregarAulas();
     }
 
     async function carregarAulas() {
-      const course_id = cursoSelect.value;
-      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', course_id);
-      aulaSelect.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
+      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', cursoSel.value);
+      aulaSel.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
     }
 
-    function formatarTempo(seg) {
+    function formatar(seg) {
       const h = String(Math.floor(seg / 3600)).padStart(2, '0');
       const m = String(Math.floor((seg % 3600) / 60)).padStart(2, '0');
       const s = String(seg % 60).padStart(2, '0');
       return `${h}h${m}m${s}s`;
     }
 
-    function mergeSegmentos(segmentos) {
-      const ordenado = [...segmentos].sort((a, b) => a.start - b.start);
+    function merge(segmentos) {
+      const ordenados = [...segmentos].sort((a, b) => a.start - b.start);
       const result = [];
-      let atual = ordenado[0];
-      for (let i = 1; i < ordenado.length; i++) {
-        const s = ordenado[i];
-        if (s.start <= atual.end) {
-          atual.end = Math.max(atual.end, s.end);
+      let atual = ordenados[0];
+      for (let i = 1; i < ordenados.length; i++) {
+        const seg = ordenados[i];
+        if (seg.start <= atual.end) {
+          atual.end = Math.max(atual.end, seg.end);
         } else {
           result.push(atual);
-          atual = s;
+          atual = seg;
         }
       }
       result.push(atual);
       return result;
     }
 
-    btn.addEventListener('click', async () => {
-      const user_id = alunoSelect.value;
-      const lesson_id = aulaSelect.value;
-      const resEl = document.getElementById('resultado');
-      const listaEl = document.getElementById('listaSegmentos');
-      const invalidEl = document.getElementById('segmentosInvalidos');
+    function desenharTracking(segmentos, duracao) {
+      grid.innerHTML = '';
+      const mapa = Array.from({ length: duracao }, () => 0);
+      segmentos.forEach(s => {
+        if (s.start >= 0 && s.end <= duracao) {
+          for (let i = s.start; i < s.end; i++) {
+            mapa[i]++;
+          }
+        }
+      });
 
-      resEl.classList.remove('hidden');
-      listaEl.innerHTML = '';
-      invalidEl.innerHTML = '';
-      document.getElementById('duracao').textContent = '';
-      document.getElementById('algoritmo').textContent = '';
-      document.getElementById('sql').textContent = '';
-      document.getElementById('diagnostico').textContent = '';
+      mapa.forEach((v, i) => {
+        const bloco = document.createElement('div');
+        bloco.className = 'bloco';
+        bloco.style.background =
+          v === 0 ? '#fff' : v === 1 ? '#22c55e' : '#60a5fa'; // branco, verde, azul claro
+        bloco.title = `Segundo ${i}: assistido ${v}x`;
+        grid.appendChild(bloco);
+      });
+    }
+
+    function exibirTooltip(evt) {
+      tooltip.style.left = evt.pageX + 10 + 'px';
+      tooltip.style.top = evt.pageY - 10 + 'px';
+      tooltip.style.display = 'block';
+      tooltip.innerText = evt.target.title;
+    }
+
+    document.getElementById('btnCalcular').addEventListener('click', async () => {
+      resultado.classList.remove('hidden');
+      grid.classList.add('hidden');
+      document.getElementById('toggleTracking').textContent = '👁️ Mostrar Visual de Segmentos';
+
+      const user_id = alunoSel.value;
+      const lesson_id = aulaSel.value;
 
       const { data: aula } = await supabase.from('lessons').select('duration').eq('id', lesson_id).single();
-      const { data: registros } = await supabase
+      const duracao = aula.duration;
+
+      const { data: segmentos } = await supabase
         .from('progress_segments')
         .select('segment')
         .eq('user_id', user_id)
         .eq('lesson_id', lesson_id);
 
-      // Brutos distintos e ordenados
-      const brutos = registros.map(s => s.segment);
-      const unicos = Array.from(new Set(brutos.map(JSON.stringify))).map(JSON.parse);
+      const brutosValidos = segmentos
+        .map(s => s.segment)
+        .filter(s => s.start >= 0 && s.end > s.start && s.end <= duracao);
 
-      const validos = unicos.filter(s => s.start >= 0 && s.end > s.start);
-      const invalidos = unicos.filter(s => s.start < 0 || s.end <= s.start);
-      const ordenados = [...validos].sort((a, b) => a.start - b.start);
+      desenharTracking(brutosValidos, duracao);
 
-      listaEl.innerHTML = ordenados.map(s =>
-        `<div class="segmento">${formatarTempo(s.start)} → ${formatarTempo(s.end)}</div>`
-      ).join('');
+      const tratados = merge(brutosValidos);
+      const tempoTratado = tratados.reduce((acc, s) => acc + (s.end - s.start), 0);
+      const percentual = ((tempoTratado / duracao) * 100).toFixed(1);
 
-      invalidEl.innerHTML = invalidos.map(s =>
-        `<div class="segmento segmento-invalido">${formatarTempo(s.start)} → ${formatarTempo(s.end)}</div>`
-      ).join('');
-
-      // Cálculo
-      const tratados = mergeSegmentos(ordenados);
-      const segundosValidos = tratados.reduce((acc, s) => acc + (s.end - s.start), 0);
-      const percentual = (segundosValidos / aula.duration) * 100;
-
-      const { data: resultadoSql } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+      const { data: resultadoSQL } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
         p_lesson_id: lesson_id
       });
 
-      const sql = resultadoSql?.[0] || { segundos_assistidos: 0, percentual_assistido: 0, status: 'desconhecido' };
+      const sql = resultadoSQL?.[0] || { segundos_assistidos: 0, percentual_assistido: 0, status: '?' };
 
-      document.getElementById('duracao').textContent = formatarTempo(aula.duration);
-      document.getElementById('algoritmo').textContent = `${formatarTempo(segundosValidos)} → ${percentual.toFixed(1)}% → ${percentual >= 97 ? '✅ Concluída' : '❌ Incompleta'}`;
-      document.getElementById('sql').textContent = `${formatarTempo(sql.segundos_assistidos)} → ${sql.percentual_assistido}% → ${sql.status}`;
-      document.getElementById('diagnostico').textContent = percentual >= 97
-        ? '✅ O aluno pode ser considerado como tendo concluído a aula.'
-        : '❌ A aula ainda não pode ser considerada como concluída.';
+      const linhas = `
+        <tr><td class="text-left p-2">📕 Duração total da aula</td>
+          <td>${formatar(duracao)}</td><td>${formatar(duracao)}</td><td>—</td></tr>
+        <tr><td class="text-left p-2 text-green-700 font-semibold">✅ Algoritmo com lacunas</td>
+          <td>${formatar(tempoTratado)}</td><td>${percentual}%</td><td>${percentual >= 97 ? '✅ Concluída' : '❌ Incompleta'}</td></tr>
+        <tr><td class="text-left p-2 text-blue-700 font-semibold">📘 Função SQL atual</td>
+          <td>${formatar(sql.segundos_assistidos)}</td><td>${sql.percentual_assistido}%</td><td>${sql.status}</td></tr>
+      `;
+      document.getElementById('tabelaResultados').innerHTML = linhas;
     });
 
-    document.getElementById('toggleInvalid').addEventListener('click', () => {
-      const invalidEl = document.getElementById('segmentosInvalidos');
-      invalidEl.classList.toggle('hidden');
+    document.getElementById('toggleTracking').addEventListener('click', () => {
+      grid.classList.toggle('hidden');
+      const txt = grid.classList.contains('hidden') ? '👁️ Mostrar Visual de Segmentos' : '🙈 Ocultar Visual de Segmentos';
+      document.getElementById('toggleTracking').textContent = txt;
     });
+
+    grid.addEventListener('mouseover', exibirTooltip);
+    grid.addEventListener('mouseout', () => tooltip.style.display = 'none');
 
     carregarDadosIniciais();
   </script>
