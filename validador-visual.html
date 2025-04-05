@@ -2,68 +2,70 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>📊 Validador Visual de Progresso</title>
+  <title>Validador Visual de Progresso</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+    .grid-segmentos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 6px;
+    }
     .segmento {
-      @apply px-3 py-2 bg-yellow-100 border-l-4 border-yellow-500 text-sm rounded shadow;
+      background-color: #eff6ff;
+      border-left: 4px solid #2563eb;
       font-family: monospace;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .segmento-invalido {
+      background-color: #fef2f2;
+      border-left: 4px solid #dc2626;
+      color: #991b1b;
     }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans p-6">
 
-  <div class="max-w-5xl mx-auto">
-    <h1 class="text-2xl font-bold text-blue-700 mb-6 flex items-center gap-2">
-      🔍 Validador Visual de Progresso do Aluno
-    </h1>
+  <h1 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    🔍 Validador Visual de Progresso
+  </h1>
 
-    <!-- Controles -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div>
-        <label class="block font-semibold mb-1">👤 Aluno</label>
-        <select id="aluno" class="w-full px-3 py-2 border rounded"></select>
-      </div>
-      <div>
-        <label class="block font-semibold mb-1">🎓 Curso</label>
-        <select id="curso" class="w-full px-3 py-2 border rounded"></select>
-      </div>
-      <div>
-        <label class="block font-semibold mb-1">📚 Aula</label>
-        <select id="aula" class="w-full px-3 py-2 border rounded"></select>
-      </div>
+  <div class="flex flex-wrap gap-4 items-center mb-6">
+    <div>
+      <label class="block font-semibold mb-1">👤 Aluno</label>
+      <select id="aluno" class="px-3 py-2 border rounded w-64"></select>
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">🎓 Curso</label>
+      <select id="curso" class="px-3 py-2 border rounded w-64"></select>
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">📚 Aula</label>
+      <select id="aula" class="px-3 py-2 border rounded w-64"></select>
+    </div>
+    <button id="btnCalcular" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded h-fit mt-6">
+      🔎 Calcular Progresso
+    </button>
+  </div>
+
+  <section id="resultado" class="bg-white p-6 rounded shadow hidden">
+    <h2 class="text-lg font-semibold mb-4">📊 Resultado</h2>
+
+    <div>
+      <h3 class="font-semibold text-gray-600 mb-2">⏱️ Segmentos assistidos:</h3>
+      <div id="listaSegmentos" class="grid-segmentos mb-2"></div>
+      <button id="toggleInvalid" class="text-sm text-blue-600 underline">👁️ Mostrar registros inválidos</button>
+      <div id="segmentosInvalidos" class="grid-segmentos hidden mt-2"></div>
     </div>
 
-    <button id="btnCalcular" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">▶️ Calcular Progresso</button>
-
-    <!-- Resultado -->
-    <section id="resultado" class="bg-white p-6 rounded shadow mt-8 hidden">
-      <h2 class="text-lg font-semibold mb-4">📊 Resultado da Aula</h2>
-
-      <!-- Tracking -->
-      <div class="mb-6">
-        <h3 class="font-semibold text-gray-600 mb-2">🟨 Segmentos brutos (tracking real do banco)</h3>
-        <div id="segmentosBrutos" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2"></div>
-      </div>
-
-      <!-- Comparação -->
-      <div class="grid md:grid-cols-2 gap-6 text-sm">
-        <div class="bg-gray-50 p-4 border rounded">
-          <h4 class="font-bold text-blue-800 mb-2">🧠 Algoritmo com lacunas</h4>
-          <p><strong>Tempo assistido:</strong> <span id="algoritmoTempo"></span></p>
-          <p><strong>Percentual:</strong> <span id="algoritmoPercentual"></span>%</p>
-          <p><strong>Status:</strong> <span id="algoritmoStatus"></span></p>
-        </div>
-        <div class="bg-gray-50 p-4 border rounded">
-          <h4 class="font-bold text-green-800 mb-2">📦 Função SQL oficial</h4>
-          <p><strong>Tempo registrado:</strong> <span id="sqlTempo"></span></p>
-          <p><strong>Percentual:</strong> <span id="sqlPercentual"></span>%</p>
-          <p><strong>Status:</strong> <span id="sqlStatus"></span></p>
-        </div>
-      </div>
-    </section>
-  </div>
+    <div class="mt-6 text-sm space-y-2">
+      <p>📕 <strong>Duração total da aula:</strong> <span id="duracao"></span></p>
+      <p>✅ <strong>Algoritmo com lacunas:</strong> <span id="algoritmo"></span></p>
+      <p>🧮 <strong>Função SQL atual:</strong> <span id="sql"></span></p>
+      <p class="text-green-600 mt-2 font-medium" id="diagnostico"></p>
+    </div>
+  </section>
 
   <script>
     const supabase = window.supabase.createClient(
@@ -71,95 +73,116 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const alunoSel = document.getElementById('aluno');
-    const cursoSel = document.getElementById('curso');
-    const aulaSel = document.getElementById('aula');
+    const alunoSelect = document.getElementById('aluno');
+    const cursoSelect = document.getElementById('curso');
+    const aulaSelect = document.getElementById('aula');
+    const btn = document.getElementById('btnCalcular');
 
-    async function carregarControles() {
+    async function carregarDadosIniciais() {
       const { data: users } = await supabase.from('users').select('id, name');
-      alunoSel.innerHTML = users.map(u => `<option value="${u.id}">${u.name || u.id}</option>`).join('');
+      alunoSelect.innerHTML = users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
 
       const { data: cursos } = await supabase.from('courses').select('id, title');
-      cursoSel.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+      cursoSelect.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
 
-      cursoSel.addEventListener('change', carregarAulas);
+      cursoSelect.addEventListener('change', carregarAulas);
       carregarAulas();
     }
 
     async function carregarAulas() {
-      const { data: aulas } = await supabase
-        .from('lessons')
-        .select('id, title')
-        .eq('course_id', cursoSel.value);
-      aulaSel.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
+      const course_id = cursoSelect.value;
+      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', course_id);
+      aulaSelect.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
     }
 
-    function formatarTempo(segundos) {
-      const h = String(Math.floor(segundos / 3600)).padStart(2, '0');
-      const m = String(Math.floor((segundos % 3600) / 60)).padStart(2, '0');
-      const s = String(Math.floor(segundos % 60)).padStart(2, '0');
-      return `<strong>${h}</strong>h<strong>${m}</strong>m<strong>${s}</strong>s`;
+    function formatarTempo(seg) {
+      const h = String(Math.floor(seg / 3600)).padStart(2, '0');
+      const m = String(Math.floor((seg % 3600) / 60)).padStart(2, '0');
+      const s = String(seg % 60).padStart(2, '0');
+      return `${h}h${m}m${s}s`;
     }
 
-    function unificarSegmentos(segmentos) {
+    function mergeSegmentos(segmentos) {
       const ordenado = [...segmentos].sort((a, b) => a.start - b.start);
-      const resultado = [];
+      const result = [];
       let atual = ordenado[0];
       for (let i = 1; i < ordenado.length; i++) {
         const s = ordenado[i];
         if (s.start <= atual.end) {
           atual.end = Math.max(atual.end, s.end);
         } else {
-          resultado.push(atual);
+          result.push(atual);
           atual = s;
         }
       }
-      resultado.push(atual);
-      return resultado;
+      result.push(atual);
+      return result;
     }
 
-    document.getElementById('btnCalcular').addEventListener('click', async () => {
-      const user_id = alunoSel.value;
-      const lesson_id = aulaSel.value;
+    btn.addEventListener('click', async () => {
+      const user_id = alunoSelect.value;
+      const lesson_id = aulaSelect.value;
+      const resEl = document.getElementById('resultado');
+      const listaEl = document.getElementById('listaSegmentos');
+      const invalidEl = document.getElementById('segmentosInvalidos');
+
+      resEl.classList.remove('hidden');
+      listaEl.innerHTML = '';
+      invalidEl.innerHTML = '';
+      document.getElementById('duracao').textContent = '';
+      document.getElementById('algoritmo').textContent = '';
+      document.getElementById('sql').textContent = '';
+      document.getElementById('diagnostico').textContent = '';
 
       const { data: aula } = await supabase.from('lessons').select('duration').eq('id', lesson_id).single();
-      const duracao = aula.duration;
-
-      const { data: segmentosData } = await supabase
+      const { data: registros } = await supabase
         .from('progress_segments')
         .select('segment')
         .eq('user_id', user_id)
         .eq('lesson_id', lesson_id);
 
-      const brutos = segmentosData.map(s => s.segment);
-      const unificados = unificarSegmentos(brutos);
+      // Brutos distintos e ordenados
+      const brutos = registros.map(s => s.segment);
+      const unicos = Array.from(new Set(brutos.map(JSON.stringify))).map(JSON.parse);
 
-      const tempoTotal = unificados.reduce((soma, seg) => soma + (seg.end - seg.start), 0);
-      const percentual = Math.round((tempoTotal / duracao) * 100);
-      const status = percentual >= 97 ? '✔ Concluída' : '🕒 Em andamento';
+      const validos = unicos.filter(s => s.start >= 0 && s.end > s.start);
+      const invalidos = unicos.filter(s => s.start < 0 || s.end <= s.start);
+      const ordenados = [...validos].sort((a, b) => a.start - b.start);
 
-      const { data: funcao } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+      listaEl.innerHTML = ordenados.map(s =>
+        `<div class="segmento">${formatarTempo(s.start)} → ${formatarTempo(s.end)}</div>`
+      ).join('');
+
+      invalidEl.innerHTML = invalidos.map(s =>
+        `<div class="segmento segmento-invalido">${formatarTempo(s.start)} → ${formatarTempo(s.end)}</div>`
+      ).join('');
+
+      // Cálculo
+      const tratados = mergeSegmentos(ordenados);
+      const segundosValidos = tratados.reduce((acc, s) => acc + (s.end - s.start), 0);
+      const percentual = (segundosValidos / aula.duration) * 100;
+
+      const { data: resultadoSql } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
         p_lesson_id: lesson_id
       });
-      const dadosSQL = funcao?.[0];
 
-      // Preencher painel
-      document.getElementById('resultado').classList.remove('hidden');
-      document.getElementById('segmentosBrutos').innerHTML = brutos.map(s => `
-        <div class="segmento">${formatarTempo(s.start)} → ${formatarTempo(s.end)}</div>
-      `).join('');
+      const sql = resultadoSql?.[0] || { segundos_assistidos: 0, percentual_assistido: 0, status: 'desconhecido' };
 
-      document.getElementById('algoritmoTempo').innerHTML = formatarTempo(tempoTotal);
-      document.getElementById('algoritmoPercentual').textContent = percentual;
-      document.getElementById('algoritmoStatus').textContent = status;
-
-      document.getElementById('sqlTempo').innerHTML = formatarTempo(dadosSQL?.segundos_assistidos || 0);
-      document.getElementById('sqlPercentual').textContent = Math.round((dadosSQL?.segundos_assistidos / duracao) * 100);
-      document.getElementById('sqlStatus').textContent = dadosSQL?.status || 'indefinido';
+      document.getElementById('duracao').textContent = formatarTempo(aula.duration);
+      document.getElementById('algoritmo').textContent = `${formatarTempo(segundosValidos)} → ${percentual.toFixed(1)}% → ${percentual >= 97 ? '✅ Concluída' : '❌ Incompleta'}`;
+      document.getElementById('sql').textContent = `${formatarTempo(sql.segundos_assistidos)} → ${sql.percentual_assistido}% → ${sql.status}`;
+      document.getElementById('diagnostico').textContent = percentual >= 97
+        ? '✅ O aluno pode ser considerado como tendo concluído a aula.'
+        : '❌ A aula ainda não pode ser considerada como concluída.';
     });
 
-    carregarControles();
+    document.getElementById('toggleInvalid').addEventListener('click', () => {
+      const invalidEl = document.getElementById('segmentosInvalidos');
+      invalidEl.classList.toggle('hidden');
+    });
+
+    carregarDadosIniciais();
   </script>
 </body>
 </html>
