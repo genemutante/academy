@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Validador Visual de Progresso</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+  <div class="max-w-5xl mx-auto p-6">
+    <h1 class="text-2xl font-bold text-blue-700 mb-6">🔍 Validador Visual de Progresso</h1>
+
+    <!-- Conexão com Supabase -->
+    <script>
+      const supabase = window.supabase.createClient(
+        'https://bkueljjvhijojzcyodvk.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+      );
+    </script>
+
+    <!-- Controles -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div>
+        <label class="block font-medium mb-1">👤 Aluno</label>
+        <select id="userSelect" class="w-full border p-2 rounded"></select>
+      </div>
+      <div>
+        <label class="block font-medium mb-1">🎓 Curso</label>
+        <select id="courseSelect" class="w-full border p-2 rounded"></select>
+      </div>
+      <div>
+        <label class="block font-medium mb-1">📚 Aula</label>
+        <select id="lessonSelect" class="w-full border p-2 rounded"></select>
+      </div>
+    </div>
+
+    <button id="btnCalcular" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">🔍 Calcular Progresso</button>
+
+    <!-- Resultados -->
+    <div id="resultado" class="mt-8 space-y-6 text-sm text-gray-700"></div>
+  </div>
+
+  <script type="module">
+    const userSelect = document.getElementById('userSelect');
+    const courseSelect = document.getElementById('courseSelect');
+    const lessonSelect = document.getElementById('lessonSelect');
+    const resultado = document.getElementById('resultado');
+
+    // Preenche selects iniciais
+    async function carregarSelects() {
+      const { data: users } = await supabase.from('users').select('id, name');
+      const { data: courses } = await supabase.from('courses').select('id, title');
+
+      users?.forEach(u => {
+        userSelect.innerHTML += `<option value="${u.id}">${u.name || u.id}</option>`;
+      });
+      courses?.forEach(c => {
+        courseSelect.innerHTML += `<option value="${c.id}">${c.title}</option>`;
+      });
+    }
+
+    // Atualiza aulas ao escolher curso
+    courseSelect.addEventListener('change', async () => {
+      const { data: lessons } = await supabase.from('lessons').select('id, title').eq('course_id', courseSelect.value);
+      lessonSelect.innerHTML = '';
+      lessons?.forEach(l => {
+        lessonSelect.innerHTML += `<option value="${l.id}">${l.title}</option>`;
+      });
+    });
+
+    // Algoritmo que une segmentos
+    function calcularTempoAssistido(segmentos) {
+      if (!segmentos?.length) return 0;
+      const ordenado = [...segmentos].sort((a, b) => a.start - b.start);
+      let tempo = 0, atual = ordenado[0];
+      for (let i = 1; i < ordenado.length; i++) {
+        const s = ordenado[i];
+        if (s.start <= atual.end) {
+          atual.end = Math.max(atual.end, s.end);
+        } else {
+          tempo += atual.end - atual.start;
+          atual = s;
+        }
+      }
+      tempo += atual.end - atual.start;
+      return tempo;
+    }
+
+    // Clique no botão
+    document.getElementById('btnCalcular').addEventListener('click', async () => {
+      resultado.innerHTML = '<p class="text-gray-500">🔄 Buscando dados...</p>';
+
+      const user_id = userSelect.value;
+      const lesson_id = lessonSelect.value;
+
+      const { data: segmentos } = await supabase
+        .from('progress_segments')
+        .select('segment')
+        .eq('user_id', user_id)
+        .eq('lesson_id', lesson_id);
+
+      const { data: aula } = await supabase
+        .from('lessons')
+        .select('duration')
+        .eq('id', lesson_id)
+        .single();
+
+      const lista = segmentos.map(s => s.segment);
+      const tempoComLacunas = calcularTempoAssistido(lista);
+
+      const { data: oficial } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+        p_user_id: user_id,
+        p_lesson_id: lesson_id
+      });
+
+      const percentual = Math.round((tempoComLacunas / aula.duration) * 100);
+      const esperadoStatus = percentual >= 97 ? '✔ Concluída' : '🕒 Em andamento';
+
+      resultado.innerHTML = `
+        <h2 class="text-xl font-bold text-blue-800">📊 Resultado</h2>
+        <div class="bg-white rounded p-4 shadow">
+          <h3 class="font-semibold">⏱️ Segmentos assistidos:</h3>
+          <ul class="list-disc ml-6 mt-2">
+            ${lista.map(s => `<li>${s.start}s → ${s.end}s</li>`).join('')}
+          </ul>
+
+          <div class="mt-4">
+            <p>🎯 <strong>Duração total da aula:</strong> ${aula.duration}s</p>
+            <p>🧠 <strong>Algoritmo com lacunas:</strong> ${tempoComLacunas}s → ${percentual}% → ${esperadoStatus}</p>
+            <p>🧮 <strong>Função SQL atual:</strong> ${oficial?.[0]?.segundos_assistidos || 0}s → ${Math.round((oficial?.[0]?.segundos_assistidos / aula.duration) * 100)}% → ${oficial?.[0]?.status}</p>
+          </div>
+
+          <div class="mt-4 text-sm text-gray-600">
+            ${percentual >= 97
+              ? '✅ O aluno pode ser considerado como tendo concluído a aula.'
+              : '⚠️ O aluno não atingiu 97% mesmo com sobreposições tratadas. Há lacunas importantes.'}
+          </div>
+        </div>
+      `;
+    });
+
+    carregarSelects();
+  </script>
+</body>
+</html>
