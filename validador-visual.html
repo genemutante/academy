@@ -2,150 +2,160 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>🔍 Validador Visual de Progresso</title>
+  <title>Validador Visual de Progresso</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    .grade-progresso {
-      display: grid;
-      grid-template-columns: repeat(60, 1fr);
-      gap: 2px;
-      margin: 16px 0;
+    .bloco-segmento {
+      font-family: monospace;
+      font-size: 12px;
+      background-color: #f0f0f0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin: 2px;
+      display: inline-block;
     }
-    .bloco {
-      height: 12px;
-      border-radius: 2px;
+    .invalid {
+      color: red;
+      font-weight: bold;
     }
-    .vazio { background-color: #e5e7eb; }
-    .valido { background-color: #10b981; }    /* verde: assistido */
-    .duplicado { background-color: #3b82f6; } /* azul: repetido */
-    .invalido { background-color: #ef4444; }  /* vermelho: inválido */
+    .grid-segmentos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 10px;
+      max-width: 100%;
+    }
+    .barra {
+      display: flex;
+      gap: 1px;
+      flex-wrap: wrap;
+      width: 600px;
+    }
+    .pixel {
+      width: 10px;
+      height: 10px;
+    }
+    .assistido { background: #4ade80; }
+    .repetido  { background: #60a5fa; }
+    .nao-assistido { background: #f1f5f9; }
+    .invalido { background: #ef4444; }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 p-6 font-sans">
+<body class="bg-gray-100 p-6 font-sans">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold text-blue-800 mb-6">🔍 Validador Visual de Progresso</h1>
 
-  <h1 class="text-2xl font-bold text-blue-700 mb-6">🔍 Validador Visual de Progresso</h1>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div>
-      <label class="block font-medium mb-1">👤 Aluno</label>
-      <select id="aluno" class="w-full border p-2 rounded"></select>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div>
+        <label class="block font-medium mb-1">👤 Aluno</label>
+        <select id="aluno" class="w-full border rounded p-2"></select>
+      </div>
+      <div>
+        <label class="block font-medium mb-1">🎓 Curso</label>
+        <select id="curso" class="w-full border rounded p-2"></select>
+      </div>
+      <div>
+        <label class="block font-medium mb-1">📚 Aula</label>
+        <select id="aula" class="w-full border rounded p-2"></select>
+      </div>
     </div>
-    <div>
-      <label class="block font-medium mb-1">🎓 Curso</label>
-      <select id="curso" class="w-full border p-2 rounded"></select>
-    </div>
-    <div>
-      <label class="block font-medium mb-1">📚 Aula</label>
-      <select id="aula" class="w-full border p-2 rounded"></select>
-    </div>
-  </div>
 
-  <button id="btnCalcular" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">🔍 Calcular Progresso</button>
+    <button id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">🔎 Calcular Progresso</button>
 
-  <div id="resultado" class="mt-10 hidden">
-    <h2 class="text-xl font-semibold mb-4">📊 Resultado</h2>
-    <div id="visualizador" class="grade-progresso"></div>
-    <label class="inline-flex items-center mt-2 cursor-pointer">
-      <input type="checkbox" id="toggleTracking" class="form-checkbox" checked>
-      <span class="ml-2 text-sm">Mostrar segmentos assistidos brutos (tracking)</span>
-    </label>
-    <div id="brutos" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-4 text-sm font-mono text-gray-700"></div>
+    <div id="resultado" class="mt-8 hidden">
+      <h2 class="text-xl font-semibold mb-4">📊 Resultado</h2>
+
+      <div class="mb-4">
+        <label class="block font-semibold text-gray-600 mb-2">🧩 Tracking de Segmentos:</label>
+        <div class="barra" id="visualizacao"></div>
+        <button class="text-sm mt-2 underline text-blue-600" onclick="document.getElementById('detalhes').classList.toggle('hidden')">Mostrar/Ocultar Detalhes</button>
+        <div id="detalhes" class="grid-segmentos mt-2 hidden"></div>
+      </div>
+    </div>
   </div>
 
   <script>
-    const supabase = supabase.createClient(
+    const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const alunoSelect = document.getElementById("aluno");
-    const cursoSelect = document.getElementById("curso");
-    const aulaSelect = document.getElementById("aula");
-    const resultado = document.getElementById("resultado");
-    const visualizador = document.getElementById("visualizador");
-    const brutos = document.getElementById("brutos");
-
-    document.getElementById("btnCalcular").addEventListener("click", calcularProgresso);
-    document.getElementById("toggleTracking").addEventListener("change", e => {
-      brutos.style.display = e.target.checked ? "grid" : "none";
-    });
+    const aluno = document.getElementById('aluno');
+    const curso = document.getElementById('curso');
+    const aula = document.getElementById('aula');
+    const btn = document.getElementById('btn');
 
     async function carregarDadosIniciais() {
-      const { data: users } = await supabase.from("users").select("id, name");
-      const { data: cursos } = await supabase.from("courses").select("id, title");
+      const { data: users } = await supabase.from('users').select('id, name');
+      aluno.innerHTML = users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
 
-      alunoSelect.innerHTML = users.map(u => `<option value="${u.id}">${u.name}</option>`).join("");
-      cursoSelect.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join("");
+      const { data: cursos } = await supabase.from('courses').select('id, title');
+      curso.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
 
-      cursoSelect.addEventListener("change", carregarAulas);
-      alunoSelect.addEventListener("change", carregarAulas);
+      curso.addEventListener('change', carregarAulas);
       carregarAulas();
     }
 
     async function carregarAulas() {
-      const { data: aulas } = await supabase
-        .from("lessons")
-        .select("id, title")
-        .eq("course_id", cursoSelect.value);
-      aulaSelect.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join("");
+      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', curso.value);
+      aula.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
     }
 
-    function formatar(seg) {
-      const s = v => String(v).padStart(2, "0");
-      const h = Math.floor(seg / 3600);
-      const m = Math.floor((seg % 3600) / 60);
-      const s_ = Math.floor(seg % 60);
-      return `${s(h)}h${s(m)}m${s(s_)}s`;
+    function formatarTempo(s) {
+      const h = Math.floor(s / 3600).toString().padStart(2, '0');
+      const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+      const ss = Math.floor(s % 60).toString().padStart(2, '0');
+      return `${h}h${m}m${ss}s`;
     }
 
-    async function calcularProgresso() {
-      resultado.classList.remove("hidden");
-      visualizador.innerHTML = "";
-      brutos.innerHTML = "";
+    btn.addEventListener('click', async () => {
+      const user_id = aluno.value;
+      const lesson_id = aula.value;
 
-      const user_id = alunoSelect.value;
-      const lesson_id = aulaSelect.value;
-      const { data: aula } = await supabase.from("lessons").select("duration").eq("id", lesson_id).single();
-      const { data: segmentos } = await supabase
-        .from("progress_segments")
-        .select("segment")
-        .eq("user_id", user_id)
-        .eq("lesson_id", lesson_id);
+      const { data: aulaData } = await supabase.from('lessons').select('duration').eq('id', lesson_id).single();
+      const duracao = aulaData.duration;
 
-      const duracao = Math.min(3600, aula?.duration || 3600);
-      const slots = Array(duracao).fill(0);
+      const { data: segmentosData } = await supabase
+        .from('progress_segments')
+        .select('segment')
+        .eq('user_id', user_id)
+        .eq('lesson_id', lesson_id);
 
-      const brutosOrdenados = segmentos
-        .map(s => s.segment)
-        .filter(s => s.start >= 0 && s.end > s.start && s.end <= duracao)
-        .sort((a, b) => a.start - b.start);
+      const segmentos = segmentosData.map(s => s.segment);
+      const pixels = Array(duracao).fill(0);
 
-      for (let seg of brutosOrdenados) {
-        for (let i = seg.start; i < seg.end; i++) {
-          slots[i]++;
+      const detalhes = [];
+      const visual = document.getElementById('visualizacao');
+      const container = document.getElementById('detalhes');
+      visual.innerHTML = '';
+      container.innerHTML = '';
+
+      for (const s of segmentos) {
+        if (s.start >= s.end || s.start < 0 || s.end > duracao) continue;
+
+        for (let i = s.start; i < s.end; i++) {
+          pixels[i]++;
         }
+
+        const box = document.createElement('div');
+        box.className = 'bloco-segmento';
+        box.textContent = `${formatarTempo(s.start)} → ${formatarTempo(s.end)}`;
+        container.appendChild(box);
       }
 
-      // Construir visual
-      for (let i = 0; i < duracao; i++) {
-        const bloco = document.createElement("div");
-        bloco.classList.add("bloco");
-        bloco.title = `Segundo ${i}s`;
-        if (slots[i] === 0) bloco.classList.add("vazio");
-        else if (slots[i] === 1) bloco.classList.add("valido");
-        else bloco.classList.add("duplicado");
-        visualizador.appendChild(bloco);
+      for (let i = 0; i < pixels.length; i++) {
+        const el = document.createElement('div');
+        el.className = 'pixel';
+        el.title = `Segundo ${i} → ${pixels[i]}x`;
+        if (pixels[i] === 0) el.classList.add('nao-assistido');
+        else if (pixels[i] === 1) el.classList.add('assistido');
+        else el.classList.add('repetido');
+        visual.appendChild(el);
       }
 
-      // Tracking bruto
-      for (let seg of brutosOrdenados) {
-        const div = document.createElement("div");
-        div.className = "bg-gray-100 p-2 rounded border border-gray-200 shadow-sm";
-        div.textContent = `${formatar(seg.start)} → ${formatar(seg.end)}`;
-        brutos.appendChild(div);
-      }
-    }
+      document.getElementById('resultado').classList.remove('hidden');
+    });
 
     carregarDadosIniciais();
   </script>
