@@ -494,7 +494,7 @@ const corPorConceito = {
 
 
 
- painelFinal.innerHTML = `
+painelFinal.innerHTML = `
   <h2 class="text-lg font-bold text-blue-700 mb-2">📌 Avaliação Geral do Aluno</h2>
 
   <div class="mb-4 text-sm">
@@ -503,8 +503,6 @@ const corPorConceito = {
       ${parecerTutor.texto}
     </p>
     <span class="inline-block text-xs px-2 py-1 rounded font-medium mt-1
-    <hr class="my-4 border-gray-200" />
-
       ${parecerTutor.status === 'preliminar' 
         ? 'bg-yellow-100 text-yellow-800' 
         : 'bg-green-100 text-green-800'}">
@@ -512,26 +510,24 @@ const corPorConceito = {
     </span>
   </div>
 
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 text-sm">
+  <hr class="my-4 border-gray-200" />
 
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 text-sm">
     <div><strong>Nota:</strong> ${avaliacao.nota}</div>
     <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
     <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
     <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
     <div><strong>Feedback:</strong> ${avaliacao.feedback}</div>
+    <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleDateString()}</div>
+    <div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleDateString()}</div>
+  </div>
 
-<div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleDateString()}</div>
-<div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleDateString()}</div>
-
-    
+  <div class="mt-6">
+    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+      🖨️ Exportar Parecer em PDF
+    </button>
   </div>
 `;
-
-  <div class="mt-4">
-  <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
-    🖨️ Exportar Parecer em PDF
-  </button>
-</div>
 
 
 const blocoDiagnostico = document.getElementById("bloco-diagnostico");
