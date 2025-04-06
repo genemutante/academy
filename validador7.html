@@ -274,18 +274,30 @@ btn.addEventListener('click', async () => {
   resultado.querySelectorAll('.parecer-tutor, .avaliacao-tecnica').forEach(el => el.remove());
 
   // Parecer
-  const parecerTexto = gerarParecerModularizado(percentual, lacunas, heatmap.filter(v => v > 1).length, heatmap[0], heatmap[duracao - 1], duracao);
+  const parecerTutor = gerarParecerTutor(diagnostico, avaliacao);
+
   const parecer = document.createElement("div");
   parecer.className = "parecer-tutor mt-6 bg-white border-l-4 border-blue-600 p-4 rounded shadow text-gray-800";
-  parecer.innerHTML = `
-    <p class="text-sm">
-      🧾 <strong>Parecer do Tutor sobre esse aluno:</strong><br>
-      ${parecerTexto}
-    </p>`;
+
+  
+parecer.innerHTML = `
+  <p class="text-sm">
+    🧾 <strong>Parecer do Tutor:</strong><br>
+    ${parecerTutor.texto}
+  </p>
+  <p class="mt-2 text-xs text-${parecerTutor.status === 'preliminar' ? 'yellow-700' : 'green-700'} italic">
+    ${parecerTutor.status === 'preliminar' ? '⚠️ Parecer preliminar. A aula ainda está em andamento.' : '✅ Parecer consolidado. Aula concluída.'}
+  </p>`;
+
+
+
+  
   resultado.appendChild(parecer);
 
   // Avaliação Técnica
-  const avaliacao = gerarAvaliacaoTecnica(percentual);
+  const diagnostico = gerarDiagnosticoCompleto({ heatmap, duracao, lacunas, segmentos: bruto });
+  const avaliacao = gerarNotaEConceito(diagnostico);
+
   const painelAvaliacao = document.createElement("div");
   painelAvaliacao.className = "avaliacao-tecnica mt-4 bg-white border border-gray-300 p-4 rounded shadow text-gray-800 text-sm";
   painelAvaliacao.innerHTML = `
@@ -309,6 +321,88 @@ btn.addEventListener('click', async () => {
 });
 
 carregar();
+
+
+  
+
+const CONCEITOS = [
+  { sigla: "A", notaMin: 9.5, rubrica: "Excelente", bncc: "Alcançou com excelência os objetivos da aula.", feedback: "Desempenho excepcional. Continue nesse ritmo!" },
+  { sigla: "B+", notaMin: 9.0, rubrica: "Muito bom", bncc: "Alcançou os objetivos com qualidade.", feedback: "Ótimo trabalho, com envolvimento acima da média." },
+  { sigla: "B", notaMin: 7.5, rubrica: "Bom", bncc: "Alcançou os objetivos com qualidade, com espaço para evoluir.", feedback: "Bom desempenho, mas com pontos a fortalecer." },
+  { sigla: "C", notaMin: 6.0, rubrica: "Regular", bncc: "Alcançou parcialmente os objetivos propostos.", feedback: "Pode mais. Reforce o foco nos próximos conteúdos." },
+  { sigla: "D", notaMin: 4.0, rubrica: "Insuficiente", bncc: "Apresenta dificuldades em consolidar os objetivos.", feedback: "Engajamento baixo. Requer maior atenção." },
+  { sigla: "E", notaMin: 0.0, rubrica: "Fraco", bncc: "Não alcançou os objetivos esperados da aula.", feedback: "Baixíssimo aproveitamento. Necessita intervenção." }
+];
+
+function gerarNotaEConceito(d) {
+  let notaBase = d.percentualAssistido / 10;
+  let penalidade = 0;
+  let bonus = 0;
+
+  if (!d.inicioAssistido) penalidade += 0.5;
+  if (!d.fimAssistido) penalidade += 0.5;
+  if (d.percentualLacunas > 0.25) penalidade += 1;
+  if (d.maiorLacuna > 60) penalidade += 0.5;
+  if (d.totalLacunas >= 4) penalidade += 0.5;
+  if (!d.linearidade && d.percentualAssistido < 80) penalidade += 0.5;
+  if (d.finalizouForaDoPrazo) penalidade += 0.5;
+  if (d.duracaoDias > 10 && d.percentualAssistido < 100) penalidade += 0.5;
+
+  if (d.percentualAssistido >= 90 && d.totalRepeticoes >= 30) bonus += 0.5;
+  if (d.totalSessoes === 1 && d.percentualAssistido >= 90) bonus += 0.3;
+
+  const notaFinal = Math.max(0, Math.min(10, notaBase - penalidade + bonus));
+  const conceitoData = CONCEITOS.find(c => notaFinal >= c.notaMin);
+
+  return {
+    nota: notaFinal.toFixed(1).replace('.', ','),
+    conceito: conceitoData.sigla,
+    rubrica: conceitoData.rubrica,
+    feedback: conceitoData.feedback,
+    bncc: conceitoData.bncc
+  };
+}
+
+function gerarDiagnosticoCompleto({ heatmap, duracao, lacunas, segmentos }) {
+  const percentualAssistido = Math.round((heatmap.filter((v, i) => v > 0 && i < duracao).length / duracao) * 100);
+  const totalRepeticoes = heatmap.filter(v => v > 1).length;
+  const inicioAssistido = heatmap.slice(0, 10).some(v => v > 0);
+  const fimAssistido = heatmap.slice(duracao - 10, duracao).some(v => v > 0);
+  const totalLacunas = lacunas.length;
+  const maiorLacuna = lacunas.length ? Math.max(...lacunas.map(([ini, fim]) => fim - ini + 1)) : 0;
+  const percentualLacunas = lacunas.reduce((acc, [ini, fim]) => acc + (fim - ini + 1), 0) / duracao;
+  const ordemOriginal = segmentos.map(s => s.segment.start);
+  const linearidade = ordemOriginal.every((v, i, arr) => i === 0 ? true : v >= arr[i - 1]);
+  const datas = segmentos.map(s => new Date(s.created_at).getTime()).sort();
+  const dataInicio = new Date(datas[0]);
+  const dataFim = new Date(datas[datas.length - 1]);
+  const duracaoDias = Math.ceil((dataFim - dataInicio) / (1000 * 60 * 60 * 24));
+  let totalSessoes = 1;
+  for (let i = 1; i < datas.length; i++) {
+    const diff = (datas[i] - datas[i - 1]) / (1000 * 60);
+    if (diff > 60) totalSessoes++;
+  }
+  const prazoLimite = new Date(dataInicio);
+  prazoLimite.setDate(prazoLimite.getDate() + 7);
+  const finalizouForaDoPrazo = dataFim > prazoLimite;
+
+  return {
+    percentualAssistido,
+    totalRepeticoes,
+    inicioAssistido,
+    fimAssistido,
+    totalLacunas,
+    maiorLacuna,
+    percentualLacunas,
+    linearidade,
+    dataInicio,
+    dataFim,
+    duracaoDias,
+    prazoLimite,
+    finalizouForaDoPrazo,
+    totalSessoes
+  };
+}
 </script>
 </body>
 </html>
