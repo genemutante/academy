@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Como o aluno assistiu essa aula?</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
       theme: {
@@ -53,6 +54,7 @@
       }
     };
   </script>
+  
   <style>
     @media (min-width: 1024px) {
       .painel-fixo {
@@ -86,7 +88,7 @@
 <body class="bg-slate-50 text-slate-800 p-6 font-sans">
 
 <div class="max-w-6xl mx-auto">
-  <h1 class="text-2xl font-bold text-slate-800 mb-2">Como o aluno assistiu essa aula?</h1>
+  <h1 class="text-2xl font-bold text-primary-800 mb-2">Como o aluno assistiu essa aula?</h1>
   <p class="text-sm text-gray-600 mb-6">Entenda visualmente a jornada do aluno durante o vídeo. Cada quadradinho representa 1 segundo.</p>
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
@@ -102,7 +104,8 @@
       <label class="block font-semibold mb-1">Aula</label>
       <select id="aula" class="w-full p-2 border border-gray-300 rounded"></select>
     </div>
-    <button id="btn" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded shadow">
+    <button id="btn" class="bg-primary-700 hover:bg-primary-800 text-white px-4 py-2 rounded shadow">
+
       Calcular Progresso
     </button>
   </div>
@@ -234,81 +237,81 @@ function gerarParecerTutor(d, a) {
 
   // Bloco de aviso para parecer parcial
   if (emAndamento) {
-    mensagens.push("⚠️ Esta aula ainda está em andamento. O parecer é preliminar e pode mudar conforme o aluno avança.");
+    mensagens.push("Esta aula ainda está em andamento. O parecer é preliminar e pode mudar conforme o aluno avança.");
   }
 
   // Bloco: abertura conforme conceito
   if (a.conceito === "A") {
     mensagens.push(random([
-      "🏆 O aluno apresentou desempenho excepcional e foco contínuo.",
-      "🎯 A aula foi acompanhada integralmente, do início ao fim.",
-      "✅ Visualização completa e excelente dedicação ao conteúdo."
+      "O aluno apresentou desempenho excepcional e foco contínuo.",
+      "A aula foi acompanhada integralmente, do início ao fim.",
+      "Visualização completa e excelente dedicação ao conteúdo."
     ]));
   } else if (a.conceito === "B+") {
     mensagens.push(random([
-      "📘 O aluno demonstrou engajamento alto, com leve margem de progresso.",
-      "🚀 Quase toda a aula foi assistida com atenção constante.",
-      "🧠 Alto envolvimento, com ótima presença nos pontos-chave."
+      "O aluno demonstrou engajamento alto, com leve margem de progresso.",
+      "Quase toda a aula foi assistida com atenção constante.",
+      "Alto envolvimento, com ótima presença nos pontos-chave."
     ]));
   } else if (a.conceito === "B") {
     mensagens.push(random([
-      "📗 O aluno acompanhou a maior parte da aula com atenção razoável.",
-      "📒 Engajamento consistente, mas com interrupções pontuais.",
-      "🧩 Aula vista de forma significativa, com espaço para refinamento."
+      "O aluno acompanhou a maior parte da aula com atenção razoável.",
+      "Engajamento consistente, mas com interrupções pontuais.",
+      "Aula vista de forma significativa, com espaço para refinamento."
     ]));
   } else if (a.conceito === "C") {
     mensagens.push(random([
-      "⚠️ O aluno acompanhou parcialmente a aula, com perdas relevantes.",
-      "🔻 Presença parcial, que pode comprometer a consolidação do conteúdo.",
-      "🕵️ Envolvimento limitado — pode mais com foco e constância."
+      "O aluno acompanhou parcialmente a aula, com perdas relevantes.",
+      "Presença parcial, que pode comprometer a consolidação do conteúdo.",
+      "Envolvimento limitado — pode mais com foco e constância."
     ]));
   } else if (a.conceito === "D") {
     mensagens.push(random([
       emAndamento
-        ? "🔸 O aproveitamento até o momento está abaixo do ideal, mas ainda pode evoluir."
-        : "🚧 Engajamento insuficiente e presença comprometida.",
-      "⛔ A aula foi pouco explorada pelo aluno.",
-      "🧱 Baixo aproveitamento, com necessidade de maior dedicação."
+        ? "O aproveitamento até o momento está abaixo do ideal, mas ainda pode evoluir."
+        : "Engajamento insuficiente e presença comprometida.",
+      "A aula foi pouco explorada pelo aluno.",
+      "Baixo aproveitamento, com necessidade de maior dedicação."
     ]));
   } else if (a.conceito === "E") {
     mensagens.push(random([
       emAndamento
-        ? "❗ Ainda não houve progresso significativo nesta aula."
-        : "❌ Aula não foi acompanhada de forma significativa.",
-      "⚠️ Praticamente não houve engajamento com o conteúdo.",
-      "📉 Aproveitamento muito baixo — precisa de acompanhamento."
+        ? "Ainda não houve progresso significativo nesta aula."
+        : "Aula não foi acompanhada de forma significativa.",
+      "Praticamente não houve engajamento com o conteúdo.",
+      "Aproveitamento muito baixo — precisa de acompanhamento."
     ]));
   }
 
   // Bloco: início/fim ignorado
-  if (!d.inicioAssistido) mensagens.push("🔎 Os primeiros minutos da aula foram ignorados.");
-  if (!d.fimAssistido) mensagens.push("⏹️ A aula foi encerrada antes do término esperado.");
+  if (!d.inicioAssistido) mensagens.push("Os primeiros minutos da aula foram ignorados.");
+  if (!d.fimAssistido) mensagens.push("A aula foi encerrada antes do término esperado.");
 
   // Bloco: lacunas
-  if (d.maiorLacuna > 60) mensagens.push("⏳ Uma ou mais lacunas longas foram detectadas.");
+  if (d.maiorLacuna > 60) mensagens.push("Uma ou mais lacunas longas foram detectadas.");
   if (d.totalLacunas >= 3 && d.percentualAssistido >= 60)
-    mensagens.push("🧩 Interrupções frequentes ao longo da aula.");
+    mensagens.push("Interrupções frequentes ao longo da aula.");
   if (d.percentualLacunas > 0.3)
-    mensagens.push("🚨 Uma parte significativa da aula foi ignorada.");
+    mensagens.push("Uma parte significativa da aula foi ignorada.");
 
   // Bloco: repetições
-  if (d.totalRepeticoes > 30) mensagens.push("🧠 Vários trechos foram revistos — pode indicar dúvida ou interesse.");
+  if (d.totalRepeticoes > 30) mensagens.push("Vários trechos foram revistos — pode indicar dúvida ou interesse.");
 
   // Bloco: linearidade
   if (!d.linearidade && d.percentualAssistido > 60)
-    mensagens.push("🔀 O conteúdo foi consumido com saltos e retomadas.");
+    mensagens.push("O conteúdo foi consumido com saltos e retomadas.");
 
   // Bloco: prazo e tempo
   if (d.finalizouForaDoPrazo)
-    mensagens.push("⏰ A aula foi finalizada após o prazo de 7 dias recomendado.");
+    mensagens.push("A aula foi finalizada após o prazo de 7 dias recomendado.");
   if (d.duracaoDias >= 10 && d.percentualAssistido < 100)
-    mensagens.push(`🗓️ O aluno levou ${d.duracaoDias} dias para concluir parcialmente a aula.`);
+    mensagens.push(`O aluno levou ${d.duracaoDias} dias para concluir parcialmente a aula.`);
 
   // Bloco: sessões
   if (d.totalSessoes >= 3)
-    mensagens.push("📆 O conteúdo foi dividido em várias sessões, com retomadas espaçadas.");
+    mensagens.push("O conteúdo foi dividido em várias sessões, com retomadas espaçadas.");
   else if (d.totalSessoes === 1 && d.percentualAssistido >= 90)
-    mensagens.push("📈 A aula foi assistida de forma contínua e objetiva.");
+    mensagens.push("A aula foi assistida de forma contínua e objetiva.");
 
   return {
     texto: mensagens.join(" "),
@@ -490,11 +493,11 @@ btn.addEventListener('click', async () => {
       bg = 'bg-gray-200 border border-gray-400';
     } else if (qtd === 1) {
       assistido++;
-      bg = 'bg-blue-400';
+      bg = 'bg-info-500';
     } else {
       assistido++;
       repeticoes++;
-      bg = 'bg-green-400';
+      bg = 'bg-success-500';
     }
 
     return `<div class="w-2 h-2 ${bg} border border-black/10 rounded-sm relative group">
@@ -540,24 +543,24 @@ btn.addEventListener('click', async () => {
   const parecerTutor = gerarParecerTutor(diagnostico, avaliacao);
 
 
-const corPorConceito = {
-  "A": "border-green-400",
-  "B+": "border-green-300",
-  "B": "border-yellow-300",
-  "C": "border-yellow-400",
-  "D": "border-orange-400",
-  "E": "border-red-400"
-};
-
-
 const bgPorConceito = {
-  "A": "bg-green-50",
-  "B+": "bg-green-100",
-  "B": "bg-yellow-50",
-  "C": "bg-yellow-100",
-  "D": "bg-orange-100",
-  "E": "bg-red-100"
+  "A": "bg-success-100",
+  "B+": "bg-success-100",
+  "B": "bg-warning-100",
+  "C": "bg-warning-100",
+  "D": "bg-danger-100",
+  "E": "bg-danger-100"
 };
+
+const corPorConceito = {
+  "A": "border-success-500",
+  "B+": "border-success-500",
+  "B": "border-warning-500",
+  "C": "border-warning-500",
+  "D": "border-danger-500",
+  "E": "border-danger-700"
+};
+
 
 
 
@@ -567,21 +570,21 @@ const bgPorConceito = {
  painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgPorConceito[avaliacao.conceito]} border-2 ${corPorConceito[avaliacao.conceito]} rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto`;
 
 
-painelFinal.innerHTML = `
+painelFinal.innerHTML = `<p class="text-xs text-gray-500 italic text-center mb-4">
   ${parecerTutor.status === 'preliminar' ? `
-    <div class="mb-4 p-3 bg-orange-200 border border-orange-400 text-orange-900 text-sm rounded text-center font-semibold shadow-sm">
+    <div class="mb-4 p-3 bg-warning-100 border border-warning-500 text-warning-700 text-sm rounded text-center font-semibold shadow-sm">
       ⚠️ Esta aula ainda está em andamento. O parecer é preliminar e pode mudar conforme o aluno avança.
     </div>
   ` : ''}
 
   <h2 class="text-lg font-bold text-blue-700 mb-2 text-center">📌 Avaliação Geral do Aluno</h2>
 
-  <p class="text-xs text-gray-500 italic text-center mb-4">
-    🔎 A cor da borda indica o nível de aproveitamento:
-    <span class="text-green-600 font-semibold">verde</span> (excelente) →
-    <span class="text-yellow-600 font-semibold">amarelo</span> (razoável) →
-    <span class="text-red-600 font-semibold">vermelho</span> (baixo).
-  </p>
+<p class="text-center text-sm text-slate-500 mb-4">
+  <span title="Verde: excelente, Amarelo: razoável, Vermelho: baixo.">
+    🛈 A borda colorida indica o nível de aproveitamento do aluno.
+  </span>
+</p>
+
 
   <div class="mb-4 text-sm leading-relaxed text-gray-800">
     🧾 <strong>Parecer do Tutor:</strong><br>
