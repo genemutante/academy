@@ -6,6 +6,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
+
   
   <script>
     tailwind.config = {
@@ -49,9 +51,10 @@
             slate: tailwind.colors.slate,
             gray: tailwind.colors.gray,
           },
-          fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
-          }
+fontFamily: {
+  sans: ['Carlito', 'sans-serif'],
+}
+
         }
       }
     };
@@ -88,6 +91,7 @@
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 p-6 font-sans">
+
 
 <div class="max-w-6xl mx-auto">
   <h1 class="text-2xl font-bold text-primary-800 mb-2">Como o aluno assistiu essa aula?</h1>
@@ -582,20 +586,19 @@ painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgP
 
 
 painelFinal.innerHTML = `
-
-  ${parecerTutor.status === 'preliminar' ? `
-    <div class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm rounded shadow-sm">
-      ⚠️ <strong>Esta aula ainda está em andamento.</strong> O parecer é preliminar e pode mudar conforme o aluno avança.
-    </div>
-  ` : ''}
-
-  <div class="flex items-center justify-center mb-3 gap-2">
-    <h2 class="text-lg font-bold text-blue-700">📌 Avaliação Geral do Aluno</h2>
-    <span class="px-2 py-1 rounded-full text-xs font-semibold ${
-      parecerTutor.status === 'preliminar' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-    }">
-      ${parecerTutor.status === 'preliminar' ? 'Parecer Preliminar' : 'Parecer Final'}
-    </span>
+  <div class="flex flex-col lg:flex-row items-center justify-between mb-4 gap-4">
+    <h2 class="text-xl font-bold text-blue-700 text-center w-full lg:w-auto">
+      Avaliação Geral do Aluno
+    </h2>
+    ${parecerTutor.status === 'preliminar' ? `
+      <div class="bg-yellow-100 text-yellow-800 text-sm px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
+        ⚠️ Parecer Preliminar — aula em andamento
+      </div>
+    ` : `
+      <div class="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
+        ✅ Aula finalizada — parecer consolidado
+      </div>
+    `}
   </div>
 
   <p class="text-center text-sm text-slate-500 mb-4">
@@ -645,12 +648,16 @@ painelFinal.innerHTML = `
   </div>
 
   <div class="mt-6 text-center">
-    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition-all duration-200">
-      🖨️ Exportar Parecer em PDF
-    </button>
+
+<button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold text-sm rounded-lg shadow-md hover:bg-blue-700 transition duration-200">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current" viewBox="0 0 20 20"><path d="M6 2a2 2 0 00-2 2v4h2V4h8v4h2V4a2 2 0 00-2-2H6zM4 10a2 2 0 00-2 2v4h4v2h8v-2h4v-4a2 2 0 00-2-2H4zm4 2h4v4H8v-4z"/></svg>
+  Exportar Parecer em PDF
+</button>
+
+
+    
   </div>
 `;
-
 
 
 
