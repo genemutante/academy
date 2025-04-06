@@ -534,7 +534,6 @@ const bgPorConceito = {
 painelFinal.innerHTML = `
   <h2 class="text-lg font-bold text-blue-700 mb-4 text-center">📌 Avaliação Geral do Aluno</h2>
 
-
   <div class="mb-4 text-sm">
     <p class="text-sm text-gray-800 mb-2 leading-relaxed">
       🧾 <strong>Parecer do Tutor:</strong><br>
@@ -556,35 +555,34 @@ painelFinal.innerHTML = `
     <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
     <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
     <div><strong>Feedback:</strong> ${avaliacao.feedback}</div>
-    <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
-    <div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
-                                
-}</div>
-
-<div class="mt-4 text-xs text-gray-500 italic text-center border-t pt-2 border-gray-300">
-  🔎 A cor da borda indica o nível de aproveitamento:
-  <span class="text-green-600 font-semibold">verde</span> (excelente) →
-  <span class="text-yellow-600 font-semibold">amarelo</span> (razoável) →
-  <span class="text-red-600 font-semibold">vermelho</span> (baixo).
-</div>
-  
-
   </div>
 
-<p class="mt-4 text-sm text-gray-600">
-  🔁 Total de sessões: <strong>${diagnostico.totalSessoes}</strong><br>
-  ⏳ Duração do acompanhamento: <strong>${diagnostico.duracaoDias} dias</strong>
-</p>
+  <!-- NOVA LINHA com Início e Fim lado a lado -->
+  <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 text-sm mt-4">
+    <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
+    <div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
+  </div>
 
-  
+  <!-- Legenda de cor FORA da grade -->
+  <p class="text-xs text-gray-500 mt-4 italic text-center">
+    🔎 A cor da borda indica o nível de aproveitamento: 
+    <span class="text-green-600 font-semibold">verde</span> (excelente) → 
+    <span class="text-yellow-600 font-semibold">amarelo</span> (razoável) → 
+    <span class="text-red-600 font-semibold">vermelho</span> (baixo).
+  </p>
 
-<div class="mt-6">
-  <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
-    🖨️ Exportar Parecer em PDF
-  </button>
-</div>
+  <p class="mt-4 text-sm text-gray-600">
+    🔁 Total de sessões: <strong>${diagnostico.totalSessoes}</strong><br>
+    ⏳ Duração do acompanhamento: <strong>${diagnostico.duracaoDias} dias</strong>
+  </p>
 
+  <div class="mt-6">
+    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+      🖨️ Exportar Parecer em PDF
+    </button>
+  </div>
 `;
+
 
 
 const blocoDiagnostico = document.getElementById("bloco-diagnostico");
