@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Como o aluno assistiu essa aula?</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-6 font-sans">
+
+<div class="max-w-6xl mx-auto">
+  <h1 class="text-2xl font-bold text-blue-800 mb-2">🧠 Como o aluno assistiu essa aula?</h1>
+  <p class="text-sm text-gray-600 mb-6">Entenda visualmente a jornada do aluno durante o vídeo. Cada quadradinho representa 1 segundo.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
+    <div>
+      <label class="block font-semibold mb-1">👤 Aluno</label>
+      <select id="aluno" class="w-full p-2 border rounded"></select>
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">🎓 Curso</label>
+      <select id="curso" class="w-full p-2 border rounded"></select>
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">📚 Aula</label>
+      <select id="aula" class="w-full p-2 border rounded"></select>
+    </div>
+    <button id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+      🔍 Calcular Progresso
+    </button>
+  </div>
+
+  <div id="resultado" class="mt-8 hidden">
+    <div class="mb-3 text-sm text-gray-700">
+      <strong>Legenda:</strong>
+      <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-blue-400 rounded-sm"></div> Assistido 1x</div>
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-green-400 rounded-sm"></div> Assistido +1x</div>
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-200 border border-gray-400 rounded-sm"></div> Não assistido</div>
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-800 rounded-sm"></div> Fora da aula</div>
+      </div>
+    </div>
+
+    <div id="painel"
+      class="bg-neutral-900 pt-10 pb-10 px-4 rounded shadow overflow-hidden mx-auto"
+      style="display: grid; grid-template-columns: repeat(120, minmax(4px, 1fr)); gap: 1px; max-width: 100%;">
+    </div>
+
+    <p class="text-sm text-left mt-4">
+      <a href="#" onclick="document.getElementById('detalhes').classList.toggle('hidden')" class="text-blue-700 underline">
+        Mostrar/Ocultar Detalhes
+      </a>
+    </p>
+
+    <div id="detalhes"
+     class="hidden mt-6 mx-auto grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 text-sm font-mono max-w-6xl">
+    </div>
+  </div>
+</div>
+
+<script>
+const supabase = window.supabase.createClient(
+  'https://bkueljjvhijojzcyodvk.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+);
+
+const MAX_SEGUNDOS = 60 * 60;
+const alunoSel = document.getElementById('aluno');
+const cursoSel = document.getElementById('curso');
+const aulaSel = document.getElementById('aula');
+const btn = document.getElementById('btn');
+const painel = document.getElementById('painel');
+const detalhes = document.getElementById('detalhes');
+const resultado = document.getElementById('resultado');
+
+function formatar(seg) {
+  const h = String(Math.floor(seg / 3600)).padStart(2, '0');
+  const m = String(Math.floor((seg % 3600) / 60)).padStart(2, '0');
+  const s = String(seg % 60).padStart(2, '0');
+  return `${h}h${m}m${s}s`;
+}
+
+function random(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+function gerarParecerModularizado(porcentagem, lacunas, repeticoes, inicio, fim, duracao) {
+  const mensagens = [];
+
+  if (porcentagem >= 97 && lacunas.length === 0) {
+    mensagens.push(random([
+      "🎯 Aula assistida por completo com atenção contínua.",
+      "✅ Excelente foco durante toda a aula.",
+      "👏 Desempenho exemplar — visualizou tudo com consistência."
+    ]));
+  } else if (porcentagem >= 90) {
+    mensagens.push(random([
+      "📘 A maior parte da aula foi assistida com atenção.",
+      "📗 Engajamento acima da média, com poucas perdas.",
+      "🔍 Conteúdo absorvido quase totalmente."
+    ]));
+  } else if (porcentagem >= 75) {
+    mensagens.push(random([
+      "⚠️ O aluno demonstrou esforço, mas com algumas interrupções.",
+      "📒 Participação razoável, apesar de algumas ausências.",
+      "📌 Aula assistida parcialmente, com sinais de atenção."
+    ]));
+  } else if (porcentagem >= 50) {
+    mensagens.push(random([
+      "🚧 O aluno assistiu menos da metade da aula.",
+      "🔻 Houve muitas lacunas no acompanhamento do conteúdo.",
+      "😕 Engajamento abaixo do ideal."
+    ]));
+  } else {
+    mensagens.push(random([
+      "❌ Pouco engajamento detectado.",
+      "🟥 A aula foi ignorada quase por completo.",
+      "📉 Desempenho insuficiente — atenção quase nula."
+    ]));
+  }
+
+  if (lacunas.some(([ini, fim]) => fim - ini > 60)) mensagens.push("⏳ Uma ou mais lacunas longas foram detectadas.");
+  if (lacunas.length >= 3 && porcentagem >= 60) mensagens.push("🧩 Várias interrupções curtas ao longo da aula.");
+  if (inicio === 0 && fim === 0) mensagens.push("📍 Ignorou tanto o início quanto o final da aula.");
+  else {
+    if (inicio > 0) mensagens.push("🔎 Ignorou os primeiros minutos da aula.");
+    if (fim === 0) mensagens.push("⏹️ Parou antes da aula terminar.");
+  }
+  if (repeticoes > 30) mensagens.push("🧠 Muitos trechos foram revistos — pode indicar dúvida ou interesse.");
+  if (repeticoes === 0 && porcentagem > 85) mensagens.push("🎯 Engajamento direto, sem revisões. Objetivo e linear.");
+
+  if (porcentagem >= 90) mensagens.push(random([
+    "🚀 Ótimo sinal de comprometimento.",
+    "🙌 Excelente envolvimento, continue assim!",
+    "🎓 Demonstra responsabilidade com o aprendizado."
+  ]));
+  else if (porcentagem >= 60) mensagens.push(random([
+    "💡 Há potencial, mas atenção aos detalhes é importante.",
+    "📈 Boa base, mas pode melhorar com mais foco.",
+    "🛠️ Engajamento aceitável, com margem de progresso."
+  ]));
+  else mensagens.push(random([
+    "📢 É preciso mais dedicação nos próximos conteúdos.",
+    "🧭 Atenção necessária para evoluir no aprendizado.",
+    "🚨 Recomendado reforço e reavaliação da abordagem."
+  ]));
+
+  return mensagens.join(" ");
+}
+
+function gerarAvaliacaoTecnica(percentual) {
+  let nota = Math.round(percentual) / 10;
+  let conceito, rubrica, bncc, feedback;
+
+  if (percentual >= 90) {
+    conceito = "A";
+    rubrica = "Excelente";
+    bncc = "Alcançou totalmente";
+    feedback = "Excelente envolvimento. Está no caminho certo.";
+  } else if (percentual >= 75) {
+    conceito = "B";
+    rubrica = "Bom";
+    bncc = "Alcançou com qualidade";
+    feedback = "Bom desempenho, com margem para melhorar.";
+  } else if (percentual >= 60) {
+    conceito = "C";
+    rubrica = "Regular";
+    bncc = "Alcançou parcialmente";
+    feedback = "Pode mais! Reforçar foco nos próximos conteúdos.";
+  } else if (percentual >= 40) {
+    conceito = "D";
+    rubrica = "Insuficiente";
+    bncc = "Alcançou de forma limitada";
+    feedback = "Precisa de mais foco e acompanhamento.";
+  } else {
+    conceito = "E";
+    rubrica = "Fraco";
+    bncc = "Não alcançou";
+    feedback = "Baixo aproveitamento. Requer intervenção.";
+  }
+
+  return {
+    nota: nota.toFixed(1).replace('.', ','),
+    conceito,
+    rubrica,
+    bncc,
+    feedback
+  };
+}
+async function carregar() {
+  const { data: alunos } = await supabase.from('users').select('id, name');
+  alunoSel.innerHTML = alunos.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+
+  const { data: cursos } = await supabase.from('courses').select('id, title');
+  cursoSel.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+
+  cursoSel.addEventListener('change', carregarAulas);
+  carregarAulas();
+}
+
+async function carregarAulas() {
+  const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', cursoSel.value);
+  aulaSel.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
+}
+
+btn.addEventListener('click', async () => {
+  painel.innerHTML = '';
+  detalhes.innerHTML = '';
+  resultado.classList.add('hidden');
+
+  const { data: aula } = await supabase.from('lessons').select('duration').eq('id', aulaSel.value).single();
+  const duracao = aula.duration;
+
+  const { data: bruto } = await supabase
+    .from('progress_segments')
+    .select('segment')
+    .eq('user_id', alunoSel.value)
+    .eq('lesson_id', aulaSel.value);
+
+  const heatmap = Array(MAX_SEGUNDOS).fill(0);
+  bruto.forEach(r => {
+    const { start, end } = r.segment;
+    if (start >= 0 && end > start && end - start <= 600) {
+      for (let s = start; s < end && s < MAX_SEGUNDOS; s++) {
+        heatmap[s]++;
+      }
+    }
+  });
+
+  let assistido = 0, repeticoes = 0;
+  const blocos = heatmap.map((qtd, idx) => {
+    let bg = 'bg-gray-200 border border-gray-400';
+    if (idx >= duracao) {
+      bg = 'bg-gray-800';
+    } else if (qtd === 0) {
+      bg = 'bg-gray-200 border border-gray-400';
+    } else if (qtd === 1) {
+      assistido++;
+      bg = 'bg-blue-400';
+    } else {
+      assistido++;
+      repeticoes++;
+      bg = 'bg-green-400';
+    }
+
+    return `<div class="w-2 h-2 ${bg} border border-black/10 rounded-sm relative group">
+      <div class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 
+                  text-xs text-gray-800 bg-white px-2 py-1 rounded border shadow 
+                  -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-50 pointer-events-none">
+        Minuto ${Math.floor(idx / 60)}:${String(idx % 60).padStart(2, '0')} – ${qtd === 0 ? 'Não assistido' : qtd === 1 ? 'Visto 1x' : `Visto ${qtd}x`}
+      </div>
+    </div>`;
+  });
+
+  painel.innerHTML = blocos.join('');
+  resultado.classList.remove('hidden');
+
+  const segundosAssistidos = heatmap.filter(s => s > 0 && s < 999).length;
+  const percentual = Math.round((segundosAssistidos / duracao) * 100);
+
+  const lacunas = [];
+  let emLacuna = false, inicioLacuna = 0;
+  for (let i = 0; i < duracao; i++) {
+    if (heatmap[i] === 0 && !emLacuna) {
+      inicioLacuna = i;
+      emLacuna = true;
+    } else if (heatmap[i] > 0 && emLacuna) {
+      lacunas.push([inicioLacuna, i - 1]);
+      emLacuna = false;
+    }
+  }
+  if (emLacuna) lacunas.push([inicioLacuna, duracao - 1]);
+
+  // LIMPA parecer antigo, se houver
+  resultado.querySelectorAll('.parecer-tutor, .avaliacao-tecnica').forEach(el => el.remove());
+
+  // Parecer
+  const parecerTexto = gerarParecerModularizado(percentual, lacunas, heatmap.filter(v => v > 1).length, heatmap[0], heatmap[duracao - 1], duracao);
+  const parecer = document.createElement("div");
+  parecer.className = "parecer-tutor mt-6 bg-white border-l-4 border-blue-600 p-4 rounded shadow text-gray-800";
+  parecer.innerHTML = `
+    <p class="text-sm">
+      🧾 <strong>Parecer do Tutor sobre esse aluno:</strong><br>
+      ${parecerTexto}
+    </p>`;
+  resultado.appendChild(parecer);
+
+  // Avaliação Técnica
+  const avaliacao = gerarAvaliacaoTecnica(percentual);
+  const painelAvaliacao = document.createElement("div");
+  painelAvaliacao.className = "avaliacao-tecnica mt-4 bg-white border border-gray-300 p-4 rounded shadow text-gray-800 text-sm";
+  painelAvaliacao.innerHTML = `
+    <p class="font-semibold mb-2">📊 Avaliação Técnica:</p>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+      <div><strong>Nota:</strong> ${avaliacao.nota}</div>
+      <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
+      <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
+      <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
+      <div><strong>Feedback:</strong> ${avaliacao.feedback}</div>
+    </div>
+  `;
+  resultado.appendChild(painelAvaliacao);
+
+  const linhas = bruto.map(r => `
+    <div class="bg-white text-gray-800 p-2 rounded-md border border-gray-300 shadow-sm font-mono text-sm hover:bg-gray-100 transition-colors duration-200">
+      ${formatar(r.segment.start)} → ${formatar(r.segment.end)}
+    </div>
+  `);
+  detalhes.innerHTML = linhas.join('');
+});
+
+carregar();
+</script>
+</body>
+</html>
