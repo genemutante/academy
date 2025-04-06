@@ -16,10 +16,12 @@
     }
   }
 
-  @media print {
-  body * {
-    visibility: hidden;
+@media print {
+  .print-visible {
+    page-break-before: always;
   }
+}
+
 
   .print-visible, .print-visible * {
     visibility: visible;
@@ -554,22 +556,19 @@ painelFinal.innerHTML = `
     <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
     <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
     <div><strong>Feedback:</strong> ${avaliacao.feedback}</div>
-    <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+    <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
+    <div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
+                                
 }</div>
 
-
-<div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
-
-<p class="text-xs text-gray-500 mt-4 italic text-center">
-  A cor da borda indica o nível de aproveitamento: 
-  <span class="text-green-600 font-semibold">verde</span> (excelente) → 
-  <span class="text-yellow-600 font-semibold">amarelo</span> (razoável) → 
+<div class="mt-4 text-xs text-gray-500 italic text-center border-t pt-2 border-gray-300">
+  🔎 A cor da borda indica o nível de aproveitamento:
+  <span class="text-green-600 font-semibold">verde</span> (excelente) →
+  <span class="text-yellow-600 font-semibold">amarelo</span> (razoável) →
   <span class="text-red-600 font-semibold">vermelho</span> (baixo).
-</p>
+</div>
+  
 
-
-                                 
-}</div>
   </div>
 
 <p class="mt-4 text-sm text-gray-600">
