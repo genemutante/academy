@@ -585,25 +585,23 @@ const corPorConceito = {
 painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgPorConceito[avaliacao.conceito]} border-2 ${corPorConceito[avaliacao.conceito]} rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto`;
 
 
+
+
+
 painelFinal.innerHTML = `
-  <div class="flex flex-col lg:flex-row items-center justify-between mb-4 gap-4">
-    <h2 class="text-xl font-bold text-blue-700 text-center w-full lg:w-auto">
-      Avaliação Geral do Aluno
-    </h2>
+
+  <div class="flex justify-between items-start mb-1 relative">
+    <h2 class="text-lg font-bold text-blue-700 text-center w-full">Avaliação Geral do Aluno</h2>
     ${parecerTutor.status === 'preliminar' ? `
-      <div class="bg-yellow-100 text-yellow-800 text-sm px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
-        ⚠️ Parecer Preliminar — aula em andamento
-      </div>
-    ` : `
-      <div class="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
-        ✅ Aula finalizada — parecer consolidado
-      </div>
-    `}
+      <span class="absolute right-0 top-0 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full font-semibold shadow">
+        Parecer Preliminar
+      </span>
+    ` : ''}
   </div>
 
   <p class="text-center text-sm text-slate-500 mb-4">
     <span title="Verde: excelente, Amarelo: razoável, Vermelho: baixo.">
-      🛈 A borda colorida indica o nível de aproveitamento.
+      A borda colorida indica o nível de aproveitamento.
     </span>
   </p>
 
@@ -648,16 +646,14 @@ painelFinal.innerHTML = `
   </div>
 
   <div class="mt-6 text-center">
-
-<button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold text-sm rounded-lg shadow-md hover:bg-blue-700 transition duration-200">
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current" viewBox="0 0 20 20"><path d="M6 2a2 2 0 00-2 2v4h2V4h8v4h2V4a2 2 0 00-2-2H6zM4 10a2 2 0 00-2 2v4h4v2h8v-2h4v-4a2 2 0 00-2-2H4zm4 2h4v4H8v-4z"/></svg>
-  Exportar Parecer em PDF
-</button>
-
-
-    
+    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-full shadow-md transition-all duration-200">
+      📄 Exportar Parecer em PDF
+    </button>
   </div>
 `;
+
+
+  
 
 
 
