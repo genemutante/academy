@@ -169,8 +169,15 @@ const blocos = heatmap.map((qtd, idx) => {
   painel.innerHTML = blocos.join('');
   resultado.classList.remove('hidden');
 
-  const linhas = bruto.map(r => `<div class="bg-gray-100 p-2 rounded border">${formatar(r.segment.start)} → ${formatar(r.segment.end)}</div>`);
-  detalhes.innerHTML = linhas.join('');
+const linhas = bruto.map(r => `
+  <div class="bg-white text-gray-800 p-2 rounded-md border border-gray-300 shadow-sm font-mono text-sm hover:bg-gray-100 transition-colors duration-200">
+    ${formatar(r.segment.start)} → ${formatar(r.segment.end)}
+  </div>
+`);
+detalhes.innerHTML = linhas.join('');
+
+
+  
 });
 
 carregar();
