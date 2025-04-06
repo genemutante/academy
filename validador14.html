@@ -579,67 +579,80 @@ const corPorConceito = {
 
 
 
-<h2 class="text-xl font-semibold text-slate-800 mb-2">Avaliação Geral do Aluno</h2>
+const painelFinal = document.createElement("div");
+painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgPorConceito[avaliacao.conceito]} border-2 ${corPorConceito[avaliacao.conceito]} rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto`;
 
-<p class="text-sm text-gray-500 mb-3">
-  A cor da borda deste painel reflete o nível de aproveitamento do aluno:
-</p>
-
-<div class="flex items-center gap-6 text-sm font-medium mb-6 text-gray-700">
-  <div class="flex items-center gap-1">
-    <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span> Excelente
+painelFinal.innerHTML = `
+  <div class="flex justify-between items-center mb-2">
+    <h2 class="text-xl font-semibold text-slate-800">Avaliação Geral do Aluno</h2>
+    ${parecerTutor.status === 'preliminar' ? `
+      <div class="text-xs bg-yellow-100 text-yellow-800 border border-yellow-300 rounded px-3 py-1 shadow-sm flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        Parecer Preliminar – Aula em andamento
+      </div>
+    ` : ''}
   </div>
-  <div class="flex items-center gap-1">
-    <span class="inline-block w-2 h-2 rounded-full bg-yellow-400"></span> Razoável
+
+  <p class="text-sm text-gray-500 mb-4">
+    A cor da borda deste painel reflete o nível de aproveitamento do aluno:
+  </p>
+
+  <div class="flex items-center justify-start gap-6 text-sm font-medium mb-6 text-gray-700">
+    <div class="flex items-center gap-1">
+      <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span> Excelente
+    </div>
+    <div class="flex items-center gap-1">
+      <span class="inline-block w-2 h-2 rounded-full bg-yellow-400"></span> Razoável
+    </div>
+    <div class="flex items-center gap-1">
+      <span class="inline-block w-2 h-2 rounded-full bg-red-500"></span> Baixo
+    </div>
   </div>
-  <div class="flex items-center gap-1">
-    <span class="inline-block w-2 h-2 rounded-full bg-red-500"></span> Baixo
+
+  <div class="mb-4">
+    <h3 class="font-semibold text-gray-800 mb-1">Parecer do Tutor:</h3>
+    <p class="text-sm text-gray-700 leading-relaxed">${parecerTutor.texto}</p>
   </div>
-</div>
 
-<div class="mb-4">
-  <h3 class="font-semibold text-gray-800 mb-1">Parecer do Tutor:</h3>
-  <p class="text-sm text-gray-700 leading-relaxed">${parecerTutor.texto}</p>
-</div>
+  <hr class="my-4 border-gray-300" />
 
-<hr class="my-4 border-gray-300" />
-
-<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-sm">
-  <div><strong>Nota:</strong> ${avaliacao.nota}</div>
-  <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
-  <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
-  <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
-  <div class="col-span-2 sm:col-span-3 md:col-span-5"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
-</div>
-
-<hr class="my-4 border-gray-300" />
-
-<div class="flex flex-wrap justify-between gap-6 text-sm text-gray-700">
-  <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
-  <div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
-</div>
-
-<hr class="my-4 border-gray-300" />
-
-<div class="mt-2 text-sm text-gray-700 space-y-2">
-  <div>
-    🔁 <strong>Total de sessões:</strong> ${diagnostico.totalSessoes}
-    <p class="text-xs text-gray-500 italic mt-1 ml-6">
-      Cada sessão representa um acesso separado por mais de 1 hora sem atividade.
-    </p>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-sm">
+    <div><strong>Nota:</strong> ${avaliacao.nota}</div>
+    <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
+    <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
+    <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
+    <div class="col-span-2 sm:col-span-3 md:col-span-5"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
   </div>
-  <div>
-    ⏳ <strong>Duração do acompanhamento:</strong> ${diagnostico.duracaoDias} dias
-  </div>
-</div>
 
-<div class="mt-6 text-left">
-  <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 text-sm transition-all duration-200">
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M6 2h12v6h4v6h-4v8H6v-8H2V8h4V2zm2 0v6h8V2H8zm8 18v-6H8v6h8zm4-8V8H4v4h16z"/></svg>
-    Exportar Parecer em PDF
-  </button>
-</div>
+  <hr class="my-4 border-gray-300" />
+
+  <div class="flex flex-wrap justify-between gap-6 text-sm text-gray-700">
+    <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+    <div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+  </div>
+
+  <hr class="my-4 border-gray-300" />
+
+  <div class="mt-2 text-sm text-gray-700 space-y-2">
+    <div>
+      🔁 <strong>Total de sessões:</strong> ${diagnostico.totalSessoes}
+      <p class="text-xs text-gray-500 italic mt-1 ml-6">
+        Cada sessão representa um acesso separado por mais de 1 hora sem atividade.
+      </p>
+    </div>
+    <div>
+      ⏳ <strong>Duração do acompanhamento:</strong> ${diagnostico.duracaoDias} dias
+    </div>
+  </div>
+
+  <div class="mt-6 text-left">
+    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 text-sm transition-all duration-200">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M6 2h12v6h4v6h-4v8H6v-8H2V8h4V2zm2 0v6h8V2H8zm8 18v-6H8v6h8zm4-8V8H4v4h16z"/></svg>
+      Exportar Parecer em PDF
+    </button>
+  </div>
 `;
+
 
 
 
