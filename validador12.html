@@ -574,12 +574,19 @@ const corPorConceito = {
  painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgPorConceito[avaliacao.conceito]} border-2 ${corPorConceito[avaliacao.conceito]} rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto`;
 
 
-painelFinal.innerHTML = `<p class="text-xs text-gray-500 italic text-center mb-4">
+painelFinal.innerHTML = `
   ${parecerTutor.status === 'preliminar' ? `
     <div class="mb-4 p-3 bg-warning-100 border border-warning-500 text-warning-700 text-sm rounded text-center font-semibold shadow-sm">
       ⚠️ Esta aula ainda está em andamento. O parecer é preliminar e pode mudar conforme o aluno avança.
     </div>
   ` : ''}
+
+  <p class="text-xs text-gray-500 italic text-center mb-4">
+    🛈 A borda colorida indica o nível de aproveitamento do aluno.
+  </p>
+`;
+
+  
 
   <h2 class="text-lg font-bold text-blue-700 mb-2 text-center">📌 Avaliação Geral do Aluno</h2>
 
