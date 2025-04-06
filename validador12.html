@@ -5,68 +5,61 @@
   <title>Como o aluno assistiu essa aula?</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.min.js"></script>
-
-
-<style>
-  @media (min-width: 1024px) {
-    .painel-fixo {
-      position: sticky;
-      top: 1rem;
-      align-self: start;
+  <style>
+    @media (min-width: 1024px) {
+      .painel-fixo {
+        position: sticky;
+        top: 1rem;
+        align-self: start;
+      }
     }
-  }
 
-@media print {
-  .print-visible {
-    page-break-before: always;
-  }
-}
+    @media print {
+      .print-visible {
+        page-break-before: always;
+      }
+    }
 
+    .print-visible, .print-visible * {
+      visibility: visible;
+    }
 
-  .print-visible, .print-visible * {
-    visibility: visible;
-  }
+    .print-visible {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 2rem;
+      background: white;
+    }
 
-  .print-visible {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 2rem;
-    background: white;
-  }
-
-  .painel-fixo {
-    position: static !important;
-    box-shadow: none !important;
-  }
-}
-  
-</style>
-
-  
+    .painel-fixo {
+      position: static !important;
+      box-shadow: none !important;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800 p-6 font-sans">
+<body class="bg-zinc-50 text-gray-800 p-6 font-sans">
 
 <div class="max-w-6xl mx-auto">
-  <h1 class="text-2xl font-bold text-blue-800 mb-2">🧠 Como o aluno assistiu essa aula?</h1>
+  <h1 class="text-2xl font-bold text-slate-800 mb-2">Como o aluno assistiu essa aula?</h1>
   <p class="text-sm text-gray-600 mb-6">Entenda visualmente a jornada do aluno durante o vídeo. Cada quadradinho representa 1 segundo.</p>
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
     <div>
-      <label class="block font-semibold mb-1">👤 Aluno</label>
-      <select id="aluno" class="w-full p-2 border rounded"></select>
+      <label class="block font-semibold mb-1">Aluno</label>
+      <select id="aluno" class="w-full p-2 border border-gray-300 rounded"></select>
     </div>
     <div>
-      <label class="block font-semibold mb-1">🎓 Curso</label>
-      <select id="curso" class="w-full p-2 border rounded"></select>
+      <label class="block font-semibold mb-1">Curso</label>
+      <select id="curso" class="w-full p-2 border border-gray-300 rounded"></select>
     </div>
     <div>
-      <label class="block font-semibold mb-1">📚 Aula</label>
-      <select id="aula" class="w-full p-2 border rounded"></select>
+      <label class="block font-semibold mb-1">Aula</label>
+      <select id="aula" class="w-full p-2 border border-gray-300 rounded"></select>
     </div>
-    <button id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-      🔍 Calcular Progresso
+    <button id="btn" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded shadow">
+      Calcular Progresso
     </button>
   </div>
 
@@ -75,7 +68,7 @@
       <strong>Legenda:</strong>
       <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1">
         <div class="flex items-center gap-1"><div class="w-4 h-4 bg-blue-400 rounded-sm"></div> Assistido 1x</div>
-        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-green-400 rounded-sm"></div> Assistido +1x</div>
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-emerald-400 rounded-sm"></div> Assistido +1x</div>
         <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-200 border border-gray-400 rounded-sm"></div> Não assistido</div>
         <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-800 rounded-sm"></div> Fora da aula</div>
       </div>
@@ -87,7 +80,6 @@
     </div>
 
     <div id="bloco-diagnostico" class="mt-6"></div>
-
 
     <p class="text-sm text-left mt-4">
       <a href="#" onclick="document.getElementById('detalhes').classList.toggle('hidden')" class="text-blue-700 underline">
