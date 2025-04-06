@@ -165,14 +165,26 @@ btn.addEventListener('click', async () => {
   if (emLacuna) lacunas.push([inicioLacuna, duracao - 1]);
 
   const parecerTexto = gerarParecerModularizado(percentual, lacunas, heatmap.filter(v => v > 1).length, heatmap[0], heatmap[duracao - 1], duracao);
-  const parecer = document.createElement("div");
-  parecer.className = "mt-6 bg-white border-l-4 border-blue-600 p-4 rounded shadow text-gray-800";
-  parecer.innerHTML = `
-    <p class="text-sm">
-      🧾 <strong>Parecer do Tutor sobre esse aluno:</strong><br>
-      ${parecerTexto}
-    </p>`;
-  resultado.appendChild(parecer);
+
+
+  
+// Remove parecer anterior, se existir
+const parecerAntigo = resultado.querySelector(".parecer-tutor");
+if (parecerAntigo) resultado.removeChild(parecerAntigo);
+
+// Cria novo parecer
+const parecer = document.createElement("div");
+parecer.className = "parecer-tutor mt-6 bg-white border-l-4 border-blue-600 p-4 rounded shadow text-gray-800";
+parecer.innerHTML = `
+  <p class="text-sm">
+    🧾 <strong>Parecer do Tutor sobre esse aluno:</strong><br>
+    ${parecerTexto}
+  </p>`;
+resultado.appendChild(parecer);
+
+
+
+  
 
   const linhas = bruto.map(r => `
     <div class="bg-white text-gray-800 p-2 rounded-md border border-gray-300 shadow-sm font-mono text-sm hover:bg-gray-100 transition-colors duration-200">
