@@ -549,7 +549,7 @@ const bgPorConceito = {
   "A": "bg-success-100",
   "B+": "bg-success-100",
   "B": "bg-warning-100",
-  "C": "bg-warning-100",
+  "C": "border-yellow-400",
   "D": "bg-danger-100",
   "E": "bg-danger-100"
 };
@@ -558,7 +558,7 @@ const corPorConceito = {
   "A": "border-success-500",
   "B+": "border-success-500",
   "B": "border-warning-500",
-  "C": "border-warning-500",
+  "C": "bg-white",
   "D": "border-danger-500",
   "E": "border-danger-700"
 };
@@ -575,25 +575,27 @@ const corPorConceito = {
 painelFinal.innerHTML = `
 
   ${parecerTutor.status === 'preliminar' ? `
-    <div class="mb-4 p-3 bg-warning-100 border border-warning-500 text-warning-700 text-sm rounded text-center font-semibold shadow-sm">
-      ⚠️ Esta aula ainda está em andamento. O parecer é preliminar e pode mudar conforme o aluno avança.
-    </div>
+<div class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm rounded shadow-sm">
+  ⚠️ <strong>Esta aula ainda está em andamento.</strong> O parecer é preliminar e pode mudar conforme o aluno avança.
+</div>
+
   ` : ''}
 
-  <h2 class="text-lg font-bold text-blue-700 mb-2 text-center">📌 Avaliação Geral do Aluno</h2>
+  <h2 class="text-lg font-bold text-blue-700 mb-3 text-center">📌 Avaliação Geral do Aluno</h2>
 
-  <p class="text-center text-sm text-slate-500 mb-4">
-    <span title="Verde: excelente, Amarelo: razoável, Vermelho: baixo.">
-      🛈 A borda colorida indica o nível de aproveitamento do aluno.
-    </span>
-  </p>
+<p class="text-center text-sm text-slate-500 mb-4">
+  <span title="Verde: excelente, Amarelo: razoável, Vermelho: baixo.">
+    🛈 A borda colorida indica o nível de aproveitamento.
+  </span>
+</p>
 
-  <div class="mb-4 text-sm leading-relaxed text-gray-800">
-    <strong>Parecer do Tutor:</strong><br>
-    ${parecerTutor.texto}
-  </div>
+<div class="mb-4">
+  <h3 class="font-semibold text-gray-800 mb-1">Parecer do Tutor:</h3>
+  <p class="text-sm text-gray-700 leading-relaxed">${parecerTutor.texto}</p>
+</div>
 
-  <hr class="my-4 border-gray-200" />
+<hr class="my-4 border-gray-300" />
+
 
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 text-sm">
     <div><strong>Nota:</strong> ${avaliacao.nota}</div>
