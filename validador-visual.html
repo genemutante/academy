@@ -147,10 +147,13 @@ const blocos = heatmap.map((qtd, idx) => {
   return `<div 
   class="w-2 h-2 ${bg} border border-black/10 rounded-sm relative group">
   
-  <div class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 
-              text-xs text-white bg-black px-2 py-1 rounded shadow-lg 
-              -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-50 
-              pointer-events-none">
+<div class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 
+            text-xs text-gray-800 bg-white px-2 py-1 rounded border shadow 
+            -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-50 
+            pointer-events-none">
+
+
+              
     ${formatar(idx)} • Visto: ${qtd}x
   </div>
 </div>`;
