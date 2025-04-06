@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Como o aluno assistiu essa aula?</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.min.js"></script>
+
+
+<style>
+  @media (min-width: 1024px) {
+    .painel-fixo {
+      position: sticky;
+      top: 1rem;
+      align-self: start;
+    }
+  }
+
+@media print {
+  .print-visible {
+    page-break-before: always;
+  }
+}
+
+
+  .print-visible, .print-visible * {
+    visibility: visible;
+  }
+
+  .print-visible {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem;
+    background: white;
+  }
+
+  .painel-fixo {
+    position: static !important;
+    box-shadow: none !important;
+  }
+}
+  
+</style>
+
+  
+</head>
+<body class="bg-gray-100 text-gray-800 p-6 font-sans">
+
+<div class="max-w-6xl mx-auto">
+  <h1 class="text-2xl font-bold text-blue-800 mb-2">🧠 Como o aluno assistiu essa aula?</h1>
+  <p class="text-sm text-gray-600 mb-6">Entenda visualmente a jornada do aluno durante o vídeo. Cada quadradinho representa 1 segundo.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
+    <div>
+      <label class="block font-semibold mb-1">👤 Aluno</label>
+      <select id="aluno" class="w-full p-2 border rounded"></select>
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">🎓 Curso</label>
+      <select id="curso" class="w-full p-2 border rounded"></select>
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">📚 Aula</label>
+      <select id="aula" class="w-full p-2 border rounded"></select>
+    </div>
+    <button id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+      🔍 Calcular Progresso
+    </button>
+  </div>
+
+  <div id="resultado" class="mt-8 hidden">
+    <div class="mb-3 text-sm text-gray-700">
+      <strong>Legenda:</strong>
+      <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-blue-400 rounded-sm"></div> Assistido 1x</div>
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-green-400 rounded-sm"></div> Assistido +1x</div>
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-200 border border-gray-400 rounded-sm"></div> Não assistido</div>
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-800 rounded-sm"></div> Fora da aula</div>
+      </div>
+    </div>
+
+    <div id="painel"
+      class="bg-neutral-900 pt-10 pb-10 px-4 rounded shadow overflow-hidden mx-auto"
+      style="display: grid; grid-template-columns: repeat(120, minmax(4px, 1fr)); gap: 1px; max-width: 100%;">
+    </div>
+
+    <div id="bloco-diagnostico" class="mt-6"></div>
+
+
+    <p class="text-sm text-left mt-4">
+      <a href="#" onclick="document.getElementById('detalhes').classList.toggle('hidden')" class="text-blue-700 underline">
+        Mostrar/Ocultar Detalhes
+      </a>
+    </p>
+
+    <div id="detalhes"
+     class="hidden mt-6 mx-auto grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 text-sm font-mono max-w-6xl">
+    </div>
+  </div>
+</div>
+
+<script>
+const supabase = window.supabase.createClient(
+  'https://bkueljjvhijojzcyodvk.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+);
+
+
+const CONCEITOS = [
+  { sigla: "A", notaMin: 9.5, rubrica: "Excelente", bncc: "Alcançou com excelência os objetivos da aula.", feedback: "Desempenho excepcional. Continue nesse ritmo!" },
+  { sigla: "B+", notaMin: 9.0, rubrica: "Muito bom", bncc: "Alcançou os objetivos com qualidade.", feedback: "Ótimo trabalho, com envolvimento acima da média." },
+  { sigla: "B", notaMin: 7.5, rubrica: "Bom", bncc: "Alcançou os objetivos com qualidade, com espaço para evoluir.", feedback: "Bom desempenho, mas com pontos a fortalecer." },
+  { sigla: "C", notaMin: 6.0, rubrica: "Regular", bncc: "Alcançou parcialmente os objetivos propostos.", feedback: "Pode mais. Reforce o foco nos próximos conteúdos." },
+  { sigla: "D", notaMin: 4.0, rubrica: "Insuficiente", bncc: "Apresenta dificuldades em consolidar os objetivos.", feedback: "Engajamento baixo. Requer maior atenção." },
+  { sigla: "E", notaMin: 0.0, rubrica: "Fraco", bncc: "Não alcançou os objetivos esperados da aula.", feedback: "Baixíssimo aproveitamento. Necessita intervenção." }
+];
+
+function gerarNotaEConceito(d) {
+  let notaBase = d.percentualAssistido / 10;
+  let penalidade = 0;
+  let bonus = 0;
+
+  if (!d.inicioAssistido) penalidade += 0.5;
+  if (!d.fimAssistido) penalidade += 0.5;
+  if (d.percentualLacunas > 0.25) penalidade += 1;
+  if (d.maiorLacuna > 60) penalidade += 0.5;
+  if (d.totalLacunas >= 4) penalidade += 0.5;
+  if (!d.linearidade && d.percentualAssistido < 80) penalidade += 0.5;
+  if (d.finalizouForaDoPrazo) penalidade += 0.5;
+  if (d.duracaoDias > 10 && d.percentualAssistido < 100) penalidade += 0.5;
+
+  if (d.percentualAssistido >= 90 && d.totalRepeticoes >= 30) bonus += 0.5;
+  if (d.totalSessoes === 1 && d.percentualAssistido >= 90) bonus += 0.3;
+
+  const notaFinal = Math.max(0, Math.min(10, notaBase - penalidade + bonus));
+  const conceitoData = CONCEITOS.find(c => notaFinal >= c.notaMin);
+
+  return {
+    nota: notaFinal.toFixed(1).replace('.', ','),
+    conceito: conceitoData.sigla,
+    rubrica: conceitoData.rubrica,
+    feedback: conceitoData.feedback,
+    bncc: conceitoData.bncc
+  };
+}
+
+  
+
+function gerarDiagnosticoCompleto({ heatmap, duracao, lacunas, segmentos }) {
+  const percentualAssistido = Math.round((heatmap.filter((v, i) => v > 0 && i < duracao).length / duracao) * 100);
+  const totalRepeticoes = heatmap.filter(v => v > 1).length;
+  const inicioAssistido = heatmap.slice(0, 10).some(v => v > 0);
+  const fimAssistido = heatmap.slice(duracao - 10, duracao).some(v => v > 0);
+  const totalLacunas = lacunas.length;
+  const maiorLacuna = lacunas.length ? Math.max(...lacunas.map(([ini, fim]) => fim - ini + 1)) : 0;
+  const percentualLacunas = lacunas.reduce((acc, [ini, fim]) => acc + (fim - ini + 1), 0) / duracao;
+  const ordemOriginal = segmentos.map(s => s.segment.start);
+  const linearidade = ordemOriginal.every((v, i, arr) => i === 0 ? true : v >= arr[i - 1]);
+  const datas = segmentos.map(s => new Date(s.created_at).getTime()).sort();
+  const dataInicio = new Date(datas[0]);
+  const dataFim = new Date(datas[datas.length - 1]);
+  const duracaoDias = Math.ceil((dataFim - dataInicio) / (1000 * 60 * 60 * 24));
+  let totalSessoes = 1;
+  for (let i = 1; i < datas.length; i++) {
+    const diff = (datas[i] - datas[i - 1]) / (1000 * 60);
+    if (diff > 60) totalSessoes++;
+  }
+  const prazoLimite = new Date(dataInicio);
+  prazoLimite.setDate(prazoLimite.getDate() + 7);
+  const finalizouForaDoPrazo = dataFim > prazoLimite;
+
+  return {
+    percentualAssistido,
+    totalRepeticoes,
+    inicioAssistido,
+    fimAssistido,
+    totalLacunas,
+    maiorLacuna,
+    percentualLacunas,
+    linearidade,
+    dataInicio,
+    dataFim,
+    duracaoDias,
+    prazoLimite,
+    finalizouForaDoPrazo,
+    totalSessoes
+  };
+}
+
+function gerarParecerTutor(d, a) {
+  const mensagens = [];
+
+  // Avalia se a aula está em andamento
+  const emAndamento = d.percentualAssistido < 100 && !d.finalizouForaDoPrazo;
+  const status = emAndamento ? "preliminar" : "definitivo";
+
+  // Bloco de aviso para parecer parcial
+  if (emAndamento) {
+    mensagens.push("⚠️ Esta aula ainda está em andamento. O parecer é preliminar e pode mudar conforme o aluno avança.");
+  }
+
+  // Bloco: abertura conforme conceito
+  if (a.conceito === "A") {
+    mensagens.push(random([
+      "🏆 O aluno apresentou desempenho excepcional e foco contínuo.",
+      "🎯 A aula foi acompanhada integralmente, do início ao fim.",
+      "✅ Visualização completa e excelente dedicação ao conteúdo."
+    ]));
+  } else if (a.conceito === "B+") {
+    mensagens.push(random([
+      "📘 O aluno demonstrou engajamento alto, com leve margem de progresso.",
+      "🚀 Quase toda a aula foi assistida com atenção constante.",
+      "🧠 Alto envolvimento, com ótima presença nos pontos-chave."
+    ]));
+  } else if (a.conceito === "B") {
+    mensagens.push(random([
+      "📗 O aluno acompanhou a maior parte da aula com atenção razoável.",
+      "📒 Engajamento consistente, mas com interrupções pontuais.",
+      "🧩 Aula vista de forma significativa, com espaço para refinamento."
+    ]));
+  } else if (a.conceito === "C") {
+    mensagens.push(random([
+      "⚠️ O aluno acompanhou parcialmente a aula, com perdas relevantes.",
+      "🔻 Presença parcial, que pode comprometer a consolidação do conteúdo.",
+      "🕵️ Envolvimento limitado — pode mais com foco e constância."
+    ]));
+  } else if (a.conceito === "D") {
+    mensagens.push(random([
+      emAndamento
+        ? "🔸 O aproveitamento até o momento está abaixo do ideal, mas ainda pode evoluir."
+        : "🚧 Engajamento insuficiente e presença comprometida.",
+      "⛔ A aula foi pouco explorada pelo aluno.",
+      "🧱 Baixo aproveitamento, com necessidade de maior dedicação."
+    ]));
+  } else if (a.conceito === "E") {
+    mensagens.push(random([
+      emAndamento
+        ? "❗ Ainda não houve progresso significativo nesta aula."
+        : "❌ Aula não foi acompanhada de forma significativa.",
+      "⚠️ Praticamente não houve engajamento com o conteúdo.",
+      "📉 Aproveitamento muito baixo — precisa de acompanhamento."
+    ]));
+  }
+
+  // Bloco: início/fim ignorado
+  if (!d.inicioAssistido) mensagens.push("🔎 Os primeiros minutos da aula foram ignorados.");
+  if (!d.fimAssistido) mensagens.push("⏹️ A aula foi encerrada antes do término esperado.");
+
+  // Bloco: lacunas
+  if (d.maiorLacuna > 60) mensagens.push("⏳ Uma ou mais lacunas longas foram detectadas.");
+  if (d.totalLacunas >= 3 && d.percentualAssistido >= 60)
+    mensagens.push("🧩 Interrupções frequentes ao longo da aula.");
+  if (d.percentualLacunas > 0.3)
+    mensagens.push("🚨 Uma parte significativa da aula foi ignorada.");
+
+  // Bloco: repetições
+  if (d.totalRepeticoes > 30) mensagens.push("🧠 Vários trechos foram revistos — pode indicar dúvida ou interesse.");
+
+  // Bloco: linearidade
+  if (!d.linearidade && d.percentualAssistido > 60)
+    mensagens.push("🔀 O conteúdo foi consumido com saltos e retomadas.");
+
+  // Bloco: prazo e tempo
+  if (d.finalizouForaDoPrazo)
+    mensagens.push("⏰ A aula foi finalizada após o prazo de 7 dias recomendado.");
+  if (d.duracaoDias >= 10 && d.percentualAssistido < 100)
+    mensagens.push(`🗓️ O aluno levou ${d.duracaoDias} dias para concluir parcialmente a aula.`);
+
+  // Bloco: sessões
+  if (d.totalSessoes >= 3)
+    mensagens.push("📆 O conteúdo foi dividido em várias sessões, com retomadas espaçadas.");
+  else if (d.totalSessoes === 1 && d.percentualAssistido >= 90)
+    mensagens.push("📈 A aula foi assistida de forma contínua e objetiva.");
+
+  return {
+    texto: mensagens.join(" "),
+    status // "preliminar" ou "definitivo"
+  };
+}
+
+
+  
+
+const MAX_SEGUNDOS = 60 * 60;
+const alunoSel = document.getElementById('aluno');
+const cursoSel = document.getElementById('curso');
+const aulaSel = document.getElementById('aula');
+const btn = document.getElementById('btn');
+const painel = document.getElementById('painel');
+const detalhes = document.getElementById('detalhes');
+const resultado = document.getElementById('resultado');
+
+function formatar(seg) {
+  const h = String(Math.floor(seg / 3600)).padStart(2, '0');
+  const m = String(Math.floor((seg % 3600) / 60)).padStart(2, '0');
+  const s = String(seg % 60).padStart(2, '0');
+  return `${h}h${m}m${s}s`;
+}
+
+function random(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+function gerarParecerModularizado(porcentagem, lacunas, repeticoes, inicio, fim, duracao) {
+  const mensagens = [];
+
+  if (porcentagem >= 97 && lacunas.length === 0) {
+    mensagens.push(random([
+      "🎯 Aula assistida por completo com atenção contínua.",
+      "✅ Excelente foco durante toda a aula.",
+      "👏 Desempenho exemplar — visualizou tudo com consistência."
+    ]));
+  } else if (porcentagem >= 90) {
+    mensagens.push(random([
+      "📘 A maior parte da aula foi assistida com atenção.",
+      "📗 Engajamento acima da média, com poucas perdas.",
+      "🔍 Conteúdo absorvido quase totalmente."
+    ]));
+  } else if (porcentagem >= 75) {
+    mensagens.push(random([
+      "⚠️ O aluno demonstrou esforço, mas com algumas interrupções.",
+      "📒 Participação razoável, apesar de algumas ausências.",
+      "📌 Aula assistida parcialmente, com sinais de atenção."
+    ]));
+  } else if (porcentagem >= 50) {
+    mensagens.push(random([
+      "🚧 O aluno assistiu menos da metade da aula.",
+      "🔻 Houve muitas lacunas no acompanhamento do conteúdo.",
+      "😕 Engajamento abaixo do ideal."
+    ]));
+  } else {
+    mensagens.push(random([
+      "❌ Pouco engajamento detectado.",
+      "🟥 A aula foi ignorada quase por completo.",
+      "📉 Desempenho insuficiente — atenção quase nula."
+    ]));
+  }
+
+  if (lacunas.some(([ini, fim]) => fim - ini > 60)) mensagens.push("⏳ Uma ou mais lacunas longas foram detectadas.");
+  if (lacunas.length >= 3 && porcentagem >= 60) mensagens.push("🧩 Várias interrupções curtas ao longo da aula.");
+  if (inicio === 0 && fim === 0) mensagens.push("📍 Ignorou tanto o início quanto o final da aula.");
+  else {
+    if (inicio > 0) mensagens.push("🔎 Ignorou os primeiros minutos da aula.");
+    if (fim === 0) mensagens.push("⏹️ Parou antes da aula terminar.");
+  }
+  if (repeticoes > 30) mensagens.push("🧠 Muitos trechos foram revistos — pode indicar dúvida ou interesse.");
+  if (repeticoes === 0 && porcentagem > 85) mensagens.push("🎯 Engajamento direto, sem revisões. Objetivo e linear.");
+
+  if (porcentagem >= 90) mensagens.push(random([
+    "🚀 Ótimo sinal de comprometimento.",
+    "🙌 Excelente envolvimento, continue assim!",
+    "🎓 Demonstra responsabilidade com o aprendizado."
+  ]));
+  else if (porcentagem >= 60) mensagens.push(random([
+    "💡 Há potencial, mas atenção aos detalhes é importante.",
+    "📈 Boa base, mas pode melhorar com mais foco.",
+    "🛠️ Engajamento aceitável, com margem de progresso."
+  ]));
+  else mensagens.push(random([
+    "📢 É preciso mais dedicação nos próximos conteúdos.",
+    "🧭 Atenção necessária para evoluir no aprendizado.",
+    "🚨 Recomendado reforço e reavaliação da abordagem."
+  ]));
+
+  return mensagens.join(" ");
+}
+
+function gerarAvaliacaoTecnica(percentual) {
+  let nota = Math.round(percentual) / 10;
+  let conceito, rubrica, bncc, feedback;
+
+  if (percentual >= 90) {
+    conceito = "A";
+    rubrica = "Excelente";
+    bncc = "Alcançou totalmente";
+    feedback = "Excelente envolvimento. Está no caminho certo.";
+  } else if (percentual >= 75) {
+    conceito = "B";
+    rubrica = "Bom";
+    bncc = "Alcançou com qualidade";
+    feedback = "Bom desempenho, com margem para melhorar.";
+  } else if (percentual >= 60) {
+    conceito = "C";
+    rubrica = "Regular";
+    bncc = "Alcançou parcialmente";
+    feedback = "Pode mais! Reforçar foco nos próximos conteúdos.";
+  } else if (percentual >= 40) {
+    conceito = "D";
+    rubrica = "Insuficiente";
+    bncc = "Alcançou de forma limitada";
+    feedback = "Precisa de mais foco e acompanhamento.";
+  } else {
+    conceito = "E";
+    rubrica = "Fraco";
+    bncc = "Não alcançou";
+    feedback = "Baixo aproveitamento. Requer intervenção.";
+  }
+
+  return {
+    nota: nota.toFixed(1).replace('.', ','),
+    conceito,
+    rubrica,
+    bncc,
+    feedback
+  };
+}
+async function carregar() {
+  const { data: alunos } = await supabase.from('users').select('id, name');
+  alunoSel.innerHTML = alunos.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+
+  const { data: cursos } = await supabase.from('courses').select('id, title');
+  cursoSel.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+
+  cursoSel.addEventListener('change', carregarAulas);
+  carregarAulas();
+}
+
+async function carregarAulas() {
+  const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', cursoSel.value);
+  aulaSel.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
+}
+
+btn.addEventListener('click', async () => {
+  painel.innerHTML = '';
+  detalhes.innerHTML = '';
+  resultado.classList.add('hidden');
+
+  const { data: aula } = await supabase.from('lessons').select('duration').eq('id', aulaSel.value).single();
+  const duracao = aula.duration;
+
+  const { data: bruto } = await supabase
+    .from('progress_segments')
+    .select('segment, created_at')
+    .eq('user_id', alunoSel.value)
+    .eq('lesson_id', aulaSel.value);
+
+  const heatmap = Array(MAX_SEGUNDOS).fill(0);
+  bruto.forEach(r => {
+    const { start, end } = r.segment;
+    if (start >= 0 && end > start && end - start <= 600) {
+      for (let s = start; s < end && s < MAX_SEGUNDOS; s++) {
+        heatmap[s]++;
+      }
+    }
+  });
+
+  let assistido = 0, repeticoes = 0;
+  const blocos = heatmap.map((qtd, idx) => {
+    let bg = 'bg-gray-200 border border-gray-400';
+    if (idx >= duracao) {
+      bg = 'bg-gray-800';
+    } else if (qtd === 0) {
+      bg = 'bg-gray-200 border border-gray-400';
+    } else if (qtd === 1) {
+      assistido++;
+      bg = 'bg-blue-400';
+    } else {
+      assistido++;
+      repeticoes++;
+      bg = 'bg-green-400';
+    }
+
+    return `<div class="w-2 h-2 ${bg} border border-black/10 rounded-sm relative group">
+      <div class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 
+                  text-xs text-gray-800 bg-white px-2 py-1 rounded border shadow 
+                  -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-50 pointer-events-none">
+        Minuto ${Math.floor(idx / 60)}:${String(idx % 60).padStart(2, '0')} – ${qtd === 0 ? 'Não assistido' : qtd === 1 ? 'Visto 1x' : `Visto ${qtd}x`}
+      </div>
+    </div>`;
+  });
+
+  painel.innerHTML = blocos.join('');
+
+
+  resultado.classList.remove('hidden');
+
+  const segundosAssistidos = heatmap.filter(s => s > 0 && s < 999).length;
+  const percentual = Math.round((segundosAssistidos / duracao) * 100);
+
+  const lacunas = [];
+  let emLacuna = false, inicioLacuna = 0;
+  for (let i = 0; i < duracao; i++) {
+    if (heatmap[i] === 0 && !emLacuna) {
+      inicioLacuna = i;
+      emLacuna = true;
+    } else if (heatmap[i] > 0 && emLacuna) {
+      lacunas.push([inicioLacuna, i - 1]);
+      emLacuna = false;
+    }
+  }
+  if (emLacuna) lacunas.push([inicioLacuna, duracao - 1]);
+
+  // LIMPA parecer antigo, se houver
+  resultado.querySelectorAll('.avaliacao-completa').forEach(el => el.remove());
+
+
+
+  // Avaliação Técnica
+  const diagnostico = gerarDiagnosticoCompleto({ heatmap, duracao, lacunas, segmentos: bruto });
+  const avaliacao = gerarNotaEConceito(diagnostico);
+  
+  // Parecer
+  const parecerTutor = gerarParecerTutor(diagnostico, avaliacao);
+
+
+const corPorConceito = {
+  "A": "border-green-400",
+  "B+": "border-green-300",
+  "B": "border-yellow-300",
+  "C": "border-yellow-400",
+  "D": "border-orange-400",
+  "E": "border-red-400"
+};
+
+
+const bgPorConceito = {
+  "A": "bg-green-50",
+  "B+": "bg-green-100",
+  "B": "bg-yellow-50",
+  "C": "bg-yellow-100",
+  "D": "bg-orange-100",
+  "E": "bg-red-100"
+};
+
+
+
+  
+ const painelFinal = document.createElement("div");
+  
+ painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgPorConceito[avaliacao.conceito]} border-2 ${corPorConceito[avaliacao.conceito]} rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto`;
+
+
+painelFinal.innerHTML = `
+  ${parecerTutor.status === 'preliminar' ? `
+    <div class="mb-4 p-3 bg-orange-200 border border-orange-400 text-orange-900 text-sm rounded text-center font-semibold shadow-sm">
+      ⚠️ Esta aula ainda está em andamento. O parecer é preliminar e pode mudar conforme o aluno avança.
+    </div>
+  ` : ''}
+
+  <h2 class="text-lg font-bold text-blue-700 mb-2 text-center">📌 Avaliação Geral do Aluno</h2>
+
+  <p class="text-xs text-gray-500 italic text-center mb-4">
+    🔎 A cor da borda indica o nível de aproveitamento:
+    <span class="text-green-600 font-semibold">verde</span> (excelente) →
+    <span class="text-yellow-600 font-semibold">amarelo</span> (razoável) →
+    <span class="text-red-600 font-semibold">vermelho</span> (baixo).
+  </p>
+
+  <div class="mb-4 text-sm leading-relaxed text-gray-800">
+    🧾 <strong>Parecer do Tutor:</strong><br>
+    ${parecerTutor.texto}
+  </div>
+
+  <hr class="my-4 border-gray-200" />
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 text-sm">
+    <div><strong>Nota:</strong> ${avaliacao.nota}</div>
+    <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
+    <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
+    <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
+    <div class="col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
+  </div>
+
+  <hr class="my-4 border-gray-200" />
+  <div class="flex justify-center gap-12 text-sm font-medium">
+    <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+    <div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+  </div>
+  <hr class="my-4 border-gray-200" />
+
+  <div class="mt-4 text-sm text-gray-700 space-y-1">
+    <div>
+      🔁 <strong>Total de sessões:</strong> ${diagnostico.totalSessoes}
+      <p class="text-xs text-gray-500 italic mt-1 ml-6">
+        Cada sessão representa um acesso separado por mais de 1 hora sem atividade.
+      </p>
+    </div>
+    <div>
+      ⏳ <strong>Duração do acompanhamento:</strong> ${diagnostico.duracaoDias} dias
+    </div>
+  </div>
+
+  <div class="mt-6 text-center">
+    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+      🖨️ Exportar Parecer em PDF
+    </button>
+  </div>
+`;
+
+
+
+const blocoDiagnostico = document.getElementById("bloco-diagnostico");
+blocoDiagnostico.innerHTML = ''; // Limpa caso já exista
+blocoDiagnostico.appendChild(painelFinal);
+
+
+
+
+  const linhas = bruto.map(r => `
+    <div class="bg-white text-gray-800 p-2 rounded-md border border-gray-300 shadow-sm font-mono text-sm hover:bg-gray-100 transition-colors duration-200">
+      ${formatar(r.segment.start)} → ${formatar(r.segment.end)}
+    </div>
+  `);
+  detalhes.innerHTML = linhas.join('');
+});
+
+carregar();
+
+
+
+</script>
+</body>
+</html>
