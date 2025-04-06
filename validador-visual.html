@@ -47,7 +47,7 @@
     </div>
 
 <div id="painel"
-  class="bg-black pt-8 pb-4 px-4 rounded shadow overflow-x-auto"
+  class="bg-neutral-900 pt-8 pb-4 px-4 rounded shadow overflow-x-auto"
   style="display: grid; grid-template-columns: repeat(120, minmax(4px, 1fr)); gap: 1px;">
 </div>
 
@@ -133,7 +133,7 @@ btn.addEventListener('click', async () => {
     if (idx >= duracao) {
       bg = 'bg-gray-800';
     } else if (qtd === 0) {
-      bg = 'bg-gray-100 border border-gray-200';
+      bg = 'bg-gray-300 border border-gray-400'; // mais visível
     } else if (qtd === 1) {
       bg = 'bg-blue-400';
     } else {
