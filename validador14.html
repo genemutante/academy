@@ -315,6 +315,13 @@ function gerarParecerTutor(d, a) {
   else if (d.totalSessoes === 1 && d.percentualAssistido >= 90)
     mensagens.push("A aula foi assistida de forma contínua e objetiva.");
 
+// Bloco: recomendação extra
+if (a.conceito === 'D' || a.conceito === 'E') {
+  mensagens.push("📚 Recomenda-se revisar os materiais e buscar apoio do tutor.");
+}
+
+
+  
   return {
     texto: mensagens.join(" "),
     status // "preliminar" ou "definitivo"
@@ -582,7 +589,14 @@ painelFinal.innerHTML = `
     </div>
   ` : ''}
 
-  <h2 class="text-lg font-bold text-blue-700 mb-3 text-center">📌 Avaliação Geral do Aluno</h2>
+  <div class="flex items-center justify-center mb-3 gap-2">
+    <h2 class="text-lg font-bold text-blue-700">📌 Avaliação Geral do Aluno</h2>
+    <span class="px-2 py-1 rounded-full text-xs font-semibold ${
+      parecerTutor.status === 'preliminar' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+    }">
+      ${parecerTutor.status === 'preliminar' ? 'Parecer Preliminar' : 'Parecer Final'}
+    </span>
+  </div>
 
   <p class="text-center text-sm text-slate-500 mb-4">
     <span title="Verde: excelente, Amarelo: razoável, Vermelho: baixo.">
