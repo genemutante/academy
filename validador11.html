@@ -15,6 +15,31 @@
       align-self: start;
     }
   }
+
+  @media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-visible, .print-visible * {
+    visibility: visible;
+  }
+
+  .print-visible {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem;
+    background: white;
+  }
+
+  .painel-fixo {
+    position: static !important;
+    box-shadow: none !important;
+  }
+}
+  
 </style>
 
   
@@ -501,7 +526,7 @@ const bgPorConceito = {
   
  const painelFinal = document.createElement("div");
   
- painelFinal.className = `avaliacao-completa painel-fixo mt-6 ${bgPorConceito[avaliacao.conceito]} border-2 ${corPorConceito[avaliacao.conceito]} rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto`;
+ painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgPorConceito[avaliacao.conceito]} border-2 ${corPorConceito[avaliacao.conceito]} rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto`;
 
 
 painelFinal.innerHTML = `
