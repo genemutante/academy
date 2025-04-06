@@ -532,9 +532,9 @@ const bgPorConceito = {
 
 
 painelFinal.innerHTML = `
-  <!-- Alerta destacado -->
+  <!-- Alerta destacado com cor mais forte -->
   ${parecerTutor.status === 'preliminar' ? `
-    <div class="mb-4 p-3 bg-yellow-100 border border-yellow-300 text-yellow-800 text-sm rounded text-center font-medium shadow-sm">
+    <div class="mb-4 p-3 bg-orange-200 border border-orange-400 text-orange-900 text-sm rounded text-center font-semibold shadow-sm">
       ⚠️ Esta aula ainda está em andamento. O parecer é preliminar e pode mudar conforme o aluno avança.
     </div>
   ` : ''}
@@ -555,13 +555,13 @@ painelFinal.innerHTML = `
     <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
     <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
     <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
-    <div class="col-span-2 sm:col-span-2 md:col-span-2 lg:col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
+    <div class="col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
   </div>
 
   <hr class="my-4 border-gray-200" />
 
-  <!-- Datas: início e fim lado a lado -->
-  <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 text-sm mt-2">
+  <!-- Datas centralizadas lado a lado -->
+  <div class="flex justify-center gap-8 text-sm mt-2 font-medium">
     <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</div>
     <div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</div>
   </div>
@@ -574,9 +574,10 @@ painelFinal.innerHTML = `
     <span class="text-red-600 font-semibold">vermelho</span> (baixo).
   </p>
 
-  <!-- Sessões e tempo -->
+  <!-- Sessões e tempo com explicação -->
   <p class="mt-4 text-sm text-gray-600">
     🔁 Total de sessões: <strong>${diagnostico.totalSessoes}</strong><br>
+    <span class="text-xs text-gray-500 italic">Cada sessão representa um acesso separado por mais de 1 hora sem atividade.</span><br>
     ⏳ Duração do acompanhamento: <strong>${diagnostico.duracaoDias} dias</strong>
   </p>
 
