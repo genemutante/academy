@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,145 +6,145 @@
   <title>Validador Visual de Progresso</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.min.js"></script>
+  <style>
+    .tooltip {
+      @apply absolute bg-black text-white text-xs px-2 py-1 rounded hidden group-hover:block z-50;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 text-gray-800 p-6 font-sans">
 
-  <div class="max-w-6xl mx-auto">
-    <h1 class="text-2xl font-bold text-blue-800 mb-6 flex items-center gap-2">🔍 Validador Visual de Progresso</h1>
+<div class="max-w-6xl mx-auto">
+  <h1 class="text-2xl font-bold text-blue-800 mb-6 flex items-center gap-2">🔍 Validador Visual de Progresso</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
-      <div>
-        <label class="block font-semibold mb-1">👤 Aluno</label>
-        <select id="aluno" class="w-full p-2 border rounded"></select>
-      </div>
-      <div>
-        <label class="block font-semibold mb-1">🎓 Curso</label>
-        <select id="curso" class="w-full p-2 border rounded"></select>
-      </div>
-      <div>
-        <label class="block font-semibold mb-1">📚 Aula</label>
-        <select id="aula" class="w-full p-2 border rounded"></select>
-      </div>
-      <button id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-        🔍 Calcular Progresso
-      </button>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
+    <div>
+      <label class="block font-semibold mb-1">👤 Aluno</label>
+      <select id="aluno" class="w-full p-2 border rounded"></select>
     </div>
-
-    <div id="resultado" class="mt-8 hidden">
-      <h2 class="text-xl font-bold text-gray-800 mb-3">📊 <strong>Tracking de Segmentos:</strong></h2>
-      <div id="painel" class="bg-black p-4 rounded shadow overflow-x-auto whitespace-nowrap flex flex-wrap gap-[2px] w-full max-w-full"></div>
-      <p class="text-sm text-right mt-1">
-        <a href="#" onclick="document.getElementById('detalhes').classList.toggle('hidden')" class="text-blue-700 underline">Mostrar/Ocultar Detalhes</a>
-      </p>
-      <pre id="detalhes" class="hidden mt-4 p-4 bg-gray-100 rounded overflow-x-auto text-xs text-gray-700 font-mono"></pre>
+    <div>
+      <label class="block font-semibold mb-1">🎓 Curso</label>
+      <select id="curso" class="w-full p-2 border rounded"></select>
     </div>
+    <div>
+      <label class="block font-semibold mb-1">📚 Aula</label>
+      <select id="aula" class="w-full p-2 border rounded"></select>
+    </div>
+    <button id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+      🔍 Calcular Progresso
+    </button>
   </div>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    );
+  <div id="resultado" class="mt-8 hidden">
+    <h2 class="text-xl font-bold text-gray-800 mb-3">📊 <strong>Tracking de Segmentos:</strong></h2>
 
-    const alunoSel = document.getElementById('aluno');
-    const cursoSel = document.getElementById('curso');
-    const aulaSel = document.getElementById('aula');
-    const btn = document.getElementById('btn');
-    const painel = document.getElementById('painel');
-    const resultado = document.getElementById('resultado');
-    const detalhes = document.getElementById('detalhes');
+    <!-- Legenda -->
+    <div class="flex gap-4 text-sm mb-2">
+      <div class="flex items-center gap-1"><div class="w-4 h-4 bg-blue-400 rounded-sm"></div> 1x assistido</div>
+      <div class="flex items-center gap-1"><div class="w-4 h-4 bg-green-400 rounded-sm"></div> Repetido</div>
+      <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-100 rounded-sm border border-gray-300"></div> Não assistido</div>
+      <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-800 rounded-sm"></div> Fora da aula</div>
+    </div>
 
-    const MAX_SEGUNDOS = 60 * 60;
+    <div id="painel" class="bg-white p-4 rounded shadow grid grid-cols-[repeat(auto-fit,minmax(2px,1fr))] gap-[1px] max-w-full" style="grid-template-columns: repeat(120, minmax(2px, 1fr));"></div>
 
+    <!-- Segmentos detalhados -->
+    <p class="text-sm text-right mt-2">
+      <a href="#" onclick="document.getElementById('detalhes').classList.toggle('hidden')" class="text-blue-700 underline">Mostrar/Ocultar Detalhes</a>
+    </p>
+    <div id="detalhes" class="hidden mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm font-mono"></div>
+  </div>
+</div>
+
+<script>
+const supabase = window.supabase.createClient(
+  'https://bkueljjvhijojzcyodvk.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+);
+
+const MAX_SEGUNDOS = 60 * 60;
+const alunoSel = document.getElementById('aluno');
+const cursoSel = document.getElementById('curso');
+const aulaSel = document.getElementById('aula');
+const btn = document.getElementById('btn');
+const painel = document.getElementById('painel');
+const detalhes = document.getElementById('detalhes');
+const resultado = document.getElementById('resultado');
+
+function formatar(seg) {
+  const h = String(Math.floor(seg / 3600)).padStart(2, '0');
+  const m = String(Math.floor((seg % 3600) / 60)).padStart(2, '0');
+  const s = String(seg % 60).padStart(2, '0');
+  return `${h}h${m}m${s}s`;
+}
 
 async function carregar() {
-  const { data: alunos, error: erroAlunos } = await supabase.from('users').select('id, name');
-  if (erroAlunos || !alunos) {
-    alert("Erro ao carregar alunos: " + (erroAlunos?.message || 'Sem dados'));
-    return;
-  }
+  const { data: alunos } = await supabase.from('users').select('id, name');
   alunoSel.innerHTML = alunos.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
 
-  const { data: cursos, error: erroCursos } = await supabase.from('courses').select('id, title');
-  if (erroCursos || !cursos) {
-    alert("Erro ao carregar cursos: " + (erroCursos?.message || 'Sem dados'));
-    return;
-  }
+  const { data: cursos } = await supabase.from('courses').select('id, title');
   cursoSel.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
 
   cursoSel.addEventListener('change', carregarAulas);
   carregarAulas();
 }
 
-
-    
-
-    async function carregarAulas() {
-      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', cursoSel.value);
-      aulaSel.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
-    }
-
-    function formatar(seg) {
-      const h = String(Math.floor(seg / 3600)).padStart(2, '0');
-      const m = String(Math.floor((seg % 3600) / 60)).padStart(2, '0');
-      const s = String(seg % 60).padStart(2, '0');
-      return `${h}h${m}m${s}s`;
-    }
-
-    btn.addEventListener('click', async () => {
-      painel.innerHTML = '';
-      detalhes.innerHTML = '';
-      resultado.classList.add('hidden');
-
-      const { data: aula } = await supabase.from('lessons').select('duration').eq('id', aulaSel.value).single();
-      const duracao = aula.duration;
-
-      const { data: bruto } = await supabase
-        .from('progress_segments')
-        .select('segment')
-        .eq('user_id', alunoSel.value)
-        .eq('lesson_id', aulaSel.value);
-
-      // Compactar múltiplos registros e ignorar inválidos
-      const heatmap = Array(MAX_SEGUNDOS).fill(0);
-      bruto.forEach(r => {
-        const { start, end } = r.segment;
-        if (start >= 0 && end >= 0 && end > start && end - start <= 600) {
-          for (let s = start; s < end; s++) {
-            if (s < MAX_SEGUNDOS) heatmap[s]++;
-          }
-        }
-      });
-
-      const blocos = heatmap.map((qtd, idx) => {
-        let bg = 'bg-gray-200';
-        
-if (idx >= duracao) {
-  bg = 'bg-gray-800'; // fora da aula, visível
-} else if (qtd === 0) {
-  bg = 'bg-gray-100'; // parte da aula não assistida
-} else if (qtd === 1) {
-  bg = 'bg-blue-400'; // assistido uma vez
-} else {
-  bg = 'bg-green-400'; // assistido mais de uma vez
+async function carregarAulas() {
+  const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', cursoSel.value);
+  aulaSel.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
 }
-        
-        return `<div title="${formatar(idx)} • Visto: ${qtd}x" class="${bg} w-2 h-2 rounded-sm"></div>`;
-      });
 
+btn.addEventListener('click', async () => {
+  painel.innerHTML = '';
+  detalhes.innerHTML = '';
+  resultado.classList.add('hidden');
 
+  const { data: aula } = await supabase.from('lessons').select('duration').eq('id', aulaSel.value).single();
+  const duracao = aula.duration;
 
-      
+  const { data: bruto } = await supabase
+    .from('progress_segments')
+    .select('segment')
+    .eq('user_id', alunoSel.value)
+    .eq('lesson_id', aulaSel.value);
 
-      painel.innerHTML = blocos.join('');
-      resultado.classList.remove('hidden');
+  const heatmap = Array(MAX_SEGUNDOS).fill(0);
+  bruto.forEach(r => {
+    const { start, end } = r.segment;
+    if (start >= 0 && end > start && end - start <= 600) {
+      for (let s = start; s < end && s < MAX_SEGUNDOS; s++) {
+        heatmap[s]++;
+      }
+    }
+  });
 
-      // Exibir detalhes
-      const linhas = bruto.map(r => `${formatar(r.segment.start)} → ${formatar(r.segment.end)}`);
-      detalhes.textContent = linhas.join('\n');
-    });
+  const blocos = heatmap.map((qtd, idx) => {
+    let bg = 'bg-gray-200 border border-gray-300';
+    if (idx >= duracao) {
+      bg = 'bg-gray-800';
+    } else if (qtd === 0) {
+      bg = 'bg-gray-100 border border-gray-200';
+    } else if (qtd === 1) {
+      bg = 'bg-blue-400';
+    } else {
+      bg = 'bg-green-400';
+    }
 
-    carregar();
-  </script>
+    return `<div class="relative group w-2 h-2 rounded-sm ${bg}">
+              <div class="tooltip absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                ${formatar(idx)} • Visto: ${qtd}x
+              </div>
+            </div>`;
+  });
+
+  painel.innerHTML = blocos.join('');
+  resultado.classList.remove('hidden');
+
+  const linhas = bruto.map(r => `<div class="bg-gray-100 p-2 rounded border">${formatar(r.segment.start)} → ${formatar(r.segment.end)}</div>`);
+  detalhes.innerHTML = linhas.join('');
+});
+
+carregar();
+</script>
 </body>
 </html>
