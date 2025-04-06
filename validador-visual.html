@@ -42,19 +42,26 @@
     <div class="flex gap-4 text-sm mb-2">
       <div class="flex items-center gap-1"><div class="w-4 h-4 bg-blue-400 rounded-sm"></div> 1x assistido</div>
       <div class="flex items-center gap-1"><div class="w-4 h-4 bg-green-400 rounded-sm"></div> Repetido</div>
-      <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-100 rounded-sm border border-gray-300"></div> Não assistido</div>
+      <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-100 border border-gray-400"></div> Não assistido</div>
       <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-800 rounded-sm"></div> Fora da aula</div>
     </div>
 
-    <div id="painel" 
-     class="bg-black p-4 rounded shadow overflow-x-auto"
-     style="display: grid; grid-template-columns: repeat(120, minmax(4px, 1fr)); gap: 1px;">
+<div id="painel"
+  class="bg-black pt-8 pb-4 px-4 rounded shadow overflow-x-auto"
+  style="display: grid; grid-template-columns: repeat(120, minmax(4px, 1fr)); gap: 1px;">
 </div>
 
+
     <!-- Segmentos detalhados -->
-    <p class="text-sm text-right mt-2">
-      <a href="#" onclick="document.getElementById('detalhes').classList.toggle('hidden')" class="text-blue-700 underline">Mostrar/Ocultar Detalhes</a>
-    </p>
+ <p class="text-sm text-left mt-2">
+  <a href="#" onclick="document.getElementById('detalhes').classList.toggle('hidden')" class="text-blue-700 underline">
+    Mostrar/Ocultar Detalhes
+  </a>
+</p>
+
+
+
+    
     <div id="detalhes" class="hidden mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm font-mono"></div>
   </div>
 </div>
@@ -133,7 +140,9 @@ btn.addEventListener('click', async () => {
       bg = 'bg-green-400';
     }
 
-return `<div class="w-2 h-2 ${bg} rounded-sm relative group">
+return `<div 
+  title="${formatar(idx)} • Visto: ${qtd}x"
+  class="w-2 h-2 ${bg} border border-black/10 rounded-sm relative group">
   <div class="absolute hidden group-hover:block text-xs text-white bg-black px-1 py-0.5 rounded -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-50">
     ${formatar(idx)} • Visto: ${qtd}x
   </div>
