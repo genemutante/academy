@@ -47,7 +47,7 @@
     </div>
 
 <div id="painel"
-  class="bg-neutral-900 pt-8 pb-4 px-4 rounded shadow overflow-x-auto"
+  class="bg-neutral-900 pt-10 pb-4 px-4 rounded shadow overflow-x-auto"
   style="display: grid; grid-template-columns: repeat(120, minmax(4px, 1fr)); gap: 1px;">
 </div>
 
@@ -128,20 +128,29 @@ btn.addEventListener('click', async () => {
     }
   });
 
-  const blocos = heatmap.map((qtd, idx) => {
-    let bg = 'bg-gray-200 border border-gray-300';
-    if (idx >= duracao) {
-      bg = 'bg-gray-800';
-    } else if (qtd === 0) {
-      bg = 'bg-gray-300 border border-gray-400'; // mais visível
-    } else if (qtd === 1) {
-      bg = 'bg-blue-400';
-    } else {
-      bg = 'bg-green-400';
-    }
+
+const blocos = heatmap.map((qtd, idx) => {
+  let bg = 'bg-gray-200 border border-gray-300';
+  if (idx >= duracao) {
+    bg = 'bg-gray-800';
+  } else if (qtd === 0) {
+    bg = 'bg-gray-300 border border-gray-400';
+  } else if (qtd === 1) {
+    bg = 'bg-blue-400';
+  } else {
+    bg = 'bg-green-400';
+  }
+
+  return `<div class="w-2 h-2 ${bg} border border-black/10 rounded-sm relative group">
+    <div class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xs text-white bg-black px-2 py-1 rounded shadow-lg -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-50 pointer-events-none">
+      ${formatar(idx)} • Visto: ${qtd}x
+    </div>
+  </div>`;
+});
+
+    
 
 return `<div 
-  title="${formatar(idx)} • Visto: ${qtd}x"
   class="w-2 h-2 ${bg} border border-black/10 rounded-sm relative group">
   <div class="absolute hidden group-hover:block text-xs text-white bg-black px-1 py-0.5 rounded -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-50">
     ${formatar(idx)} • Visto: ${qtd}x
