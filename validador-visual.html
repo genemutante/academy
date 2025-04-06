@@ -46,7 +46,10 @@
       <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-800 rounded-sm"></div> Fora da aula</div>
     </div>
 
-    <div id="painel" class="bg-white p-4 rounded shadow grid grid-cols-[repeat(auto-fit,minmax(2px,1fr))] gap-[1px] max-w-full" style="grid-template-columns: repeat(120, minmax(2px, 1fr));"></div>
+    <div id="painel" 
+     class="bg-black p-4 rounded shadow overflow-x-auto"
+     style="display: grid; grid-template-columns: repeat(120, minmax(4px, 1fr)); gap: 1px;">
+</div>
 
     <!-- Segmentos detalhados -->
     <p class="text-sm text-right mt-2">
@@ -130,11 +133,12 @@ btn.addEventListener('click', async () => {
       bg = 'bg-green-400';
     }
 
-    return `<div class="relative group w-2 h-2 rounded-sm ${bg}">
-              <div class="tooltip absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                ${formatar(idx)} • Visto: ${qtd}x
-              </div>
-            </div>`;
+return `<div class="w-2 h-2 ${bg} rounded-sm relative group">
+  <div class="absolute hidden group-hover:block text-xs text-white bg-black px-1 py-0.5 rounded -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-50">
+    ${formatar(idx)} • Visto: ${qtd}x
+  </div>
+</div>`;
+
   });
 
   painel.innerHTML = blocos.join('');
