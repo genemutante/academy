@@ -191,17 +191,52 @@ btn.addEventListener('click', async () => {
 carregar();
 
 function gerarParecer(porcentagem, lacunas, repeticoes, inicio, fim, duracao) {
-  if (porcentagem === 100) return "👏 O aluno assistiu toda a aula sem deixar lacunas. Excelente dedicação!";
-  if (porcentagem >= 97 && lacunas.length === 0) return "✅ O aluno assistiu quase toda a aula com atenção consistente.";
-  if (porcentagem >= 80 && lacunas.length <= 1) return "📘 O aluno assistiu a maior parte da aula. Uma pequena lacuna foi detectada.";
-  if (porcentagem >= 60) {
-    if (lacunas.length > 2) return "⚠️ O aluno pulou diversos trechos importantes. Pode haver falhas no entendimento.";
-    return "📙 O aluno assistiu parcialmente a aula. Seria bom revisar.";
+  const lacunasTotal = lacunas.length;
+  const inicioAssistido = inicio > 0 ? false : true;
+  const fimAssistido = fim > 0 ? true : false;
+  const percentualLacunas = lacunas.reduce((acc, [ini, fim]) => acc + (fim - ini + 1), 0) / duracao;
+
+  const mensagens = [];
+
+  // -- Faixas principais --
+  if (porcentagem === 100) {
+    mensagens.push("👏 O aluno assistiu toda a aula do início ao fim, sem interrupções. Excelente desempenho!");
+  } else if (porcentagem >= 97 && percentualLacunas < 0.01) {
+    mensagens.push("✅ Excelente! O aluno viu quase tudo e sem lacunas relevantes.");
+  } else if (porcentagem >= 90 && percentualLacunas <= 0.05) {
+    mensagens.push("📘 Muito bom. O aluno viu a maior parte da aula com foco.");
+  } else if (porcentagem >= 80) {
+    mensagens.push("📗 Bom engajamento geral, mas houve alguns pulos ou trechos ignorados.");
+  } else if (porcentagem >= 60) {
+    mensagens.push("⚠️ O aluno assistiu mais da metade da aula, mas com várias interrupções.");
+  } else if (porcentagem >= 40) {
+    mensagens.push("🚧 O aluno viu menos da metade da aula. Pode haver comprometimento do aprendizado.");
+  } else if (porcentagem >= 20) {
+    mensagens.push("❌ Pouco engajamento. Quase não viu o conteúdo.");
+  } else {
+    mensagens.push("❌ O aluno praticamente não assistiu à aula.");
   }
-  if (porcentagem >= 40) return "🚧 Atenção: o aluno abandonou mais da metade da aula.";
-  if (porcentagem >= 20) return "❌ O aluno quase não acompanhou a aula. Isso compromete totalmente o aprendizado.";
-  return "❌ O aluno praticamente não assistiu ao conteúdo.";
+
+  // -- Detalhes extras --
+  if (!inicioAssistido) mensagens.push("🔎 Ignorou os primeiros minutos da aula.");
+  if (!fimAssistido) mensagens.push("⏹️ Parou antes da aula terminar.");
+  if (repeticoes > 30) mensagens.push("🧠 Muitos trechos foram revistos — pode indicar interesse ou dúvida.");
+  if (lacunasTotal >= 3 && porcentagem >= 60) mensagens.push("🧩 Diversas lacunas detectadas — atenção intermitente.");
+  if (lacunasTotal === 1 && percentualLacunas < 0.05) mensagens.push("📌 Pequena lacuna identificada, mas nada crítico.");
+  if (percentualLacunas > 0.3) mensagens.push("🚨 Grande parte da aula foi ignorada.");
+  if (porcentagem >= 90 && repeticoes === 0) mensagens.push("🎯 Engajamento direto, sem revisões. Rápido e objetivo.");
+  if (porcentagem < 20 && repeticoes > 0) mensagens.push("❓ O aluno revisou trechos sem assistir o resto da aula.");
+  if (lacunas.some(([ini, fim]) => fim - ini > 60)) mensagens.push("⏳ Longa lacuna detectada — perda de partes importantes.");
+  if (inicioAssistido && fimAssistido && lacunasTotal > 0 && porcentagem >= 85) mensagens.push("📺 Apesar de algumas lacunas, assistiu do início ao fim.");
+
+  // Junta tudo
+  return mensagens.join(" ");
 }
+
+
+
+
+  
 </script>
 </body>
 </html>
