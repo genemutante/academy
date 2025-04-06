@@ -586,53 +586,54 @@ painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgP
 
 
 
-painelFinal.innerHTML = (() => {
-  const cores = {
-    A: { cor: 'green', titulo: 'Desempenho de Excelência' },
-    'B+': { cor: 'lime', titulo: 'Muito Bom Aproveitamento' },
-    B: { cor: 'yellow', titulo: 'Bom Aproveitamento' },
-    C: { cor: 'orange', titulo: 'Atenção Necessária' },
-    D: { cor: 'red', titulo: 'Aproveitamento Crítico' },
-    E: { cor: 'red', titulo: 'Desempenho Insatisfatório' },
-  };
-
-  const { cor, titulo } = cores[avaliacao.conceito] || { cor: 'gray', titulo: 'Avaliação do Aluno' };
-
-  return `
-    <div class="relative bg-white border-l-8 border-${cor}-600 rounded shadow p-6 space-y-4 font-sans">
-      <h2 class="text-xl font-bold text-${cor}-700">${titulo}</h2>
-
+painelFinal.innerHTML = `
+  <div class="relative rounded-xl border-l-[6px] p-6 shadow-md bg-white" style="border-color: ${corDominante};">
+    <div class="flex justify-between items-start mb-4">
+      <h2 class="text-lg font-semibold text-[${corDominante}]">
+        ${tituloPainel}
+      </h2>
       ${parecerTutor.status === 'preliminar' ? `
-        <div class="inline-flex items-center gap-2 bg-${cor}-100 text-${cor}-700 px-3 py-1 text-sm rounded shadow-sm">
-          <span>⚠️</span> <span>Parecer Preliminar</span>
+        <div class="inline-flex items-center px-3 py-1 text-xs rounded bg-[${corDominante}]/10 text-[${corDominante}] font-medium gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg>
+          Parecer Preliminar
         </div>
       ` : ''}
-
-      <p class="text-gray-800 text-sm leading-relaxed">${parecerTutor.texto}</p>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-        <div><strong>Nota:</strong> ${avaliacao.nota}</div>
-        <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
-        <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
-        <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
-        <div class="sm:col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
-      </div>
-
-      <div class="italic text-sm text-gray-500">
-        Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
-        Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
-        Sessões: ${diagnostico.totalSessoes}
-      </div>
-
-      <div class="pt-4">
-        <button onclick="window.print()" class="bg-${cor}-600 hover:bg-${cor}-700 text-white px-4 py-2 rounded shadow text-sm">
-          Exportar Parecer em PDF
-        </button>
-      </div>
     </div>
-  `;
-})();
 
+    <div class="grid grid-cols-1 sm:grid-cols-2 text-sm text-slate-600 gap-y-1 mb-4">
+      <div><strong>Aluno:</strong> ${alunoSel.selectedOptions[0].textContent}</div>
+      <div><strong>Aula:</strong> ${aulaSel.selectedOptions[0].textContent}</div>
+      <div><strong>Curso:</strong> ${cursoSel.selectedOptions[0].textContent}</div>
+      <div><strong>Progresso:</strong> ${diagnostico.percentualAssistido}%</div>
+      <div><strong>Duração:</strong> ${diagnostico.duracaoDias} dias</div>
+      <div><strong>Sessões:</strong> ${diagnostico.totalSessoes}</div>
+    </div>
+
+    <p class="text-sm text-slate-700 leading-relaxed mb-4">
+      ${parecerTutor.texto}
+    </p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-800 mb-4">
+      <div><strong>Nota:</strong> ${avaliacao.nota}</div>
+      <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
+      <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
+      <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
+      <div class="sm:col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
+    </div>
+
+    <div class="text-xs text-gray-500 italic border-t pt-3">
+      Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+      Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+      Sessões: ${diagnostico.totalSessoes}
+    </div>
+
+    <div class="mt-4 text-left">
+      <button onclick="window.print()" class="bg-[${corDominante}] hover:brightness-110 text-white px-4 py-2 rounded-md shadow text-sm transition-all">
+        Exportar Parecer em PDF
+      </button>
+    </div>
+  </div>
+`;
 
   
 
