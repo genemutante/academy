@@ -155,18 +155,6 @@ const blocos = heatmap.map((qtd, idx) => {
   </div>`;
 });
 
-
-    
-
-return `<div 
-  class="w-2 h-2 ${bg} border border-black/10 rounded-sm relative group">
-  <div class="absolute hidden group-hover:block text-xs text-white bg-black px-1 py-0.5 rounded -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-50">
-    ${formatar(idx)} • Visto: ${qtd}x
-  </div>
-</div>`;
-
-  });
-
   painel.innerHTML = blocos.join('');
   resultado.classList.remove('hidden');
 
