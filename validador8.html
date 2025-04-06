@@ -447,7 +447,8 @@ btn.addEventListener('click', async () => {
   if (emLacuna) lacunas.push([inicioLacuna, duracao - 1]);
 
   // LIMPA parecer antigo, se houver
-  resultado.querySelectorAll('.parecer-tutor, .avaliacao-tecnica').forEach(el => el.remove());
+  resultado.querySelectorAll('.avaliacao-completa').forEach(el => el.remove());
+
 
 
   // Avaliação Técnica
@@ -466,32 +467,44 @@ parecer.innerHTML = `
     🧾 <strong>Parecer do Tutor:</strong><br>
     ${parecerTutor.texto}
   </p>
-  <p class="mt-2 inline-block text-xs px-2 py-1 rounded font-medium ${
-    parecerTutor.status === 'preliminar'
-      ? 'bg-yellow-100 text-yellow-800'
-      : 'bg-green-100 text-green-800'
-  }">
+
+  
+
+  
     ${parecerTutor.status === 'preliminar'
       ? '⚠️ Parecer preliminar. A aula ainda está em andamento.'
       : '✅ Parecer consolidado. Aula concluída.'}
   </p>
 `;
   
-  resultado.appendChild(parecer);
+ const painelFinal = document.createElement("div");
+painelFinal.className = "avaliacao-completa mt-6 bg-white border-2 border-blue-200 rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto";
 
-  const painelAvaliacao = document.createElement("div");
-  painelAvaliacao.className = "avaliacao-tecnica mt-4 bg-white border border-gray-300 p-4 rounded shadow text-gray-800 text-sm";
-  painelAvaliacao.innerHTML = `
-    <p class="font-semibold mb-2">📊 Avaliação Técnica:</p>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-      <div><strong>Nota:</strong> ${avaliacao.nota}</div>
-      <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
-      <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
-      <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
-      <div><strong>Feedback:</strong> ${avaliacao.feedback}</div>
-    </div>
-  `;
-  resultado.appendChild(painelAvaliacao);
+painelFinal.innerHTML = `
+  <h2 class="text-lg font-bold text-blue-700 mb-2">📌 Avaliação Geral do Aluno</h2>
+
+  <div class="mb-4 text-sm">
+    <p class="text-sm text-gray-800 mb-2 leading-relaxed">
+      🧾 <strong>Parecer do Tutor:</strong><br>
+      ${parecerTutor.texto}
+    </p>
+    <span class="inline-block text-xs px-2 py-1 rounded font-medium mt-1
+      ${parecerTutor.status === 'preliminar' 
+        ? 'bg-yellow-100 text-yellow-800' 
+        : 'bg-green-100 text-green-800'}">
+      ${parecerTutor.status === 'preliminar' ? '⚠️ Parecer preliminar' : '✅ Parecer definitivo'}
+    </span>
+  </div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-sm">
+    <div><strong>Nota:</strong> ${avaliacao.nota}</div>
+    <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
+    <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
+    <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
+    <div><strong>Feedback:</strong> ${avaliacao.feedback}</div>
+  </div>
+`;
+
 
   const linhas = bruto.map(r => `
     <div class="bg-white text-gray-800 p-2 rounded-md border border-gray-300 shadow-sm font-mono text-sm hover:bg-gray-100 transition-colors duration-200">
