@@ -46,6 +46,9 @@
       style="display: grid; grid-template-columns: repeat(120, minmax(4px, 1fr)); gap: 1px; max-width: 100%;">
     </div>
 
+    <div id="bloco-diagnostico" class="mt-6"></div>
+
+
     <p class="text-sm text-left mt-4">
       <a href="#" onclick="document.getElementById('detalhes').classList.toggle('hidden')" class="text-blue-700 underline">
         Mostrar/Ocultar Detalhes
@@ -428,6 +431,8 @@ btn.addEventListener('click', async () => {
   });
 
   painel.innerHTML = blocos.join('');
+
+
   resultado.classList.remove('hidden');
 
   const segundosAssistidos = heatmap.filter(s => s > 0 && s < 999).length;
@@ -488,7 +493,10 @@ btn.addEventListener('click', async () => {
   </div>
 `;
 
-  resultado.appendChild(painelFinal);
+const blocoDiagnostico = document.getElementById("bloco-diagnostico");
+blocoDiagnostico.innerHTML = ''; // Limpa caso já exista
+blocoDiagnostico.appendChild(painelFinal);
+
 
 
 
