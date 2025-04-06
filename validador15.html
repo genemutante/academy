@@ -587,75 +587,40 @@ painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgP
 
 
 
-  painelFinal.innerHTML = `
-  <div class="relative mb-6">
-    <h2 class="text-xl font-semibold text-center text-slate-800">Avaliação Geral do Aluno</h2>
-    <p class="text-sm text-gray-500 text-center mt-1">
-      A cor da borda deste painel reflete o nível de aproveitamento:
-      <span class="inline-flex items-center gap-1 text-green-600 ml-2">
-        <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Excelente
-      </span>
-      <span class="inline-flex items-center gap-1 text-yellow-600 ml-4">
-        <span class="w-2 h-2 rounded-full bg-yellow-400 inline-block"></span> Razoável
-      </span>
-      <span class="inline-flex items-center gap-1 text-red-600 ml-4">
-        <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span> Baixo
-      </span>
+painelFinal.innerHTML = `
+  <div class="bg-white border-l-8 border-red-500 p-6 rounded-xl shadow-sm text-gray-800 font-sans space-y-4">
+    <div class="flex justify-between items-start">
+      <h2 class="text-lg font-semibold text-red-600">Estilo 4: Alerta Corporativo</h2>
+      ${parecerTutor.status === 'preliminar' ? `
+        <span class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded font-medium flex items-center gap-1 shadow-sm">
+          <span>🚨</span> Parecer Preliminar
+        </span>
+      ` : ''}
+    </div>
+
+    <p class="text-sm leading-relaxed">
+      ${parecerTutor.texto}
     </p>
-    ${parecerTutor.status === 'preliminar' ? `
-      <div class="absolute top-0 right-0 px-3 py-1 text-xs rounded-full border border-yellow-300 bg-yellow-50 text-yellow-800 font-medium shadow-sm">
-        ⚠️ Parecer Preliminar – Aula em andamento
-      </div>
-    ` : ''}
-  </div>
 
-  <div class="mb-4">
-    <h3 class="font-semibold text-gray-800 mb-1">Parecer do Tutor:</h3>
-    <p class="text-sm text-gray-700 leading-relaxed">${parecerTutor.texto}</p>
-  </div>
-
-  <hr class="my-4 border-gray-300" />
-
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 text-sm">
-    <div><strong>Nota:</strong> ${avaliacao.nota}</div>
-    <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
-    <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
-    <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
-    <div class="col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
-  </div>
-
-  <hr class="my-4 border-gray-300" />
-
-  <div class="flex justify-center gap-12 text-sm font-medium text-gray-700">
-    <div>
-      <strong>Início:</strong> ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+    <div class="text-sm space-y-1">
+      <p><strong>Nota:</strong> ${avaliacao.nota}</p>
+      <p><strong>Conceito:</strong> ${avaliacao.conceito}</p>
+      <p><strong>Rubrica:</strong> ${avaliacao.rubrica}</p>
+      <p><strong>BNCC:</strong> ${avaliacao.bncc}</p>
+      <p><strong>Feedback:</strong> ${avaliacao.feedback}</p>
     </div>
-    <div>
-      <strong>Fim:</strong> ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-    </div>
-  </div>
 
-  <hr class="my-4 border-gray-300" />
+    <p class="text-xs text-gray-500 italic mt-4">
+      Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+      Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+      Sessões: ${diagnostico.totalSessoes}
+    </p>
 
-  <div class="mt-4 text-sm text-gray-700 space-y-2">
-    <div>
-      🔁 <strong>Total de sessões:</strong> ${diagnostico.totalSessoes}
-      <p class="text-xs text-gray-500 italic mt-1 ml-6">
-        Cada sessão representa um acesso separado por mais de 1 hora sem atividade.
-      </p>
+    <div class="pt-4">
+      <button onclick="window.print()" class="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-md transition-all shadow-sm">
+        Exportar Parecer em PDF
+      </button>
     </div>
-    <div>
-      ⏳ <strong>Duração do acompanhamento:</strong> ${diagnostico.duracaoDias} dias
-    </div>
-  </div>
-
-  <div class="mt-6 text-left">
-    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow flex items-center gap-2 text-sm transition-all duration-200">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-5a2 2 0 00-2-2h-2M7 17H5a2 2 0 01-2-2v-5a2 2 0 012-2h2m10 0V5a2 2 0 00-2-2H9a2 2 0 00-2 2v3m10 0H7" />
-      </svg>
-      Exportar Parecer em PDF
-    </button>
   </div>
 `;
 
