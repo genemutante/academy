@@ -6,142 +6,120 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
-<body class="bg-gray-100 p-6 text-gray-800">
+<body class="bg-gray-100 text-gray-800 p-6 font-sans">
 
-  <div class="max-w-7xl mx-auto">
-    <h1 class="text-2xl font-bold text-blue-700 mb-6">🔍 Validador Visual de Progresso</h1>
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-2xl font-bold text-blue-800 mb-6 flex items-center gap-2">🔍 Validador Visual de Progresso</h1>
 
-    <!-- Controles -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
       <div>
-        <label class="block mb-1 font-semibold">👤 Aluno</label>
-        <select id="aluno" class="w-full border p-2 rounded"></select>
+        <label class="block font-semibold mb-1">👤 Aluno</label>
+        <select id="aluno" class="w-full p-2 border rounded"></select>
       </div>
       <div>
-        <label class="block mb-1 font-semibold">🎓 Curso</label>
-        <select id="curso" class="w-full border p-2 rounded"></select>
+        <label class="block font-semibold mb-1">🎓 Curso</label>
+        <select id="curso" class="w-full p-2 border rounded"></select>
       </div>
       <div>
-        <label class="block mb-1 font-semibold">📚 Aula</label>
-        <select id="aula" class="w-full border p-2 rounded"></select>
+        <label class="block font-semibold mb-1">📚 Aula</label>
+        <select id="aula" class="w-full p-2 border rounded"></select>
       </div>
+      <button id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+        🔍 Calcular Progresso
+      </button>
     </div>
 
-    <button id="btnCalcular" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-6">
-      🔎 Calcular Progresso
-    </button>
-
-    <!-- Resultado -->
-    <div id="resultado" class="hidden">
-      <h2 class="text-lg font-bold mb-2">📊 Tracking de Segmentos:</h2>
-      <div id="painel" class="grid grid-cols-100 gap-px bg-white p-2 rounded shadow"
-           style="grid-template-columns: repeat(100, minmax(0, 1fr)); max-width: 100%;"></div>
+    <div id="resultado" class="mt-8 hidden">
+      <h2 class="text-xl font-bold text-gray-800 mb-3">📊 <strong>Tracking de Segmentos:</strong></h2>
+      <div id="painel" class="bg-white p-4 rounded shadow overflow-x-auto whitespace-nowrap flex flex-wrap gap-[2px] w-full max-w-full"></div>
+      <p class="text-sm text-right mt-1">
+        <a href="#" onclick="document.getElementById('detalhes').classList.toggle('hidden')" class="text-blue-700 underline">Mostrar/Ocultar Detalhes</a>
+      </p>
+      <pre id="detalhes" class="hidden mt-4 p-4 bg-gray-100 rounded overflow-x-auto text-xs text-gray-700 font-mono"></pre>
     </div>
   </div>
 
   <script>
-    // Inicializar Supabase
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5MDAwMDAwMCwiZXhwIjoxOTQ5NTM2MDAwfQ.3k5HHTzTxNZT4rAY9CVYzCkK6GqDQmpVrCTwaRSmtHc'
     );
 
-    const alunoSelect = document.getElementById('aluno');
-    const cursoSelect = document.getElementById('curso');
-    const aulaSelect = document.getElementById('aula');
+    const alunoSel = document.getElementById('aluno');
+    const cursoSel = document.getElementById('curso');
+    const aulaSel = document.getElementById('aula');
+    const btn = document.getElementById('btn');
     const painel = document.getElementById('painel');
     const resultado = document.getElementById('resultado');
+    const detalhes = document.getElementById('detalhes');
 
-    async function carregarDadosIniciais() {
-      const { data: users } = await supabase.from('users').select('id, name');
-      alunoSelect.innerHTML = users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+    const MAX_SEGUNDOS = 60 * 60;
+
+    async function carregar() {
+      const { data: alunos } = await supabase.from('users').select('id, name');
+      alunoSel.innerHTML = alunos.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
 
       const { data: cursos } = await supabase.from('courses').select('id, title');
-      cursoSelect.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+      cursoSel.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
 
-      cursoSelect.addEventListener('change', carregarAulas);
+      cursoSel.addEventListener('change', carregarAulas);
       carregarAulas();
     }
 
     async function carregarAulas() {
-      const course_id = cursoSelect.value;
-      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', course_id);
-      aulaSelect.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
+      const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', cursoSel.value);
+      aulaSel.innerHTML = aulas.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
     }
 
-    function formatarTempo(segundos) {
-      const h = Math.floor(segundos / 3600).toString().padStart(2, '0');
-      const m = Math.floor((segundos % 3600) / 60).toString().padStart(2, '0');
-      const s = Math.floor(segundos % 60).toString().padStart(2, '0');
+    function formatar(seg) {
+      const h = String(Math.floor(seg / 3600)).padStart(2, '0');
+      const m = String(Math.floor((seg % 3600) / 60)).padStart(2, '0');
+      const s = String(seg % 60).padStart(2, '0');
       return `${h}h${m}m${s}s`;
     }
 
-    function detectarLacunas(assistidos) {
-      const lacunas = new Set();
-      for (let i = 1; i < assistidos.length; i++) {
-        const anterior = assistidos[i - 1];
-        const atual = assistidos[i];
-        for (let j = anterior + 1; j < atual; j++) {
-          if (!assistidos.includes(j)) {
-            lacunas.add(j);
-          }
-        }
-      }
-      return lacunas;
-    }
-
-    document.getElementById('btnCalcular').addEventListener('click', async () => {
-      resultado.classList.add('hidden');
+    btn.addEventListener('click', async () => {
       painel.innerHTML = '';
+      detalhes.innerHTML = '';
+      resultado.classList.add('hidden');
 
-      const user_id = alunoSelect.value;
-      const lesson_id = aulaSelect.value;
-
-      const { data: aula } = await supabase.from('lessons').select('duration').eq('id', lesson_id).single();
+      const { data: aula } = await supabase.from('lessons').select('duration').eq('id', aulaSel.value).single();
       const duracao = aula.duration;
 
-      const { data: segmentos } = await supabase
+      const { data: bruto } = await supabase
         .from('progress_segments')
         .select('segment')
-        .eq('user_id', user_id)
-        .eq('lesson_id', lesson_id);
+        .eq('user_id', alunoSel.value)
+        .eq('lesson_id', aulaSel.value);
 
-      const contagem = Array(3600).fill(0);
-      const assistidos = [];
-
-      segmentos.forEach(s => {
-        const { start, end } = s.segment;
-        if (start >= 0 && end > start && end <= 3600) {
-          for (let i = start; i < end; i++) {
-            contagem[i]++;
+      // Compactar múltiplos registros e ignorar inválidos
+      const heatmap = Array(MAX_SEGUNDOS).fill(0);
+      bruto.forEach(r => {
+        const { start, end } = r.segment;
+        if (start >= 0 && end >= 0 && end > start && end - start <= 600) {
+          for (let s = start; s < end; s++) {
+            if (s < MAX_SEGUNDOS) heatmap[s]++;
           }
         }
       });
 
-      for (let i = 0; i < duracao; i++) {
-        if (contagem[i] > 0) assistidos.push(i);
-      }
+      const blocos = heatmap.map((qtd, idx) => {
+        let bg = 'bg-gray-200';
+        if (idx >= duracao) bg = 'bg-gray-100';
+        else if (qtd === 1) bg = 'bg-blue-500';
+        else if (qtd > 1) bg = 'bg-green-500';
+        return `<div title="${formatar(idx)} • Visto: ${qtd}x" class="${bg} w-2 h-2 rounded-sm"></div>`;
+      });
 
-      const lacunas = detectarLacunas(assistidos);
-
-      for (let i = 0; i < 3600; i++) {
-        const cor = (() => {
-          if (i >= duracao) return 'bg-gray-100'; // fora do vídeo
-          if (lacunas.has(i)) return 'bg-red-400'; // lacuna
-          if (contagem[i] > 1) return 'bg-blue-400'; // repetido
-          if (contagem[i] === 1) return 'bg-green-400'; // assistido
-          return 'bg-white'; // não assistido
-        })();
-
-        const bloco = document.createElement('div');
-        bloco.className = `${cor} w-2 h-2`;
-        painel.appendChild(bloco);
-      }
-
+      painel.innerHTML = blocos.join('');
       resultado.classList.remove('hidden');
+
+      // Exibir detalhes
+      const linhas = bruto.map(r => `${formatar(r.segment.start)} → ${formatar(r.segment.end)}`);
+      detalhes.textContent = linhas.join('\n');
     });
 
-    carregarDadosIniciais();
+    carregar();
   </script>
 </body>
 </html>
