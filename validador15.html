@@ -586,43 +586,52 @@ painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgP
 
 
 
+painelFinal.innerHTML = (() => {
+  const cores = {
+    A: { cor: 'green', titulo: 'Desempenho de Excelência' },
+    'B+': { cor: 'lime', titulo: 'Muito Bom Aproveitamento' },
+    B: { cor: 'yellow', titulo: 'Bom Aproveitamento' },
+    C: { cor: 'orange', titulo: 'Atenção Necessária' },
+    D: { cor: 'red', titulo: 'Aproveitamento Crítico' },
+    E: { cor: 'red', titulo: 'Desempenho Insatisfatório' },
+  };
 
-painelFinal.innerHTML = `
-  <div class="bg-white border-l-8 border-red-500 p-6 rounded-xl shadow-sm text-gray-800 font-sans space-y-4">
-    <div class="flex justify-between items-start">
-      <h2 class="text-lg font-semibold text-red-600">Estilo 4: Alerta Corporativo</h2>
+  const { cor, titulo } = cores[avaliacao.conceito] || { cor: 'gray', titulo: 'Avaliação do Aluno' };
+
+  return `
+    <div class="relative bg-white border-l-8 border-${cor}-600 rounded shadow p-6 space-y-4 font-sans">
+      <h2 class="text-xl font-bold text-${cor}-700">${titulo}</h2>
+
       ${parecerTutor.status === 'preliminar' ? `
-        <span class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded font-medium flex items-center gap-1 shadow-sm">
-          <span>🚨</span> Parecer Preliminar
-        </span>
+        <div class="inline-flex items-center gap-2 bg-${cor}-100 text-${cor}-700 px-3 py-1 text-sm rounded shadow-sm">
+          <span>⚠️</span> <span>Parecer Preliminar</span>
+        </div>
       ` : ''}
+
+      <p class="text-gray-800 text-sm leading-relaxed">${parecerTutor.texto}</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        <div><strong>Nota:</strong> ${avaliacao.nota}</div>
+        <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
+        <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
+        <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
+        <div class="sm:col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
+      </div>
+
+      <div class="italic text-sm text-gray-500">
+        Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+        Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+        Sessões: ${diagnostico.totalSessoes}
+      </div>
+
+      <div class="pt-4">
+        <button onclick="window.print()" class="bg-${cor}-600 hover:bg-${cor}-700 text-white px-4 py-2 rounded shadow text-sm">
+          Exportar Parecer em PDF
+        </button>
+      </div>
     </div>
-
-    <p class="text-sm leading-relaxed">
-      ${parecerTutor.texto}
-    </p>
-
-    <div class="text-sm space-y-1">
-      <p><strong>Nota:</strong> ${avaliacao.nota}</p>
-      <p><strong>Conceito:</strong> ${avaliacao.conceito}</p>
-      <p><strong>Rubrica:</strong> ${avaliacao.rubrica}</p>
-      <p><strong>BNCC:</strong> ${avaliacao.bncc}</p>
-      <p><strong>Feedback:</strong> ${avaliacao.feedback}</p>
-    </div>
-
-    <p class="text-xs text-gray-500 italic mt-4">
-      Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
-      Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
-      Sessões: ${diagnostico.totalSessoes}
-    </p>
-
-    <div class="pt-4">
-      <button onclick="window.print()" class="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-md transition-all shadow-sm">
-        Exportar Parecer em PDF
-      </button>
-    </div>
-  </div>
-`;
+  `;
+})();
 
 
   
