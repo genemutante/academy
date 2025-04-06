@@ -573,29 +573,24 @@ const corPorConceito = {
 
 
 painelFinal.innerHTML = `
-
-  ${parecerTutor.status === 'preliminar' ? `
-<div class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm rounded shadow-sm">
-  ⚠️ <strong>Esta aula ainda está em andamento.</strong> O parecer é preliminar e pode mudar conforme o aluno avança.
-</div>
-
-  ` : ''}
+  <div class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm rounded shadow-sm">
+    ⚠️ <strong>Esta aula ainda está em andamento.</strong> O parecer é preliminar e pode mudar conforme o aluno avança.
+  </div>
 
   <h2 class="text-lg font-bold text-blue-700 mb-3 text-center">📌 Avaliação Geral do Aluno</h2>
 
-<p class="text-center text-sm text-slate-500 mb-4">
-  <span title="Verde: excelente, Amarelo: razoável, Vermelho: baixo.">
-    🛈 A borda colorida indica o nível de aproveitamento.
-  </span>
-</p>
+  <p class="text-center text-sm text-slate-500 mb-4">
+    <span title="Verde: excelente, Amarelo: razoável, Vermelho: baixo.">
+      🛈 A borda colorida indica o nível de aproveitamento.
+    </span>
+  </p>
 
-<div class="mb-4">
-  <h3 class="font-semibold text-gray-800 mb-1">Parecer do Tutor:</h3>
-  <p class="text-sm text-gray-700 leading-relaxed">${parecerTutor.texto}</p>
-</div>
+  <div class="mb-4">
+    <h3 class="font-semibold text-gray-800 mb-1">Parecer do Tutor:</h3>
+    <p class="text-sm text-gray-700 leading-relaxed">${parecerTutor.texto}</p>
+  </div>
 
-<hr class="my-4 border-gray-300" />
-
+  <hr class="my-4 border-gray-300" />
 
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 text-sm">
     <div><strong>Nota:</strong> ${avaliacao.nota}</div>
@@ -605,16 +600,20 @@ painelFinal.innerHTML = `
     <div class="col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
   </div>
 
-  <hr class="my-4 border-gray-200" />
+  <hr class="my-4 border-gray-300" />
 
-  <div class="flex justify-center gap-12 text-sm font-medium">
-    <div><strong>Início:</strong> ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
-    <div><strong>Fim:</strong> ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+  <div class="flex justify-center gap-12 text-sm font-medium text-gray-700">
+    <div>
+      <strong>Início:</strong> ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+    </div>
+    <div>
+      <strong>Fim:</strong> ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+    </div>
   </div>
 
-  <hr class="my-4 border-gray-200" />
+  <hr class="my-4 border-gray-300" />
 
-  <div class="mt-4 text-sm text-gray-700 space-y-1">
+  <div class="mt-4 text-sm text-gray-700 space-y-2">
     <div>
       🔁 <strong>Total de sessões:</strong> ${diagnostico.totalSessoes}
       <p class="text-xs text-gray-500 italic mt-1 ml-6">
@@ -627,11 +626,12 @@ painelFinal.innerHTML = `
   </div>
 
   <div class="mt-6 text-center">
-    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition-all duration-200">
       🖨️ Exportar Parecer em PDF
     </button>
   </div>
 `;
+
 
 
 
