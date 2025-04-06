@@ -587,7 +587,7 @@ painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgP
 
 
 
-painelFinal.innerHTML = `
+  painelFinal.innerHTML = `
   <div class="relative mb-6">
     <h2 class="text-xl font-semibold text-center text-slate-800">Avaliação Geral do Aluno</h2>
     <p class="text-sm text-gray-500 text-center mt-1">
@@ -603,8 +603,8 @@ painelFinal.innerHTML = `
       </span>
     </p>
     ${parecerTutor.status === 'preliminar' ? `
-      <div class="absolute top-0 right-0 px-3 py-1 text-xs rounded border border-yellow-300 bg-yellow-50 text-yellow-800 font-medium shadow-sm">
-        Parecer Preliminar – Aula em andamento
+      <div class="absolute top-0 right-0 px-3 py-1 text-xs rounded-full border border-yellow-300 bg-yellow-50 text-yellow-800 font-medium shadow-sm">
+        ⚠️ Parecer Preliminar – Aula em andamento
       </div>
     ` : ''}
   </div>
@@ -649,8 +649,8 @@ painelFinal.innerHTML = `
     </div>
   </div>
 
-  <div class="mt-6 text-center">
-    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow flex items-center justify-center gap-2 text-sm transition-all duration-200">
+  <div class="mt-6 text-left">
+    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow flex items-center gap-2 text-sm transition-all duration-200">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-5a2 2 0 00-2-2h-2M7 17H5a2 2 0 01-2-2v-5a2 2 0 012-2h2m10 0V5a2 2 0 00-2-2H9a2 2 0 00-2 2v3m10 0H7" />
       </svg>
