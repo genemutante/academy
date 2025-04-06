@@ -55,16 +55,28 @@
 
     const MAX_SEGUNDOS = 60 * 60;
 
-    async function carregar() {
-      const { data: alunos } = await supabase.from('users').select('id, name');
-      alunoSel.innerHTML = alunos.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
 
-      const { data: cursos } = await supabase.from('courses').select('id, title');
-      cursoSel.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+async function carregar() {
+  const { data: alunos, error: erroAlunos } = await supabase.from('users').select('id, name');
+  if (erroAlunos || !alunos) {
+    alert("Erro ao carregar alunos: " + (erroAlunos?.message || 'Sem dados'));
+    return;
+  }
+  alunoSel.innerHTML = alunos.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
 
-      cursoSel.addEventListener('change', carregarAulas);
-      carregarAulas();
-    }
+  const { data: cursos, error: erroCursos } = await supabase.from('courses').select('id, title');
+  if (erroCursos || !cursos) {
+    alert("Erro ao carregar cursos: " + (erroCursos?.message || 'Sem dados'));
+    return;
+  }
+  cursoSel.innerHTML = cursos.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+
+  cursoSel.addEventListener('change', carregarAulas);
+  carregarAulas();
+}
+
+
+    
 
     async function carregarAulas() {
       const { data: aulas } = await supabase.from('lessons').select('id, title').eq('course_id', cursoSel.value);
