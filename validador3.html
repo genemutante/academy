@@ -182,9 +182,59 @@ btn.addEventListener('click', async () => {
     </div>
   `);
   detalhes.innerHTML = linhas.join('');
+
+
+// Diagnóstico final
+const segundosAssistidos = heatmap.filter(s => s > 0 && s < 999).length;
+const percentual = Math.round((segundosAssistidos / duracao) * 100);
+
+// Detectar lacunas
+const lacunas = [];
+let emLacuna = false, inicioLacuna = 0;
+for (let i = 0; i < duracao; i++) {
+  if (heatmap[i] === 0 && !emLacuna) {
+    inicioLacuna = i;
+    emLacuna = true;
+  } else if (heatmap[i] > 0 && emLacuna) {
+    lacunas.push([inicioLacuna, i - 1]);
+    emLacuna = false;
+  }
+}
+if (emLacuna) lacunas.push([inicioLacuna, duracao - 1]);
+
+// Parecer
+const parecerTexto = gerarParecer(percentual, lacunas, heatmap.filter(v => v > 1).length, heatmap[0], heatmap[duracao - 1], duracao);
+const parecer = document.createElement("div");
+parecer.className = "mt-6 bg-white border-l-4 border-blue-600 p-4 rounded shadow text-gray-800";
+parecer.innerHTML = `
+  <p class="text-sm">
+    ✍️ <strong>Avaliação do Tutor:</strong><br>
+    ${parecerTexto}
+  </p>`;
+resultado.appendChild(parecer);
+
+
+  
 });
 
 carregar();
+
+
+function gerarParecer(porcentagem, lacunas, repeticoes, inicio, fim, duracao) {
+  if (porcentagem === 100) return "👏 O aluno assistiu toda a aula sem deixar lacunas. Excelente dedicação!";
+  if (porcentagem >= 97 && lacunas.length === 0) return "✅ O aluno assistiu quase toda a aula com atenção consistente.";
+  if (porcentagem >= 80 && lacunas.length <= 1) return "📘 O aluno assistiu a maior parte da aula. Uma pequena lacuna foi detectada.";
+  if (porcentagem >= 60) {
+    if (lacunas.length > 2) return "⚠️ O aluno pulou diversos trechos importantes. Pode haver falhas no entendimento.";
+    return "📙 O aluno assistiu parcialmente a aula. Seria bom revisar.";
+  }
+  if (porcentagem >= 40) return "🚧 Atenção: o aluno abandonou mais da metade da aula.";
+  if (porcentagem >= 20) return "❌ O aluno quase não acompanhou a aula. Isso compromete totalmente o aprendizado.";
+  return "❌ O aluno praticamente não assistiu ao conteúdo.";
+}
+
+
+  
 </script>
 </body>
 </html>
