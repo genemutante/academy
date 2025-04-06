@@ -575,9 +575,12 @@ painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgP
 
 
 painelFinal.innerHTML = `
-  <div class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm rounded shadow-sm">
-    ⚠️ <strong>Esta aula ainda está em andamento.</strong> O parecer é preliminar e pode mudar conforme o aluno avança.
-  </div>
+
+  ${parecerTutor.status === 'preliminar' ? `
+    <div class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm rounded shadow-sm">
+      ⚠️ <strong>Esta aula ainda está em andamento.</strong> O parecer é preliminar e pode mudar conforme o aluno avança.
+    </div>
+  ` : ''}
 
   <h2 class="text-lg font-bold text-blue-700 mb-3 text-center">📌 Avaliação Geral do Aluno</h2>
 
