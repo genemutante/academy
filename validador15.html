@@ -622,10 +622,10 @@ painelFinal.innerHTML = `
     </div>
 
 <div class="text-xs text-gray-500 italic border-t pt-3">
-  Início: ${...} /
-  Fim: ${...} /
-  Sessões: ${...} /
-  Prazo limite: ${...} /
+  Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+  Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+  Sessões: ${diagnostico.totalSessoes} /
+  Prazo limite: ${diagnostico.prazoLimite.toLocaleDateString('pt-BR')} /
   Status: ${parecerTutor.status === 'definitivo' ? 'Parecer Final' : 'Parecer Preliminar'}
 </div>
 
