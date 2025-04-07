@@ -4,107 +4,66 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quiz de Aula</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: 'Carlito', sans-serif;
-      background-color: #f9fafb;
-      margin: 0;
-      padding: 1rem;
-    }
-    header {
-      background-color: #0ea5e9;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 1.25rem;
-    }
-    .container {
-      max-width: 880px;
-      margin: 2rem auto;
-      padding: 0 1.25rem;
-    }
-    .card {
-      background-color: white;
-      border-radius: 10px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .question {
-      margin-bottom: 1rem;
-    }
-    .question p {
-      font-weight: bold;
-    }
-    .result {
-      background-color: #e0ffe0;
-      padding: 1rem;
-      border-radius: 6px;
-      margin-top: 1rem;
-      text-align: center;
-    }
-  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Carlito', 'sans-serif']
+          },
+          colors: {
+            primary: {
+              DEFAULT: '#0ea5e9'
+            },
+            base: '#f9fafb'
+          }
+        }
+      }
+    };
+  </script>
 </head>
-<body>
-  <!-- Cabeçalho -->
-  <header>
-    <h1>Quiz de Aula</h1>
-  </header>
+<body class="bg-base text-slate-800 font-sans p-4">
 
-  <!-- Conteúdo -->
-  <div class="container">
-    <div id="quizContent">
-      <p>Carregando quiz...</p>
+  <div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow-md rounded-xl p-6 border border-slate-200">
+      <h1 class="text-xl font-bold text-primary text-center mb-6">Avaliação da Aula</h1>
+      <div id="quizContent" class="space-y-6">
+        <p class="text-sm text-slate-500">Carregando quiz...</p>
+      </div>
     </div>
   </div>
 
   <script>
-    // Cria o cliente Supabase (mesmos parâmetros usados no painel do aluno)
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    // Obtém os parâmetros da URL: user_id e lesson_id
     const params = new URLSearchParams(window.location.search);
     const userId = params.get('user_id');
     const lessonId = params.get('lesson_id');
 
     if (!userId || !lessonId) {
       document.getElementById('quizContent').innerHTML =
-        '<p><strong>Erro:</strong> Parâmetros "user_id" e "lesson_id" são necessários na URL.</p>';
+        '<p class="text-red-600 font-semibold">Parâmetros "user_id" e "lesson_id" são obrigatórios na URL.</p>';
       throw new Error('Parâmetros ausentes na URL.');
     }
 
-    // Função para carregar o quiz usando a view que encapsula o SQL
     async function loadQuiz() {
-      // Supondo que a view se chame "quiz_view"
       const { data, error } = await supabase
         .from('quiz_view')
         .select('*')
         .eq('id_aula', lessonId);
 
-      if (error) {
+      if (error || !data || data.length === 0) {
         document.getElementById('quizContent').innerHTML =
-          `<p>Erro ao carregar quiz: ${error.message}</p>`;
-        console.error("Erro ao carregar quiz:", error);
-        return;
-      }
-      if (!data || data.length === 0) {
-        document.getElementById('quizContent').innerHTML =
-          '<p>Nenhuma pergunta encontrada para esta aula.</p>';
+          `<p class="text-red-600">Erro ao carregar perguntas.</p>`;
         return;
       }
 
-      // Agrupa as linhas por pergunta (cada linha representa uma alternativa)
       const grouped = {};
       data.forEach(row => {
         const pid = row.id_pergunta;
@@ -112,7 +71,7 @@
           grouped[pid] = {
             id_pergunta: pid,
             pergunta: row.pergunta,
-            quiz_id: row.id_quiz,  // Incluindo o quiz_id para uso posterior
+            quiz_id: row.id_quiz,
             alternatives: []
           };
         }
@@ -122,125 +81,103 @@
         });
       });
 
-      // Converte o objeto agrupado em array de perguntas
       const questions = Object.values(grouped);
       renderQuiz(questions);
     }
 
-    // Função para renderizar o quiz na tela
     function renderQuiz(questions) {
       const container = document.getElementById('quizContent');
       container.innerHTML = '';
 
       const form = document.createElement('form');
       form.id = 'quizForm';
+      form.className = 'space-y-6';
 
-      questions.forEach(question => {
-        const card = document.createElement('div');
-        card.className = 'card';
+      questions.forEach((question, index) => {
+        const qBlock = document.createElement('div');
+        qBlock.className = 'p-4 bg-slate-50 border border-slate-200 rounded-md';
 
-        const divQuestion = document.createElement('div');
-        divQuestion.className = 'question';
+        const title = document.createElement('p');
+        title.className = 'font-semibold mb-2 text-slate-700';
+        title.textContent = `${index + 1}. ${question.pergunta}`;
+        qBlock.appendChild(title);
 
-        const p = document.createElement('p');
-        p.textContent = question.pergunta;
-        divQuestion.appendChild(p);
-
-        // Renderiza cada alternativa com radio button
-        question.alternatives.forEach((alt, idx) => {
+        question.alternatives.forEach((alt, i) => {
           const label = document.createElement('label');
-          label.style.display = 'block';
+          label.className = 'flex items-center space-x-2 mb-1 text-sm';
+
           const input = document.createElement('input');
           input.type = 'radio';
-          // Usamos o id da pergunta como nome para agrupar as alternativas
           input.name = question.id_pergunta;
-          // Usamos o índice para identificar a opção
-          input.value = idx; 
+          input.value = i;
           input.required = true;
+
           label.appendChild(input);
-          label.appendChild(document.createTextNode(" " + alt.alternativa));
-          divQuestion.appendChild(label);
+          label.appendChild(document.createTextNode(alt.alternativa));
+          qBlock.appendChild(label);
         });
 
-        card.appendChild(divQuestion);
-        form.appendChild(card);
+        form.appendChild(qBlock);
       });
 
-      const submitButton = document.createElement('button');
-      submitButton.type = 'submit';
-      submitButton.textContent = 'Enviar respostas';
-      form.appendChild(submitButton);
+      const submit = document.createElement('button');
+      submit.type = 'submit';
+      submit.textContent = 'Enviar Respostas';
+      submit.className = 'bg-primary text-white px-4 py-2 rounded shadow hover:brightness-110 transition';
+      form.appendChild(submit);
 
-      form.addEventListener('submit', async (event) => {
-        event.preventDefault();
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
         await submitQuiz(questions);
       });
 
       container.appendChild(form);
     }
 
-    // Função para enviar as respostas e calcular a pontuação
     async function submitQuiz(questions) {
-      const form = document.getElementById('quizForm');
-      const formData = new FormData(form);
+      const formData = new FormData(document.getElementById('quizForm'));
       let score = 0;
       const total = questions.length;
       const answersArray = [];
 
-      // Para cada pergunta, coleta a alternativa selecionada e calcula a pontuação
-      questions.forEach(question => {
-        const selectedIdx = formData.get(question.id_pergunta);
-        answersArray.push({
-          question_id: question.id_pergunta,
-          selected_index: selectedIdx
-        });
-        const selectedAlternative = question.alternatives[selectedIdx];
-        if (selectedAlternative && selectedAlternative.is_correct) {
-          score++;
-        }
+      questions.forEach(q => {
+        const selected = formData.get(q.id_pergunta);
+        const answer = q.alternatives[selected];
+        answersArray.push({ question_id: q.id_pergunta, selected_index: selected });
+        if (answer && answer.is_correct) score++;
       });
 
-      // Monta o payload para o insert
       const payload = {
         user_id: userId,
-        quiz_id: questions[0].quiz_id, // Agora esse valor está definido corretamente
+        quiz_id: questions[0].quiz_id,
         answers: answersArray,
-        score: score,
-        total: total
+        score,
+        total
       };
 
-      try {
-        const { data: resultData, error } = await supabase
-          .from('user_quiz_results')
-          .insert(payload);
+      const { error } = await supabase
+        .from('user_quiz_results')
+        .insert(payload);
 
-        if (error) {
-          console.error("Erro ao enviar quiz:", error);
-          document.getElementById('quizContent').innerHTML =
-            `<p>Ocorreu um erro ao enviar suas respostas. Por favor, tente novamente.</p>`;
-          return;
-        }
-
-        exibirResultado(score, total);
-      } catch (err) {
-        console.error("Exceção ao enviar quiz:", err);
+      if (error) {
         document.getElementById('quizContent').innerHTML =
-          `<p>Desculpe, ocorreu um problema inesperado ao enviar suas respostas. Tente novamente mais tarde.</p>`;
+          `<p class="text-red-600">Erro ao enviar respostas.</p>`;
+        return;
       }
+
+      exibirResultado(score, total);
     }
 
-    // Função para exibir o resultado na tela
     function exibirResultado(score, total) {
       const container = document.getElementById('quizContent');
       container.innerHTML = `
-        <div class="result">
-          <h2>Resultado</h2>
-          <p>Você acertou <strong>${score}</strong> de <strong>${total}</strong> perguntas.</p>
+        <div class="text-center bg-emerald-50 border border-emerald-300 p-6 rounded-lg">
+          <h2 class="text-lg font-bold text-emerald-800 mb-2">Resultado</h2>
+          <p class="text-slate-700">Você acertou <strong>${score}</strong> de <strong>${total}</strong> perguntas.</p>
         </div>
       `;
     }
 
-    // Inicializa a página carregando o quiz
     loadQuiz();
   </script>
 </body>
