@@ -627,15 +627,10 @@ painelFinal.innerHTML = `
   </div>
 `;
 
-document.getElementById("bloco-diagnostico").appendChild(painelFinal);
-
-
-
-
-
 const blocoDiagnostico = document.getElementById("bloco-diagnostico");
-blocoDiagnostico.innerHTML = ''; // Limpa caso já exista
+blocoDiagnostico.innerHTML = ''; // Limpa antes de inserir
 blocoDiagnostico.appendChild(painelFinal);
+
 
 
 
