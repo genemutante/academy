@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz de Avaliação</title>
+  <title>Quiz de Aula</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -12,8 +12,9 @@
       font-family: 'Carlito', sans-serif;
       background-color: #f9fafb;
       margin: 0;
+      padding: 1rem;
     }
-    header.topo {
+    header {
       background-color: #0ea5e9;
       color: white;
       padding: 0.75rem 1.5rem;
@@ -21,25 +22,21 @@
       align-items: center;
       justify-content: space-between;
     }
-    header.topo h1 {
-      font-size: 1.25rem;
+    header h1 {
       margin: 0;
+      font-size: 1.25rem;
     }
     .container {
       max-width: 880px;
       margin: 2rem auto;
       padding: 0 1.25rem;
     }
-    .card-quiz {
+    .card {
       background-color: white;
       border-radius: 10px;
       padding: 1rem;
       margin-bottom: 1rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .card-quiz h3 {
-      font-size: 1.15rem;
-      margin-bottom: 0.4rem;
     }
     .question {
       margin-bottom: 1rem;
@@ -58,8 +55,8 @@
 </head>
 <body>
   <!-- Cabeçalho -->
-  <header class="topo">
-    <h1>Quiz de Avaliação</h1>
+  <header>
+    <h1>Quiz de Aula</h1>
   </header>
 
   <!-- Conteúdo -->
@@ -70,31 +67,30 @@
   </div>
 
   <script>
-    // Criação do cliente Supabase (mesmos parâmetros do painel do aluno)
+    // Cria o cliente Supabase (mesmos parâmetros usados no painel do aluno)
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    // Obtém os parâmetros da URL: user_id e quiz_id
+    // Obtém os parâmetros da URL: user_id e lesson_id
     const params = new URLSearchParams(window.location.search);
     const userId = params.get('user_id');
-    const quizId = params.get('quiz_id');
+    const lessonId = params.get('lesson_id');
 
-    if (!userId || !quizId) {
+    if (!userId || !lessonId) {
       document.getElementById('quizContent').innerHTML =
-        '<p><strong>Erro:</strong> ID do usuário ou do quiz não encontrado na URL.</p>';
+        '<p><strong>Erro:</strong> Parâmetros "user_id" e "lesson_id" são necessários na URL.</p>';
       throw new Error('Parâmetros ausentes na URL.');
     }
 
-    // Função para carregar as perguntas do quiz do Supabase.
-    // Assume que existe uma tabela "questions" com campos:
-    // id, quiz_id, text, options (JSON) e correct_answer.
+    // Função para carregar o quiz usando a view que encapsula o SQL
     async function loadQuiz() {
+      // Supondo que a view se chame "quiz_view"
       const { data, error } = await supabase
-        .from('questions')
+        .from('quiz_view')
         .select('*')
-        .eq('quiz_id', quizId);
+        .eq('id_aula', lessonId);
 
       if (error) {
         document.getElementById('quizContent').innerHTML =
@@ -103,51 +99,69 @@
       }
       if (!data || data.length === 0) {
         document.getElementById('quizContent').innerHTML =
-          '<p>Nenhuma pergunta encontrada para este quiz.</p>';
+          '<p>Nenhuma pergunta encontrada para esta aula.</p>';
         return;
       }
-      renderQuiz(data);
+
+      // Agrupa as linhas por pergunta (cada linha é uma alternativa)
+      const grouped = {};
+      data.forEach(row => {
+        const pid = row.id_pergunta;
+        if (!grouped[pid]) {
+          grouped[pid] = {
+            id_pergunta: pid,
+            pergunta: row.pergunta,
+            // Poderíamos armazenar também peso, etc.
+            alternatives: []
+          };
+        }
+        grouped[pid].alternatives.push({
+          alternativa: row.alternativa,
+          is_correct: row.is_correct
+        });
+      });
+
+      // Converte o objeto agrupado em array
+      const questions = Object.values(grouped);
+      renderQuiz(questions);
     }
 
-    // Função para renderizar o quiz no DOM
+    // Função para renderizar o quiz na tela
     function renderQuiz(questions) {
       const container = document.getElementById('quizContent');
       container.innerHTML = '';
 
-      // Cria um formulário para o quiz
       const form = document.createElement('form');
       form.id = 'quizForm';
 
       questions.forEach(question => {
         const card = document.createElement('div');
-        card.className = 'card-quiz';
+        card.className = 'card';
 
-        const questionDiv = document.createElement('div');
-        questionDiv.className = 'question';
+        const divQuestion = document.createElement('div');
+        divQuestion.className = 'question';
+
         const p = document.createElement('p');
-        p.textContent = question.text;
-        questionDiv.appendChild(p);
+        p.textContent = question.pergunta;
+        divQuestion.appendChild(p);
 
-        // Se "options" estiver em formato JSON string, converte; caso contrário, usa direto.
-        let options = question.options;
-        if (typeof options === 'string') {
-          options = JSON.parse(options);
-        }
-
-        options.forEach(option => {
+        // Renderiza cada alternativa com radio button
+        question.alternatives.forEach((alt, idx) => {
           const label = document.createElement('label');
           label.style.display = 'block';
           const input = document.createElement('input');
           input.type = 'radio';
-          input.name = question.id;
-          input.value = option.id;
+          // Usamos o id da pergunta como nome para agrupar as alternativas
+          input.name = question.id_pergunta;
+          // Usamos o índice ou o texto para identificar a opção
+          input.value = idx; 
           input.required = true;
           label.appendChild(input);
-          label.appendChild(document.createTextNode(" " + option.text));
-          questionDiv.appendChild(label);
+          label.appendChild(document.createTextNode(" " + alt.alternativa));
+          divQuestion.appendChild(label);
         });
 
-        card.appendChild(questionDiv);
+        card.appendChild(divQuestion);
         form.appendChild(card);
       });
 
@@ -168,27 +182,35 @@
     async function submitQuiz(questions) {
       const form = document.getElementById('quizForm');
       const formData = new FormData(form);
-      let correctCount = 0;
+      let score = 0;
       const total = questions.length;
       const answersArray = [];
 
+      // Para cada pergunta, verifica a alternativa selecionada
       questions.forEach(question => {
-        const selected = formData.get(question.id);
-        answersArray.push({ question_id: question.id, option_id: selected });
-        if (selected === question.correct_answer) {
-          correctCount++;
+        const selectedIdx = formData.get(question.id_pergunta);
+        // Armazena a resposta para inserção no resultado
+        answersArray.push({
+          question_id: question.id_pergunta,
+          // Se desejar, pode salvar também o texto da alternativa selecionada
+          selected_index: selectedIdx
+        });
+        // Obtém a alternativa correspondente
+        const selectedAlternative = question.alternatives[selectedIdx];
+        // Se a alternativa selecionada for a correta, incrementa o score
+        if (selectedAlternative && selectedAlternative.is_correct) {
+          score++;
         }
       });
 
-      // Insere o resultado na tabela "user_quiz_results".
-      // Se sua tabela tiver outros campos (como score, total, etc.), ajuste conforme necessário.
+      // Insere o resultado na tabela "user_quiz_results"
       const { data: resultData, error } = await supabase
         .from('user_quiz_results')
         .insert({
           user_id: userId,
-          quiz_id: quizId,
-          answers: answersArray, // Coluna do tipo JSONB
-          score: correctCount,
+          quiz_id: questions[0].quiz_id, // ou extraído de outra forma se houver
+          answers: answersArray,
+          score: score,
           total: total
         });
 
@@ -197,10 +219,10 @@
           `<p>Erro ao enviar respostas: ${error.message}</p>`;
         return;
       }
-      exibirResultado(correctCount, total);
+      exibirResultado(score, total);
     }
 
-    // Função para exibir o resultado na tela
+    // Função para exibir o resultado
     function exibirResultado(score, total) {
       const container = document.getElementById('quizContent');
       container.innerHTML = `
@@ -211,7 +233,7 @@
       `;
     }
 
-    // Carrega o quiz ao iniciar a página
+    // Inicializa a página carregando o quiz
     loadQuiz();
   </script>
 </body>
