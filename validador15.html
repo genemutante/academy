@@ -579,36 +579,11 @@ const corPorConceito = {
 
 
 
-  
- const painelFinal = document.createElement("div");
-  
-painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 ${bgPorConceito[avaliacao.conceito]} border-2 ${corPorConceito[avaliacao.conceito]} rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto`;
-
-// Define cor e título com base no conceito
-const tituloPorConceito = {
-  "A": "Desempenho Excelente",
-  "B+": "Desempenho Muito Bom",
-  "B": "Bom Aproveitamento",
-  "C": "Atenção Necessária",
-  "D": "Aproveitamento Baixo",
-  "E": "Alerta Crítico"
-};
-
-const corDominantePorConceito = {
-  "A": "#059669",     // verde-600
-  "B+": "#10b981",    // verde-500
-  "B": "#f59e0b",     // amarelo-500
-  "C": "#f97316",     // laranja-500
-  "D": "#ef4444",     // vermelho-500
-  "E": "#b91c1c"      // vermelho-700
-};
-
-const tituloPainel = tituloPorConceito[avaliacao.conceito];
-const corDominante = corDominantePorConceito[avaliacao.conceito];
-
-
 painelFinal.innerHTML = `
   <div class="relative rounded-xl border-l-[6px] p-6 shadow-md bg-white" style="border-color: ${corDominante};">
+    
+    <h3 class="text-xl font-semibold text-slate-800 mb-4 border-b pb-1">📝 Parecer Técnico do Tutor</h3>
+
     <div class="flex justify-between items-start mb-4">
       <h2 class="text-lg font-semibold text-[${corDominante}]">
         ${tituloPainel}
