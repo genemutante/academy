@@ -332,13 +332,15 @@ if (a.conceito === 'D' || a.conceito === 'E') {
   
 if (!emAndamento) {
   mensagens.push(`
-    <span class="inline-flex items-center gap-1">
-      🔒 <strong>Este parecer é final</strong>
-    </span><br>
-    <span>
-      Reflete exclusivamente o desempenho do aluno até ${d.prazoLimite.toLocaleDateString('pt-BR')}.<br>
-      Atividades realizadas após esta data <strong>não alteram esta avaliação</strong>.
-    </span>
+    <div class="mt-4 bg-slate-100 border border-slate-300 rounded p-3 text-sm text-slate-800 leading-snug">
+      <div class="font-semibold flex items-center gap-1 mb-1">
+        🔒 Este parecer é final
+      </div>
+      <div>
+        Reflete exclusivamente o desempenho do aluno até <strong>${d.prazoLimite.toLocaleDateString('pt-BR')}</strong>.<br>
+        Atividades realizadas após esta data <strong>não alteram esta avaliação</strong>.
+      </div>
+    </div>
   `);
 }
 
