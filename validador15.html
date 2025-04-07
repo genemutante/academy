@@ -614,13 +614,11 @@ painelFinal.innerHTML = `
   <div class="flex justify-between items-start mb-4">
 
   
-<div>
-<p class="text-sm text-slate-600">Avaliação do aluno nesta aula:</p>
-<h3 class="text-lg font-bold" style="color: ${corDominante};">
-  ${tituloPainel}
-</h3>
-
-  
+<div class="mb-4 text-sm rounded border border-[${corDominante}] bg-[${corDominante}]/10 text-[${corDominante}] font-medium px-3 py-2 inline-flex items-center gap-2 shadow-sm">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/>
+  </svg>
+  Avaliação do aluno nesta aula: <span class="font-semibold ml-1">${tituloPainel}</span>
 </div>
 
     
