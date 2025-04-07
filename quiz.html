@@ -92,7 +92,7 @@
     // id, quiz_id, text, options (JSON) e correct_answer.
     async function loadQuiz() {
       const { data, error } = await supabase
-        .from('quiz_questions')
+        .from('questions')
         .select('*')
         .eq('quiz_id', quizId);
 
