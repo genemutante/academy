@@ -615,11 +615,13 @@ painelFinal.innerHTML = `
       <div class="sm:col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
     </div>
 
-    <div class="text-xs text-gray-500 italic border-t pt-3">
-      Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
-      Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
-      Sessões: ${diagnostico.totalSessoes}
-    </div>
+<div class="text-xs text-gray-500 italic border-t pt-3">
+  Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+  Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+  Sessões: ${diagnostico.totalSessoes} /
+  <span class="text-slate-500">Prazo limite: ${diagnostico.prazoLimite.toLocaleDateString('pt-BR')}</span>
+</div>
+
 
     <div class="mt-4 text-left">
       <button onclick="window.print()" class="bg-[${corDominante}] hover:brightness-110 text-white px-4 py-2 rounded-md shadow text-sm transition-all">
