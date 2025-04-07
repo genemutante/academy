@@ -328,10 +328,13 @@ if (a.conceito === 'D' || a.conceito === 'E') {
 
 // ⬇️ Adicione aqui:
 if (!emAndamento) {
+  
 mensagens.push(`
 🔒 <strong>Este parecer é final</strong> e reflete exclusivamente o desempenho do aluno até ${d.prazoLimite.toLocaleDateString('pt-BR')}.<br>
 Atividades realizadas após esta data <strong>não alteram esta avaliação</strong>.
 `);
+
+  
 }
 
 
