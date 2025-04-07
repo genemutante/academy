@@ -166,6 +166,91 @@
       }
 
       exibirResultado(score, total);
+
+
+<!-- INSIRA abaixo de `exibirResultado(score, total)` -->
+function exibirResultado(score, total) {
+  const container = document.getElementById('quizContent');
+  container.innerHTML = `
+    <div class="text-center bg-emerald-50 border border-emerald-300 p-6 rounded-lg mb-6">
+      <h2 class="text-lg font-bold text-emerald-800 mb-2">Resultado</h2>
+      <p class="text-slate-700">Você acertou <strong>${score}</strong> de <strong>${total}</strong> perguntas.</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 p-6 rounded-lg">
+      <h3 class="text-lg font-semibold mb-4 text-slate-800">Agora queremos ouvir sua opinião sobre esta aula:</h3>
+      <form id="feedbackForm" class="space-y-4">
+
+        <div>
+          <label class="block text-sm font-medium mb-1">1. Como você se sentiu em relação ao seu aprendizado durante esta aula?</label>
+          <select name="aprendizado" class="w-full border rounded p-2" required>
+            <option value="">Selecione uma opção</option>
+            <option value="Aprendi com facilidade e me senti engajado">Aprendi com facilidade e me senti engajado</option>
+            <option value="Aprendi com algum esforço, mas consegui acompanhar">Aprendi com algum esforço, mas consegui acompanhar</option>
+            <option value="Tive dificuldades para aprender o conteúdo">Tive dificuldades para aprender o conteúdo</option>
+            <option value="Não consegui me conectar com o aprendizado">Não consegui me conectar com o aprendizado</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">2. O conteúdo desta aula fez sentido para você e contribuiu para sua aprendizagem?</label>
+          <select name="conteudo" class="w-full border rounded p-2" required>
+            <option value="">Selecione uma opção</option>
+            <option value="Contribuiu muito e fez total sentido">Contribuiu muito e fez total sentido</option>
+            <option value="Contribuiu parcialmente">Contribuiu parcialmente</option>
+            <option value="Trouxe poucas contribuições para mim">Trouxe poucas contribuições para mim</option>
+            <option value="Não fez sentido para meu momento de aprendizagem">Não fez sentido para meu momento de aprendizagem</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">3. Este tema dialoga com suas necessidades, interesses ou desafios atuais?</label>
+          <select name="pertinencia" class="w-full border rounded p-2" required>
+            <option value="">Selecione uma opção</option>
+            <option value="Sim, totalmente">Sim, totalmente</option>
+            <option value="Em parte">Em parte</option>
+            <option value="Pouco">Pouco</option>
+            <option value="Não dialoga">Não dialoga</option>
+          </select>
+        </div>
+
+        <button type="submit" class="bg-primary text-white px-4 py-2 rounded shadow hover:brightness-110 transition">
+          Enviar Avaliação
+        </button>
+      </form>
+    </div>
+  `;
+
+  // Submete o feedback qualitativo para a mesma tabela
+  document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    const payload = {
+      user_id: userId,
+      lesson_id: lessonId,
+      quiz_id: questions[0].quiz_id,
+      score: null, // ⚠️ Importante para diferenciar do quiz objetivo
+      total: null,
+      answers: null,
+      qualidade: formData.get('aprendizado'),
+      sentido: formData.get('conteudo'),
+      dificuldade: formData.get('pertinencia')
+    };
+
+    const { error } = await supabase.from('user_quiz_results').insert(payload);
+
+    if (error) {
+      alert("Erro ao enviar feedback qualitativo.");
+      console.error(error);
+      return;
+    }
+
+    e.target.innerHTML = `<p class="text-green-700 font-semibold mt-4">✅ Obrigado por compartilhar sua opinião!</p>`;
+  });
+}
+
+      
     }
 
     function exibirResultado(score, total) {
