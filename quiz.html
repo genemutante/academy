@@ -95,6 +95,7 @@
       if (error) {
         document.getElementById('quizContent').innerHTML =
           `<p>Erro ao carregar quiz: ${error.message}</p>`;
+        console.error("Erro ao carregar quiz:", error);
         return;
       }
       if (!data || data.length === 0) {
@@ -103,7 +104,7 @@
         return;
       }
 
-      // Agrupa as linhas por pergunta (cada linha é uma alternativa)
+      // Agrupa as linhas por pergunta (cada linha representa uma alternativa)
       const grouped = {};
       data.forEach(row => {
         const pid = row.id_pergunta;
@@ -111,7 +112,7 @@
           grouped[pid] = {
             id_pergunta: pid,
             pergunta: row.pergunta,
-            // Poderíamos armazenar também peso, etc.
+            quiz_id: row.id_quiz,  // Incluindo o quiz_id para uso posterior
             alternatives: []
           };
         }
@@ -121,7 +122,7 @@
         });
       });
 
-      // Converte o objeto agrupado em array
+      // Converte o objeto agrupado em array de perguntas
       const questions = Object.values(grouped);
       renderQuiz(questions);
     }
@@ -153,7 +154,7 @@
           input.type = 'radio';
           // Usamos o id da pergunta como nome para agrupar as alternativas
           input.name = question.id_pergunta;
-          // Usamos o índice ou o texto para identificar a opção
+          // Usamos o índice para identificar a opção
           input.value = idx; 
           input.required = true;
           label.appendChild(input);
@@ -179,62 +180,56 @@
     }
 
     // Função para enviar as respostas e calcular a pontuação
-async function submitQuiz(questions) {
-  const form = document.getElementById('quizForm');
-  const formData = new FormData(form);
-  let score = 0;
-  const total = questions.length;
-  const answersArray = [];
+    async function submitQuiz(questions) {
+      const form = document.getElementById('quizForm');
+      const formData = new FormData(form);
+      let score = 0;
+      const total = questions.length;
+      const answersArray = [];
 
-  // Processa cada pergunta, obtendo a resposta selecionada e calculando a pontuação.
-  questions.forEach(question => {
-    const selectedIdx = formData.get(question.id_pergunta);
-    if (selectedIdx === null) {
-      // Esse caso não deve ocorrer se os radio buttons estiverem com "required".
-      console.error(`Nenhuma resposta selecionada para a pergunta ${question.id_pergunta}.`);
-      return;
-    }
-    answersArray.push({
-      question_id: question.id_pergunta,
-      selected_index: selectedIdx
-    });
-    const selectedAlternative = question.alternatives[selectedIdx];
-    if (selectedAlternative && selectedAlternative.is_correct) {
-      score++;
-    }
-  });
+      // Para cada pergunta, coleta a alternativa selecionada e calcula a pontuação
+      questions.forEach(question => {
+        const selectedIdx = formData.get(question.id_pergunta);
+        answersArray.push({
+          question_id: question.id_pergunta,
+          selected_index: selectedIdx
+        });
+        const selectedAlternative = question.alternatives[selectedIdx];
+        if (selectedAlternative && selectedAlternative.is_correct) {
+          score++;
+        }
+      });
 
-  // Tenta inserir os dados na tabela user_quiz_results.
-  try {
-    const { data: resultData, error } = await supabase
-      .from('user_quiz_results')
-      .insert({
+      // Monta o payload para o insert
+      const payload = {
         user_id: userId,
-        quiz_id: questions[0].quiz_id, // Presume que todas as questões pertencem ao mesmo quiz
+        quiz_id: questions[0].quiz_id, // Agora esse valor está definido corretamente
         answers: answersArray,
         score: score,
         total: total
-      });
+      };
 
-    if (error) {
-      // Log para depuração e mensagem amigável ao usuário.
-      console.error("Erro ao enviar quiz:", error);
-      document.getElementById('quizContent').innerHTML =
-        `<p>Ocorreu um erro ao enviar suas respostas. Por favor, tente novamente.</p>`;
-      return;
+      try {
+        const { data: resultData, error } = await supabase
+          .from('user_quiz_results')
+          .insert(payload);
+
+        if (error) {
+          console.error("Erro ao enviar quiz:", error);
+          document.getElementById('quizContent').innerHTML =
+            `<p>Ocorreu um erro ao enviar suas respostas. Por favor, tente novamente.</p>`;
+          return;
+        }
+
+        exibirResultado(score, total);
+      } catch (err) {
+        console.error("Exceção ao enviar quiz:", err);
+        document.getElementById('quizContent').innerHTML =
+          `<p>Desculpe, ocorreu um problema inesperado ao enviar suas respostas. Tente novamente mais tarde.</p>`;
+      }
     }
 
-    // Exibe uma mensagem de sucesso com a pontuação.
-    exibirResultado(score, total);
-  } catch (err) {
-    console.error("Exceção ao enviar quiz:", err);
-    document.getElementById('quizContent').innerHTML =
-      `<p>Desculpe, ocorreu um problema inesperado ao enviar suas respostas. Tente novamente mais tarde.</p>`;
-  }
-}
-
-
-    // Função para exibir o resultado
+    // Função para exibir o resultado na tela
     function exibirResultado(score, total) {
       const container = document.getElementById('quizContent');
       container.innerHTML = `
