@@ -326,23 +326,7 @@ if (a.conceito === 'D' || a.conceito === 'E') {
   mensagens.push("📚 Recomenda-se revisar os materiais e buscar apoio do tutor.");
 }
 
-// ⬇️ Adicione aqui:
 
-
-  
-if (!emAndamento) {
-  mensagens.push(`
-    <div class="mt-4 bg-slate-100 border border-slate-300 rounded p-3 text-sm text-slate-800 leading-snug">
-      <div class="font-semibold flex items-center gap-1 mb-1">
-        🔒 Este parecer é final
-      </div>
-      <div>
-        Reflete exclusivamente o desempenho do aluno até <strong>${d.prazoLimite.toLocaleDateString('pt-BR')}</strong>.<br>
-        Atividades realizadas após esta data <strong>não alteram esta avaliação</strong>.
-      </div>
-    </div>
-  `);
-}
 
 
 
@@ -602,21 +586,28 @@ painelFinal.innerHTML = `
   <div class="relative rounded-xl border-l-[6px] p-6 shadow-md bg-white" style="border-color: ${corDominante};">
     <h2 class="text-xl font-bold mb-6 text-slate-800 text-center border-b pb-2">Parecer Técnico do Tutor</h2>
 
-    ${parecerTutor.status === 'definitivo' ? `
-      <div class="inline-flex items-center px-3 py-1 text-xs rounded border border-slate-400 text-slate-800 font-medium gap-1 bg-white shadow-sm mb-4">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/>
-        </svg>
-        <span>Parecer Final: encerrado em ${diagnostico.prazoLimite.toLocaleDateString('pt-BR')}</span>
-      </div>
-    ` : ''}
 
-    <div class="inline-flex items-center px-3 py-2 text-sm rounded border border-yellow-300 bg-yellow-50 text-yellow-800 font-medium gap-2 mb-4">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 14a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm1-4.5h-2V7h2v4.5z"/>
-      </svg>
-      <span>Avaliação do aluno nesta aula: <strong>${tituloPainel}</strong></span>
-    </div>
+
+
+<div class="inline-flex items-center px-3 py-2 text-sm rounded border border-yellow-300 bg-yellow-50 text-yellow-800 font-medium gap-2 mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/>
+  </svg>
+  <span>Avaliação do aluno nesta aula: <strong>${tituloPainel}</strong></span>
+</div>
+
+${parecerTutor.status === 'definitivo' ? `
+  <div class="inline-flex items-center px-3 py-1 text-xs rounded border border-slate-400 text-slate-800 font-medium gap-1 bg-white shadow-sm mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/>
+    </svg>
+    <span>Parecer Final: encerrado em ${diagnostico.prazoLimite.toLocaleDateString('pt-BR')}</span>
+  </div>
+` : ''}
+
+
+
+    
 
     <div class="grid grid-cols-1 sm:grid-cols-2 text-sm text-slate-600 gap-y-1 mb-4">
       <div><strong>Aluno:</strong> ${alunoSel.selectedOptions[0].textContent}</div>
