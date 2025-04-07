@@ -213,7 +213,7 @@ function gerarDiagnosticoCompleto({ heatmap, duracao, lacunas, segmentos }) {
     if (diff > 60) totalSessoes++;
   }
   const prazoLimite = new Date(dataInicio);
-  prazoLimite.setDate(prazoLimite.getDate() + 7);
+  prazoLimite.setDate(prazoLimite.getDate() + 3);
   const finalizouForaDoPrazo = dataFim > prazoLimite;
 
   return {
