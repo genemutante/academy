@@ -238,9 +238,10 @@ function gerarParecerTutor(d, a) {
   const mensagens = [];
 
   // Avalia se a aula está em andamento
-  const emAndamento = d.percentualAssistido < 100 && d.dataFim <= d.prazoLimite;
+const agora = new Date();
+const emAndamento = d.percentualAssistido < 100 && agora <= d.prazoLimite;
+const status = emAndamento ? "preliminar" : "definitivo";
 
-  const status = emAndamento ? "preliminar" : "definitivo";
 
   // Bloco de aviso para parecer parcial
   if (emAndamento) {
