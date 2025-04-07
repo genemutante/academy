@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz - Versão HTML Puro</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    a {
+      color: #0057b7;
+      text-decoration: underline;
+    }
+    h1, h2 {
+      color: #0057b7;
+    }
+    .question {
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 6px;
+    }
+    .question p {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    button {
+      padding: 10px 16px;
+      background-color: #0057b7;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .result {
+      margin-top: 30px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background-color: #e0ffe0;
+      text-align: center;
+    }
+    .loading {
+      text-align: center;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/">← Voltar</a>
+    <h1>Quiz (HTML Puro)</h1>
+    
+    <!-- Container onde o quiz será renderizado -->
+    <div id="quizContainer"></div>
+    
+    <!-- Mensagem de carregamento -->
+    <div id="loadingMessage" class="loading" style="display:none;">
+      <p>Carregando perguntas...</p>
+    </div>
+
+    <!-- Mensagem de resultado -->
+    <div id="resultContainer" class="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    // ------------------------------------------
+    // CONFIGURAÇÕES (ajuste conforme suas funções)
+    // ------------------------------------------
+    // Exemplo de ID do Quiz (poderia vir da URL, query string etc.)
+    const quizId = '12345-abcde';
+    
+    // Endpoints das funções Netlify (exemplo)
+    const GET_QUIZ_ENDPOINT = '/.netlify/functions/getQuiz';
+    const SUBMIT_QUIZ_ENDPOINT = '/.netlify/functions/submitQuiz';
+    
+    // Exemplo de userId fixo (ajuste conforme necessário)
+    const userId = '22222222-2222-2222-2222-222222222222'; // "Maria Aluna"
+
+    // ------------------------------------------
+    // ELEMENTOS DOM
+    // ------------------------------------------
+    const quizContainer = document.getElementById('quizContainer');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const resultContainer = document.getElementById('resultContainer');
+    
+    // ------------------------------------------
+    // ESTADO (para armazenar perguntas e respostas)
+    // ------------------------------------------
+    let quizData = []; // Armazena perguntas recebidas da API
+    let answers = {};  // Respostas selecionadas pelo usuário
+
+    // ------------------------------------------
+    // FUNÇÃO: Carregar o Quiz da API
+    // ------------------------------------------
+    async function loadQuiz() {
+      try {
+        loadingMessage.style.display = 'block';
+        quizContainer.innerHTML = '';
+        resultContainer.style.display = 'none';
+
+        const url = `${GET_QUIZ_ENDPOINT}?quizId=${quizId}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Erro ao buscar quiz: ${response.statusText}`);
+        }
+        quizData = await response.json(); // Estrutura esperada: [{id, text, options: [{id, text}], ...}, ...]
+        
+        renderQuiz(quizData);
+      } catch (error) {
+        quizContainer.innerHTML = `<p style="color:red;">Falha ao carregar quiz: ${error.message}</p>`;
+      } finally {
+        loadingMessage.style.display = 'none';
+      }
+    }
+
+    // ------------------------------------------
+    // FUNÇÃO: Renderizar o Quiz no DOM
+    // ------------------------------------------
+    function renderQuiz(questions) {
+      // Cria um formulário
+      const form = document.createElement('form');
+      form.id = "quizForm";
+
+      questions.forEach(question => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = "question";
+
+        const p = document.createElement('p');
+        p.textContent = question.text;
+        questionDiv.appendChild(p);
+
+        question.options.forEach(option => {
+          const label = document.createElement('label');
+          const input = document.createElement('input');
+          input.type = "radio";
+          input.name = question.id;
+          input.value = option.id;
+          input.required = true;
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(" " + option.text));
+          questionDiv.appendChild(label);
+        });
+
+        form.appendChild(questionDiv);
+      });
+
+      const submitButton = document.createElement('button');
+      submitButton.type = "submit";
+      submitButton.textContent = "Enviar respostas";
+      form.appendChild(submitButton);
+
+      // Evento de envio do formulário
+      form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        enviarRespostas();
+      });
+
+      quizContainer.appendChild(form);
+    }
+
+    // ------------------------------------------
+    // FUNÇÃO: Coletar respostas e enviar para API
+    // ------------------------------------------
+    async function enviarRespostas() {
+      // Monta objeto com question_id e option_id
+      const form = document.getElementById('quizForm');
+      const formData = new FormData(form);
+
+      // Reseta o objeto answers
+      answers = {};
+
+      // Passa por cada pergunta e pega a resposta selecionada
+      quizData.forEach(question => {
+        const selectedOption = formData.get(question.id);
+        answers[question.id] = selectedOption;
+      });
+
+      // Monta payload no formato esperado pela API
+      // Exemplo: { userId, quizId, answers: [{question_id, option_id}, ...] }
+      const payload = {
+        userId: userId,
+        quizId: quizId,
+        answers: Object.entries(answers).map(([question_id, option_id]) => ({
+          question_id,
+          option_id
+        }))
+      };
+
+      try {
+        const response = await fetch(SUBMIT_QUIZ_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          throw new Error(`Erro ao enviar respostas: ${response.statusText}`);
+        }
+        // Exemplo de retorno esperado: { score: 2, total: 3 }
+        const resultData = await response.json();
+        exibirResultado(resultData);
+      } catch (error) {
+        quizContainer.innerHTML = `<p style="color:red;">Falha ao enviar respostas: ${error.message}</p>`;
+      }
+    }
+
+    // ------------------------------------------
+    // FUNÇÃO: Exibir resultado na tela
+    // ------------------------------------------
+    function exibirResultado(result) {
+      // Exemplo: result = { score: 2, total: 2, message: 'Parabéns' }
+      const { score, total, message } = result;
+      quizContainer.innerHTML = ''; // Apaga o formulário
+      resultContainer.style.display = 'block';
+      resultContainer.innerHTML = `
+        <h2>Resultado</h2>
+        <p>Você acertou <strong>${score}</strong> de <strong>${total}</strong> perguntas.</p>
+        <p>${message || ''}</p>
+      `;
+    }
+
+    // ------------------------------------------
+    // Inicializa
+    // ------------------------------------------
+    window.onload = loadQuiz;
+  </script>
+</body>
+</html>
