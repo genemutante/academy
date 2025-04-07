@@ -88,11 +88,11 @@
     }
 
     // Função para carregar as perguntas do quiz do Supabase.
-    // Assume que existe uma tabela "quiz_questions" com campos:
+    // Assume que existe uma tabela "questions" com campos:
     // id, quiz_id, text, options (JSON) e correct_answer.
     async function loadQuiz() {
       const { data, error } = await supabase
-        .from('questions')
+        .from('quiz_questions')
         .select('*')
         .eq('quiz_id', quizId);
 
@@ -119,4 +119,100 @@
       form.id = 'quizForm';
 
       questions.forEach(question => {
-        const card = document.createElement('div
+        const card = document.createElement('div');
+        card.className = 'card-quiz';
+
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'question';
+        const p = document.createElement('p');
+        p.textContent = question.text;
+        questionDiv.appendChild(p);
+
+        // Se "options" estiver em formato JSON string, converte; caso contrário, usa direto.
+        let options = question.options;
+        if (typeof options === 'string') {
+          options = JSON.parse(options);
+        }
+
+        options.forEach(option => {
+          const label = document.createElement('label');
+          label.style.display = 'block';
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = question.id;
+          input.value = option.id;
+          input.required = true;
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(" " + option.text));
+          questionDiv.appendChild(label);
+        });
+
+        card.appendChild(questionDiv);
+        form.appendChild(card);
+      });
+
+      const submitButton = document.createElement('button');
+      submitButton.type = 'submit';
+      submitButton.textContent = 'Enviar respostas';
+      form.appendChild(submitButton);
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await submitQuiz(questions);
+      });
+
+      container.appendChild(form);
+    }
+
+    // Função para enviar as respostas e calcular a pontuação
+    async function submitQuiz(questions) {
+      const form = document.getElementById('quizForm');
+      const formData = new FormData(form);
+      let correctCount = 0;
+      const total = questions.length;
+      const answersArray = [];
+
+      questions.forEach(question => {
+        const selected = formData.get(question.id);
+        answersArray.push({ question_id: question.id, option_id: selected });
+        if (selected === question.correct_answer) {
+          correctCount++;
+        }
+      });
+
+      // Insere o resultado na tabela "user_quiz_results".
+      // Se sua tabela tiver outros campos (como score, total, etc.), ajuste conforme necessário.
+      const { data: resultData, error } = await supabase
+        .from('user_quiz_results')
+        .insert({
+          user_id: userId,
+          quiz_id: quizId,
+          answers: answersArray, // Coluna do tipo JSONB
+          score: correctCount,
+          total: total
+        });
+
+      if (error) {
+        document.getElementById('quizContent').innerHTML =
+          `<p>Erro ao enviar respostas: ${error.message}</p>`;
+        return;
+      }
+      exibirResultado(correctCount, total);
+    }
+
+    // Função para exibir o resultado na tela
+    function exibirResultado(score, total) {
+      const container = document.getElementById('quizContent');
+      container.innerHTML = `
+        <div class="result">
+          <h2>Resultado</h2>
+          <p>Você acertou <strong>${score}</strong> de <strong>${total}</strong> perguntas.</p>
+        </div>
+      `;
+    }
+
+    // Carrega o quiz ao iniciar a página
+    loadQuiz();
+  </script>
+</body>
+</html>
