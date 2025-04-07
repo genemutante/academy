@@ -589,65 +589,65 @@ painelFinal.innerHTML = `
   <h2 class="text-xl font-bold mb-6 text-slate-800 text-center border-b pb-2">Parecer Técnico do Tutor</h2>
 
   ${parecerTutor.status === 'definitivo' ? `
-  <div class="inline-flex items-center px-3 py-1 text-xs rounded border border-slate-400 text-slate-800 font-medium gap-1 bg-white shadow-sm">
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/>
-  </svg>
-  <span>Parecer Final: encerrado em ${d.prazoLimite.toLocaleDateString('pt-BR')}</span>
-</div>
-` : ''}
-
-  
-    <div class="flex justify-between items-start mb-4">
-      <h3 class="text-lg font-semibold" style="color: ${corDominante};">
-        ${tituloPainel}
-      </h3>
-      ${parecerTutor.status === 'preliminar' ? `
-        <div class="inline-flex items-center px-3 py-1 text-xs rounded bg-[${corDominante}]/10 text-[${corDominante}] font-medium gap-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg>
-          Parecer Preliminar
-        </div>
-      ` : ''}
+    <div class="inline-flex items-center px-3 py-1 text-xs rounded border border-slate-400 text-slate-800 font-medium gap-1 bg-white shadow-sm mb-4 mx-auto w-fit">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/>
+      </svg>
+      <span>Parecer Final: encerrado em ${diagnostico.prazoLimite.toLocaleDateString('pt-BR')}</span>
     </div>
+  ` : ''}
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 text-sm text-slate-600 gap-y-1 mb-4">
-      <div><strong>Aluno:</strong> ${alunoSel.selectedOptions[0].textContent}</div>
-      <div><strong>Aula:</strong> ${aulaSel.selectedOptions[0].textContent}</div>
-      <div><strong>Curso:</strong> ${cursoSel.selectedOptions[0].textContent}</div>
-      <div><strong>Progresso:</strong> ${diagnostico.percentualAssistido}%</div>
-      <div><strong>Duração:</strong> ${diagnostico.duracaoDias} dias</div>
-      <div><strong>Sessões:</strong> ${diagnostico.totalSessoes}</div>
-    </div>
-
-    <p class="text-sm text-slate-700 leading-relaxed mb-4">
-      ${parecerTutor.texto}
-    </p>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-800 mb-4">
-      <div><strong>Nota:</strong> ${avaliacao.nota}</div>
-      <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
-      <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
-      <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
-      <div class="sm:col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
-    </div>
-
-<div class="text-xs text-gray-500 italic border-t pt-3">
-  Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
-  Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
-  Sessões: ${diagnostico.totalSessoes} /
-  Prazo limite: ${diagnostico.prazoLimite.toLocaleDateString('pt-BR')} /
-  Status: <span class="text-slate-800 font-semibold">🔒 Parecer Final</span>
-
-
-</div>
-
-    <div class="mt-4 text-left">
-      <button onclick="window.print()" class="bg-[${corDominante}] hover:brightness-110 text-white px-4 py-2 rounded-md shadow text-sm transition-all">
-        Exportar Parecer em PDF
-      </button>
-    </div>
+  <div class="flex justify-between items-start mb-4">
+    <h3 class="text-lg font-semibold" style="color: ${corDominante};">
+      ${tituloPainel}
+    </h3>
+    ${parecerTutor.status === 'preliminar' ? `
+      <div class="inline-flex items-center px-3 py-1 text-xs rounded bg-[${corDominante}]/10 text-[${corDominante}] font-medium gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/>
+        </svg>
+        Parecer Preliminar
+      </div>
+    ` : ''}
   </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 text-sm text-slate-600 gap-y-1 mb-4">
+    <div><strong>Aluno:</strong> ${alunoSel.selectedOptions[0].textContent}</div>
+    <div><strong>Aula:</strong> ${aulaSel.selectedOptions[0].textContent}</div>
+    <div><strong>Curso:</strong> ${cursoSel.selectedOptions[0].textContent}</div>
+    <div><strong>Progresso:</strong> ${diagnostico.percentualAssistido}%</div>
+    <div><strong>Duração:</strong> ${diagnostico.duracaoDias} dias</div>
+    <div><strong>Sessões:</strong> ${diagnostico.totalSessoes}</div>
+  </div>
+
+  <p class="text-sm text-slate-700 leading-relaxed mb-4">
+    ${parecerTutor.texto}
+  </p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-800 mb-4">
+    <div><strong>Nota:</strong> ${avaliacao.nota}</div>
+    <div><strong>Conceito:</strong> ${avaliacao.conceito}</div>
+    <div><strong>Rubrica:</strong> ${avaliacao.rubrica}</div>
+    <div><strong>BNCC:</strong> ${avaliacao.bncc}</div>
+    <div class="sm:col-span-2"><strong>Feedback:</strong> ${avaliacao.feedback}</div>
+  </div>
+
+  <div class="text-xs text-gray-500 italic border-t pt-3">
+    Início: ${diagnostico.dataInicio.toLocaleDateString('pt-BR')} ${diagnostico.dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+    Fim: ${diagnostico.dataFim.toLocaleDateString('pt-BR')} ${diagnostico.dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} /
+    Sessões: ${diagnostico.totalSessoes} /
+    Prazo limite: ${diagnostico.prazoLimite.toLocaleDateString('pt-BR')} /
+    Status: <span class="text-slate-800 font-semibold">${parecerTutor.status === 'definitivo' ? '🔒 Parecer Final' : '⚠️ Parecer Preliminar'}</span>
+  </div>
+
+  <div class="mt-4 text-left">
+    <button onclick="window.print()" class="bg-[${corDominante}] hover:brightness-110 text-white px-4 py-2 rounded-md shadow text-sm transition-all">
+      Exportar Parecer em PDF
+    </button>
+  </div>
+</div>
 `;
+
 
 const blocoDiagnostico = document.getElementById("bloco-diagnostico");
 blocoDiagnostico.innerHTML = ''; // Limpa antes de inserir
