@@ -555,38 +555,35 @@ btn.addEventListener('click', async () => {
   // Parecer
   const parecerTutor = gerarParecerTutor(diagnostico, avaliacao);
 
+const tituloPainel = {
+  "A": "Desempenho Excelente",
+  "B+": "Ótimo Desempenho",
+  "B": "Bom Aproveitamento",
+  "C": "Atenção Necessária",
+  "D": "Atenção Crítica",
+  "E": "Baixíssimo Aproveitamento"
+}[avaliacao.conceito] || "Parecer Técnico do Tutor";
+
+const corDominante = {
+  "A": "#059669",      // Verde
+  "B+": "#10b981",     // Verde-claro
+  "B": "#f59e0b",      // Amarelo
+  "C": "#f59e0b",      // Amarelo
+  "D": "#ef4444",      // Vermelho
+  "E": "#b91c1c"       // Vermelho-escuro
+}[avaliacao.conceito] || "#64748b"; // Fallback (cinza)
+
 const painelFinal = document.createElement("div");
 
-const bgPorConceito = {
-  "A": "bg-white",
-  "B+": "bg-white",
-  "B": "bg-white",
-  "C": "bg-white",
-  "D": "bg-white",
-  "E": "bg-white"
-};
-
-
-const corPorConceito = {
-  "A": "border-green-400",
-  "B+": "border-green-300",
-  "B": "border-yellow-400",
-  "C": "border-yellow-400",
-  "D": "border-red-400",
-  "E": "border-red-600"
-};
-
-
+painelFinal.className = `avaliacao-completa painel-fixo print-visible mt-6 border-2 rounded-xl shadow-lg p-6 text-gray-800 max-w-4xl mx-auto`;
 
 painelFinal.innerHTML = `
+  <h2 class="text-xl font-semibold mb-4 text-center text-slate-700">Parecer Técnico do Tutor</h2>
   <div class="relative rounded-xl border-l-[6px] p-6 shadow-md bg-white" style="border-color: ${corDominante};">
-    
-    <h3 class="text-xl font-semibold text-slate-800 mb-4 border-b pb-1">📝 Parecer Técnico do Tutor</h3>
-
     <div class="flex justify-between items-start mb-4">
-      <h2 class="text-lg font-semibold text-[${corDominante}]">
+      <h3 class="text-lg font-semibold" style="color: ${corDominante};">
         ${tituloPainel}
-      </h2>
+      </h3>
       ${parecerTutor.status === 'preliminar' ? `
         <div class="inline-flex items-center px-3 py-1 text-xs rounded bg-[${corDominante}]/10 text-[${corDominante}] font-medium gap-1">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a1 1 0 011 1v5a1 1 0 11-2 0V7a1 1 0 011-1zm0 10a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg>
@@ -630,8 +627,8 @@ painelFinal.innerHTML = `
   </div>
 `;
 
+document.getElementById("bloco-diagnostico").appendChild(painelFinal);
 
-  
 
 
 
