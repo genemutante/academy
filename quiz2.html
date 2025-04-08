@@ -218,7 +218,7 @@
       
       const questionType = document.createElement('span');
       questionType.className = 'inline-block text-xs font-semibold uppercase tracking-wide text-primary-600 mb-2';
-      questionType.textContent = step.type === 'quiz' ? 'Conhecimento' : 'Feedback';
+      questionType.textContent = step.type === 'quiz' ? 'CONHECIMENTO' : 'FEEDBACK';
       questionDiv.appendChild(questionType);
 
       const question = document.createElement('h2');
@@ -228,66 +228,54 @@
 
       stepContent.appendChild(questionDiv);
 
-      const optionsContainer = document.createElement('div');
+      const optionsContainer = document.createElement('form');
       optionsContainer.className = 'space-y-3';
+      optionsContainer.id = `form-${step.id}`;
       
-      const radios = [];
+      // CORREÇÃO: Uso do ID único para o grupo de radio buttons
+      const radioGroupName = `question-${step.id}`; 
 
       step.options.forEach((opt, idx) => {
         const label = document.createElement('label');
         label.className = 'flex items-center p-4 rounded-lg border border-slate-200 transition-all cursor-pointer hover:bg-slate-50';
+        
+        // Marca a opção previamente selecionada, se houver
         if (answers[step.id] == idx) {
           label.classList.add('bg-primary-50', 'border-primary-300');
         }
 
-        const radioContainer = document.createElement('div');
-        radioContainer.className = 'mr-3 flex-shrink-0';
-        
-        const customRadio = document.createElement('div');
-        customRadio.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center';
-        if (answers[step.id] == idx) {
-          customRadio.className = 'w-5 h-5 rounded-full border-2 border-primary-600 flex items-center justify-center';
-          const innerDot = document.createElement('div');
-          innerDot.className = 'w-2.5 h-2.5 rounded-full bg-primary-600';
-          customRadio.appendChild(innerDot);
-        }
-        radioContainer.appendChild(customRadio);
-
+        // Cria o input radio com z-index para garantir clicabilidade
         const input = document.createElement('input');
         input.type = 'radio';
-        input.name = step.id;
+        input.name = radioGroupName; // CORREÇÃO: Nome consistente para o grupo
         input.value = idx;
-        input.className = 'sr-only';
+        input.className = 'w-5 h-5 text-primary-600 border-slate-300 focus:ring-primary-500 cursor-pointer';
+        input.style.zIndex = '10'; // Garante que o input esteja acima de outros elementos
+        
         if (answers[step.id] == idx) {
           input.checked = true;
         }
 
-        input.addEventListener('change', () => {
-          document.querySelectorAll(`label[for="${step.id}"]`).forEach(lbl => {
-            lbl.classList.remove('bg-primary-50', 'border-primary-300');
-            lbl.querySelector('.w-5').className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center';
-            lbl.querySelector('.w-5').innerHTML = '';
+        // CORREÇÃO: Event listener simplificado e melhorado
+        input.addEventListener('click', () => {
+          // Remove a seleção visual de todas as opções
+          document.querySelectorAll(`#form-${step.id} label`).forEach(l => {
+            l.classList.remove('bg-primary-50', 'border-primary-300');
           });
           
-          if (input.checked) {
-            label.classList.add('bg-primary-50', 'border-primary-300');
-            customRadio.className = 'w-5 h-5 rounded-full border-2 border-primary-600 flex items-center justify-center';
-            const innerDot = document.createElement('div');
-            innerDot.className = 'w-2.5 h-2.5 rounded-full bg-primary-600';
-            customRadio.appendChild(innerDot);
-          }
+          // Aplica o estilo à opção selecionada
+          label.classList.add('bg-primary-50', 'border-primary-300');
+          
+          // Armazena a resposta imediatamente
+          answers[step.id] = idx;
         });
 
-        radioContainer.appendChild(input);
-        label.appendChild(radioContainer);
-        
-        const textContainer = document.createElement('div');
-        textContainer.className = 'flex-grow';
+        const textContainer = document.createElement('span');
+        textContainer.className = 'ml-3';
         textContainer.textContent = opt.text || opt;
-        label.appendChild(textContainer);
         
-        label.setAttribute('for', step.id);
-        radios.push(input);
+        label.appendChild(input);
+        label.appendChild(textContainer);
         optionsContainer.appendChild(label);
       });
 
@@ -311,10 +299,14 @@
     });
 
     btnNext.addEventListener('click', async () => {
-      const radios = document.querySelectorAll(`input[name="${steps[currentStep].id}"]`);
+      const currentStepId = steps[currentStep].id;
+      const radioGroupName = `question-${currentStepId}`;
+      
+      // CORREÇÃO: Seletor corrigido para capturar inputs do grupo atual
+      const radios = document.querySelectorAll(`input[name="${radioGroupName}"]`);
       const selected = [...radios].find(r => r.checked);
       
-      if (!selected) {
+      if (!selected && !(currentStepId in answers)) {
         // Aviso de seleção obrigatória
         const existingAlert = document.getElementById('alertMessage');
         if (!existingAlert) {
@@ -341,8 +333,6 @@
         }
         return;
       }
-      
-      answers[steps[currentStep].id] = selected.value;
 
       if (currentStep < steps.length - 1) {
         currentStep++;
