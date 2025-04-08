@@ -169,17 +169,18 @@ const supabase = window.supabase.createClient(
           return acc + (correct && correct.is_correct ? 1 : 0);
         }, 0);
 
-        const payload = {
-          user_id: userId,
-          lesson_id: lessonId,
-          quiz_id: quizId,
-          answers: quizAnswers,
-          score,
-          total: quizAnswers.length,
-          aprendizado: steps.find(s => s.id === 'aprendizado').options[answers['aprendizado']],
-          sentido: steps.find(s => s.id === 'sentido').options[answers['sentido']],
-          relevancia: steps.find(s => s.id === 'relevancia').options[answers['relevancia']]
-        };
+const payload = {
+  user_id: userId,
+  lesson_id: lessonId,
+  quiz_id: quizId,
+  answers: JSON.stringify(quizAnswers),
+  score,
+  total: quizAnswers.length,
+  aprendizado: steps.find(s => s.id === 'aprendizado').options[answers['aprendizado']],
+  sentido: steps.find(s => s.id === 'sentido').options[answers['sentido']],
+  relevancia: steps.find(s => s.id === 'relevancia').options[answers['relevancia']]
+};
+
 
         const { error } = await supabase.from('user_quiz_results').insert(payload);
         if (error) {
