@@ -3,534 +3,199 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avaliação de Aprendizado</title>
+  <title>Quiz em Etapas</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: {
-              50: '#f0f7ff',
-              100: '#e0f0ff',
-              200: '#c0e0ff',
-              300: '#90c8ff',
-              400: '#60a8ff',
-              500: '#3b82f6',
-              600: '#2563eb',
-              700: '#1d4ed8',
-              800: '#1e40af',
-              900: '#1e3a8a'
-            }
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif']
-          },
-          boxShadow: {
-            'custom': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            primary: '#2563eb'
           }
         }
       }
     };
   </script>
 </head>
-<body class="bg-gradient-to-br from-slate-100 to-slate-200 text-slate-800 font-sans min-h-screen flex items-center justify-center p-4">
-  <div class="max-w-xl w-full mx-auto bg-white rounded-2xl shadow-custom p-8 border border-slate-100" id="quizContainer">
-    <div class="flex items-center justify-center mb-6">
-      <div class="bg-primary-600 text-white w-12 h-12 rounded-full flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-        </svg>
-      </div>
+<body class="bg-slate-50 text-slate-800 font-sans p-4">
+  <div class="max-w-md w-full mx-auto bg-white rounded-2xl shadow-xl p-6 border border-slate-200" id="quizContainer">
+    <h1 class="text-2xl font-bold text-center text-primary mb-4">Avaliação da Aula</h1>
+    <div id="progressBar" class="w-full h-2 bg-slate-200 rounded-full overflow-hidden mb-4">
+      <div class="h-full bg-primary transition-all" id="progressFill" style="width: 0%"></div>
     </div>
-    <h1 class="text-2xl font-bold text-center text-slate-800 mb-2">Avaliação da Aula</h1>
-    <p class="text-slate-500 text-center mb-8">Compartilhe sua experiência e ajude a melhorar nosso conteúdo</p>
-    
-    <div class="flex items-center justify-between mb-2">
-      <span class="text-xs font-medium text-slate-600" id="progressText">Questão 1 de 6</span>
-      <span class="text-xs font-medium text-primary-600" id="timeRemaining"></span>
-    </div>
-    
-    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-8">
-      <div class="h-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500" id="progressFill" style="width: 0%"></div>
-    </div>
-    
-    <div id="stepContent" class="min-h-[280px]"></div>
-    
-    <div class="flex justify-between mt-8 pt-4 border-t border-slate-100">
-      <button id="btnBack" class="bg-white border border-slate-300 text-slate-700 px-5 py-2.5 rounded-lg font-medium hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
-        Voltar
-      </button>
-      <button id="btnNext" class="bg-primary-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-primary-700 transition shadow-sm flex items-center gap-2">
-        Avançar
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
-      </button>
+    <div id="stepContent"></div>
+    <div class="flex justify-between mt-6">
+      <button id="btnBack" class="bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50">Voltar</button>
+      <button id="btnNext" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition">Avançar</button>
     </div>
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    );
+const supabase = window.supabase.createClient(
+  'https://bkueljjvhijojzcyodvk.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+);
+
 
     const params = new URLSearchParams(window.location.search);
     const userId = params.get('user_id');
     const lessonId = params.get('lesson_id');
 
     if (!userId || !lessonId) {
-      document.getElementById('quizContainer').innerHTML = `
-        <div class="text-center p-8">
-          <div class="bg-red-100 text-red-700 p-4 rounded-lg mb-4 inline-flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Parâmetros Ausentes
-          </div>
-          <p class="text-slate-600">Os parâmetros "user_id" e "lesson_id" são necessários na URL.</p>
-        </div>`;
+      document.getElementById('quizContainer').innerHTML = '<p class="text-red-600">Parâmetros "user_id" e "lesson_id" são obrigatórios na URL.</p>';
       throw new Error('Parâmetros ausentes.');
     }
 
     let steps = [], currentStep = 0;
     const answers = {};
-    let startTime;
 
     const stepContent = document.getElementById('stepContent');
     const btnBack = document.getElementById('btnBack');
     const btnNext = document.getElementById('btnNext');
     const progressFill = document.getElementById('progressFill');
-    const progressText = document.getElementById('progressText');
-    const timeRemaining = document.getElementById('timeRemaining');
-
-    // Função para formatar o tempo restante
-    function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    // Animações
-    function fadeIn(element) {
-      element.classList.add('opacity-0');
-      setTimeout(() => {
-        element.classList.remove('opacity-0');
-        element.classList.add('transition-opacity', 'duration-500');
-      }, 50);
-    }
 
     async function carregarQuiz() {
-      stepContent.innerHTML = `
-        <div class="flex justify-center items-center h-[280px]">
-          <div class="flex flex-col items-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 mb-4"></div>
-            <p class="text-slate-500">Carregando perguntas...</p>
-          </div>
-        </div>`;
-
-      try {
-        const { data, error } = await supabase.from('quiz_view').select('*').eq('id_aula', lessonId);
-        if (error) throw error;
-        
-        if (!data || data.length === 0) {
-          throw new Error('Nenhuma pergunta encontrada para esta aula.');
-        }
-
-        const grouped = {};
-        data.forEach(row => {
-          const pid = row.id_pergunta;
-          if (!grouped[pid]) {
-            grouped[pid] = {
-              type: 'quiz',
-              id: pid,
-              question: row.pergunta,
-              quiz_id: row.id_quiz,
-              options: []
-            };
-          }
-          grouped[pid].options.push({ text: row.alternativa, is_correct: row.is_correct });
-        });
-
-        steps = Object.values(grouped);
-        steps.push(
-          { 
-            type: 'qual', 
-            id: 'aprendizado', 
-            question: 'Como você se sentiu em relação ao seu aprendizado durante esta aula?', 
-            options: [
-              'Aprendi com facilidade e me senti engajado', 
-              'Aprendi com algum esforço, mas consegui acompanhar', 
-              'Tive dificuldades para aprender o conteúdo', 
-              'Não consegui me conectar com o aprendizado'
-            ] 
-          },
-          { 
-            type: 'qual', 
-            id: 'sentido', 
-            question: 'O conteúdo desta aula fez sentido para você e contribuiu para sua aprendizagem?', 
-            options: [
-              'Contribuiu muito e fez total sentido', 
-              'Contribuiu parcialmente', 
-              'Trouxe poucas contribuições para mim', 
-              'Não fez sentido para meu momento de aprendizagem'
-            ] 
-          },
-          { 
-            type: 'qual', 
-            id: 'relevancia', 
-            question: 'Este tema dialoga com suas necessidades, interesses ou desafios atuais?', 
-            options: [
-              'Sim, totalmente', 
-              'Em parte', 
-              'Pouco', 
-              'Não dialoga'
-            ] 
-          }
-        );
-
-        startTime = Date.now();
-        renderStep();
-        
-      } catch (error) {
-        console.error('Erro ao carregar quiz:', error);
-        stepContent.innerHTML = `
-          <div class="flex justify-center items-center h-[280px]">
-            <div class="text-center p-6 bg-red-50 rounded-xl border border-red-200 max-w-md">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <h2 class="text-lg font-bold text-red-800 mb-2">Erro ao Carregar Perguntas</h2>
-              <p class="text-slate-700">Não foi possível carregar o questionário para esta aula.</p>
-              <p class="text-sm text-red-600 mt-2">${error.message}</p>
-              <button class="mt-4 bg-primary-600 text-white px-4 py-2 rounded-lg text-sm" onclick="location.reload()">Tentar Novamente</button>
-            </div>
-          </div>`;
+      const { data, error } = await supabase.from('quiz_view').select('*').eq('id_aula', lessonId);
+      if (error || !data || data.length === 0) {
+        stepContent.innerHTML = '<p class="text-red-600">Erro ao carregar perguntas.</p>';
+        return;
       }
+
+      const grouped = {};
+      data.forEach(row => {
+        const pid = row.id_pergunta;
+        if (!grouped[pid]) {
+          grouped[pid] = {
+            type: 'quiz',
+            id: pid,
+            question: row.pergunta,
+            quiz_id: row.id_quiz,
+            options: []
+          };
+        }
+        grouped[pid].options.push({ text: row.alternativa, is_correct: row.is_correct });
+      });
+
+      steps = Object.values(grouped);
+      steps.push(
+        { type: 'qual', id: 'aprendizado', question: 'Como você se sentiu em relação ao seu aprendizado durante esta aula?', options: [
+          'Aprendi com facilidade e me senti engajado', 'Aprendi com algum esforço, mas consegui acompanhar', 'Tive dificuldades para aprender o conteúdo', 'Não consegui me conectar com o aprendizado'] },
+        { type: 'qual', id: 'sentido', question: 'O conteúdo desta aula fez sentido para você e contribuiu para sua aprendizagem?', options: [
+          'Contribuiu muito e fez total sentido', 'Contribuiu parcialmente', 'Trouxe poucas contribuições para mim', 'Não fez sentido para meu momento de aprendizagem'] },
+        { type: 'qual', id: 'relevancia', question: 'Este tema dialoga com suas necessidades, interesses ou desafios atuais?', options: [
+          'Sim, totalmente', 'Em parte', 'Pouco', 'Não dialoga'] }
+      );
+
+      renderStep();
     }
 
     function renderStep() {
       const step = steps[currentStep];
       stepContent.innerHTML = '';
-      fadeIn(stepContent);
 
-      progressText.textContent = `Questão ${currentStep + 1} de ${steps.length}`;
+      const progresso = document.createElement('p');
+      progresso.className = 'text-sm text-slate-500 text-center mb-3';
+      progresso.textContent = `Pergunta ${currentStep + 1} de ${steps.length}`;
+      stepContent.appendChild(progresso);
 
-      const questionDiv = document.createElement('div');
-      questionDiv.className = 'mb-6';
-      
-      const questionType = document.createElement('span');
-      questionType.className = 'inline-block text-xs font-semibold uppercase tracking-wide text-primary-600 mb-2';
-      questionType.textContent = step.type === 'quiz' ? 'Conhecimento' : 'Feedback';
-      questionDiv.appendChild(questionType);
-
-      const question = document.createElement('h2');
-      question.className = 'text-lg font-semibold mb-6 text-slate-800';
+      const question = document.createElement('p');
+      question.className = 'text-base font-semibold mb-4 text-slate-800 text-center';
       question.textContent = step.question;
-      questionDiv.appendChild(question);
+      stepContent.appendChild(question);
 
-      stepContent.appendChild(questionDiv);
+      const radios = [];
 
-      const optionsContainer = document.createElement('div');
-      optionsContainer.className = 'space-y-3 options-container';
-      optionsContainer.id = `options-${step.id}`;
-      
       step.options.forEach((opt, idx) => {
-        const optionId = `option-${step.id}-${idx}`;
-        
         const label = document.createElement('label');
-        label.className = 'flex items-center p-4 rounded-lg border border-slate-200 transition-all cursor-pointer hover:bg-slate-50';
-        label.htmlFor = optionId;
-        
-        if (answers[step.id] == idx) {
-          label.classList.add('bg-primary-50', 'border-primary-300');
-        }
+        label.className = 'block mb-3 p-3 rounded-md border transition-all cursor-pointer bg-white hover:bg-blue-50 border-slate-300 text-slate-800';
+        label.dataset.checked = 'false';
 
-        const radioContainer = document.createElement('div');
-        radioContainer.className = 'mr-3 flex-shrink-0';
-        
-        const customRadio = document.createElement('div');
-        customRadio.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center';
-        
-        if (answers[step.id] == idx) {
-          customRadio.className = 'w-5 h-5 rounded-full border-2 border-primary-600 flex items-center justify-center';
-          const innerDot = document.createElement('div');
-          innerDot.className = 'w-2.5 h-2.5 rounded-full bg-primary-600';
-          customRadio.appendChild(innerDot);
-        }
-        
-        radioContainer.appendChild(customRadio);
-        
         const input = document.createElement('input');
         input.type = 'radio';
         input.name = step.id;
-        input.id = optionId;
         input.value = idx;
-        input.className = 'sr-only option-radio';
-        input.dataset.questionId = step.id;
-        input.dataset.optionIndex = idx;
-        
+        input.className = 'accent-blue-600 mr-2';
         if (answers[step.id] == idx) {
           input.checked = true;
+          label.classList.add('bg-blue-100', 'border-blue-500');
         }
 
-        radioContainer.appendChild(input);
-        label.appendChild(radioContainer);
-        
-        const textContainer = document.createElement('div');
-        textContainer.className = 'flex-grow';
-        textContainer.textContent = opt.text || opt;
-        label.appendChild(textContainer);
-        
-        optionsContainer.appendChild(label);
-      });
-
-      stepContent.appendChild(optionsContainer);
-
-      // Adicionar listeners para opções
-      document.querySelectorAll('.option-radio').forEach(radio => {
-        radio.addEventListener('change', handleOptionSelect);
-      });
-
-      // Clicar no label também seleciona a opção
-      document.querySelectorAll(`#options-${step.id} label`).forEach(label => {
-        label.addEventListener('click', function(e) {
-          const radioId = this.getAttribute('for');
-          const radio = document.getElementById(radioId);
-          if (radio && !radio.checked) {
-            radio.checked = true;
-            
-            // Disparar o evento change manualmente
-            const event = new Event('change');
-            radio.dispatchEvent(event);
-          }
+        input.addEventListener('change', () => {
+          radios.forEach(r => r.parentElement.classList.remove('bg-blue-100', 'border-blue-500'));
+          label.classList.add('bg-blue-100', 'border-blue-500');
         });
+
+        radios.push(input);
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(opt.text || opt));
+        stepContent.appendChild(label);
       });
-      
+
       btnBack.disabled = currentStep === 0;
-      btnNext.innerHTML = currentStep === steps.length - 1 ? 
-        'Finalizar <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>' : 
-        'Avançar <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>';
-      
+      btnNext.textContent = currentStep === steps.length - 1 ? 'Enviar' : 'Avançar';
       progressFill.style.width = `${((currentStep + 1) / steps.length) * 100}%`;
     }
 
-    function handleOptionSelect(e) {
-      const radio = e.target;
-      const questionId = radio.dataset.questionId;
-      const optionIndex = radio.dataset.optionIndex;
-      
-      // Atualizar a aparência de todas as opções deste grupo
-      const container = document.getElementById(`options-${questionId}`);
-      if (!container) return;
-      
-      // Remover seleção visual de todas as opções
-      container.querySelectorAll('label').forEach(lbl => {
-        lbl.classList.remove('bg-primary-50', 'border-primary-300');
-        const customRadio = lbl.querySelector('div.w-5');
-        if (customRadio) {
-          customRadio.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center';
-          customRadio.innerHTML = '';
-        }
-      });
-      
-      // Aplicar seleção visual à opção clicada
-      const label = document.querySelector(`label[for="option-${questionId}-${optionIndex}"]`);
-      if (label) {
-        label.classList.add('bg-primary-50', 'border-primary-300');
-        const customRadio = label.querySelector('div.w-5');
-        if (customRadio) {
-          customRadio.className = 'w-5 h-5 rounded-full border-2 border-primary-600 flex items-center justify-center';
-          const innerDot = document.createElement('div');
-          innerDot.className = 'w-2.5 h-2.5 rounded-full bg-primary-600';
-          customRadio.innerHTML = '';
-          customRadio.appendChild(innerDot);
-        }
-      }
-      
-      // Salvar resposta
-      answers[questionId] = optionIndex;
-    }
-
     btnBack.addEventListener('click', () => {
-      if (currentStep > 0) {
-        btnNext.disabled = false;
-        btnNext.innerHTML = 'Avançar <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>';
-        currentStep--;
-        renderStep();
-      }
+      if (currentStep > 0) currentStep--;
+      renderStep();
     });
 
     btnNext.addEventListener('click', async () => {
-      const step = steps[currentStep];
-      const selectedOption = document.querySelector(`input[name="${step.id}"]:checked`);
-      
-      if (!selectedOption) {
-        // Aviso de seleção obrigatória
-        const existingAlert = document.getElementById('alertMessage');
-        if (!existingAlert) {
-          const alert = document.createElement('div');
-          alert.id = 'alertMessage';
-          alert.className = 'text-sm text-red-600 mt-4 flex items-center justify-center';
-          alert.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Por favor, selecione uma opção para continuar.
-          `;
-          stepContent.appendChild(alert);
-          
-          // Animação de shake no botão próximo
-          btnNext.classList.add('animate-pulse');
-          setTimeout(() => btnNext.classList.remove('animate-pulse'), 1000);
-          
-          setTimeout(() => {
-            if (document.getElementById('alertMessage')) {
-              document.getElementById('alertMessage').remove();
-            }
-          }, 3000);
-        }
+      const radios = document.querySelectorAll(`input[name="${steps[currentStep].id}"]`);
+      const selected = [...radios].find(r => r.checked);
+      if (!selected) {
+        alert('Por favor, selecione uma opção.');
         return;
       }
-      
-      // Já salvamos a resposta no evento de mudança do radio
+      answers[steps[currentStep].id] = selected.value;
 
       if (currentStep < steps.length - 1) {
         currentStep++;
         renderStep();
       } else {
         btnNext.disabled = true;
-        btnBack.disabled = true;
-        btnNext.innerHTML = `
-          <span class="flex items-center">
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Enviando...
-          </span>`;
+        btnNext.textContent = 'Enviando...';
 
-        try {
-          // Encontrar o quiz_id
-          const quizStep = steps.find(s => s.type === 'quiz');
-          const quizId = quizStep ? quizStep.quiz_id : null;
-          
-          if (!quizId) {
-            throw new Error('ID do quiz não encontrado');
-          }
+        const quizId = steps[0].quiz_id;
+        const quizAnswers = steps.filter(s => s.type === 'quiz').map(s => ({
+          question_id: s.id,
+          selected_index: answers[s.id]
+        }));
 
-          // Processar respostas do quiz
-          const quizSteps = steps.filter(s => s.type === 'quiz');
-          const quizAnswers = [];
-          
-          quizSteps.forEach(s => {
-            if (answers[s.id] !== undefined) {
-              quizAnswers.push({
-                question_id: s.id,
-                selected_index: parseInt(answers[s.id])
-              });
-            }
-          });
+        const score = steps.filter(s => s.type === 'quiz').reduce((acc, s) => {
+          const correct = s.options[answers[s.id]];
+          return acc + (correct && correct.is_correct ? 1 : 0);
+        }, 0);
 
-          // Calcular pontuação
-          const score = quizSteps.reduce((acc, s) => {
-            if (answers[s.id] === undefined) return acc;
-            const selectedIndex = parseInt(answers[s.id]);
-            const option = s.options[selectedIndex];
-            return acc + (option && option.is_correct ? 1 : 0);
-          }, 0);
+        const payload = {
+          user_id: userId,
+          lesson_id: lessonId,
+          quiz_id: quizId,
+          answers: quizAnswers,
+          score,
+          total: quizAnswers.length,
+          aprendizado: steps.find(s => s.id === 'aprendizado').options[answers['aprendizado']],
+          sentido: steps.find(s => s.id === 'sentido').options[answers['sentido']],
+          relevancia: steps.find(s => s.id === 'relevancia').options[answers['relevancia']]
+        };
 
-          // Calcular tempo decorrido
-          const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-
-          // Respostas qualitativas
-          const qualitativeAnswers = {};
-          ['aprendizado', 'sentido', 'relevancia'].forEach(field => {
-            if (answers[field] !== undefined) {
-              const step = steps.find(s => s.id === field);
-              if (step) {
-                qualitativeAnswers[field] = step.options[answers[field]];
-              }
-            }
-          });
-
-          // Montar payload simplificado
-          const payload = {
-            user_id: userId,
-            lesson_id: lessonId,
-            quiz_id: quizId,
-            score: score,
-            total_questions: quizSteps.length,
-            elapsed_time: elapsedTime,
-            quiz_answers: JSON.stringify(quizAnswers),
-            feedback: JSON.stringify(qualitativeAnswers)
-          };
-
-          console.log('Enviando payload:', payload);
-
-          // Enviar para o Supabase
-          const { data, error } = await supabase
-            .from('user_quiz_results')
-            .insert(payload)
-            .select();
-
-          if (error) throw error;
-          
-          // Mostrar resultado de sucesso
-          document.getElementById('progressFill').style.width = '100%';
-          
-          stepContent.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-8">
-              <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 class="text-2xl font-bold text-slate-800 mb-2">Avaliação Concluída</h2>
-              <p class="text-slate-500 text-center mb-6">Suas respostas foram registradas com sucesso.<br>Obrigado pelo seu feedback!</p>
-              
-              <div class="bg-slate-50 rounded-lg p-4 w-full">
-                <div class="flex justify-between items-center">
-                  <span class="text-slate-500">Pontuação</span>
-                  <span class="text-lg font-bold text-primary-600">${score}/${quizSteps.length}</span>
-                </div>
-                <div class="w-full bg-slate-200 rounded-full h-2 mt-2">
-                  <div class="bg-primary-600 h-2 rounded-full" style="width: ${(score/quizSteps.length*100)}%"></div>
-                </div>
-              </div>
-            </div>`;
-            
-          progressText.textContent = 'Concluído';
+        const { error } = await supabase.from('user_quiz_results').insert(payload);
+        if (error) {
+          stepContent.innerHTML = '<p class="text-red-500">Erro ao enviar avaliação.</p>';
+        } else {
+          stepContent.innerHTML = '<div class="text-center p-6 bg-emerald-50 rounded-xl border border-emerald-200">' +
+            '<h2 class="text-lg font-bold text-emerald-800 mb-2">✅ Avaliação Concluída</h2>' +
+            '<p class="text-slate-700">Suas respostas foram registradas com sucesso. Obrigado por participar!</p>' +
+            '</div>';
           btnBack.style.display = 'none';
           btnNext.style.display = 'none';
-          
-        } catch (error) {
-          console.error('Erro ao enviar avaliação:', error);
-          
-          stepContent.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-6">
-              <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
-              <h2 class="text-xl font-bold text-slate-800 mb-2">Erro ao Enviar Avaliação</h2>
-              <p class="text-slate-500 text-center mb-4">Não foi possível salvar suas respostas. Por favor, tente novamente.</p>
-              <div class="bg-red-50 p-3 rounded-lg text-sm text-red-700 mb-4 max-w-md overflow-auto">
-                <p class="font-semibold">Detalhes do erro:</p>
-                <code class="block mt-1">${error.message || 'Erro desconhecido'}</code>
-              </div>
-              <button class="bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700 transition shadow-sm" onclick="location.reload()">
-                Tentar Novamente
-              </button>
-            </div>`;
-            
-          btnNext.disabled = false;
-          btnBack.disabled = false;
-          btnNext.innerHTML = 'Finalizar <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6
+        }
+      }
+    });
+
+    carregarQuiz();
+  </script>
+</body>
+</html>
