@@ -1,26 +1,45 @@
+//    const supabase = window.supabase.createClient(
+//      'https://bkueljjvhijojzcyodvk.supabase.co',
+//      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+//    );
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz em Etapas (Dinâmico)</title>
+  <title>Quiz em Etapas</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb'
+          }
+        }
+      }
+    };
+  </script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans p-4">
-  <div class="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-6 border border-slate-200" id="quizContainer">
-    <h1 class="text-xl font-bold text-center text-blue-600 mb-4">Avaliação da Aula</h1>
+  <div class="max-w-md w-full mx-auto bg-white rounded-2xl shadow-xl p-6 border border-slate-200" id="quizContainer">
+    <h1 class="text-2xl font-bold text-center text-primary mb-4">Avaliação da Aula</h1>
+    <div id="progressBar" class="w-full h-2 bg-slate-200 rounded-full overflow-hidden mb-4">
+      <div class="h-full bg-primary transition-all" id="progressFill" style="width: 0%"></div>
+    </div>
     <div id="stepContent"></div>
     <div class="flex justify-between mt-6">
-      <button id="btnBack" class="bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50" disabled>Voltar</button>
-      <button id="btnNext" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Avançar</button>
+      <button id="btnBack" class="bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50">Voltar</button>
+      <button id="btnNext" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition">Avançar</button>
     </div>
   </div>
 
   <script>
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     );
 
     const params = new URLSearchParams(window.location.search);
@@ -38,10 +57,10 @@
     const stepContent = document.getElementById('stepContent');
     const btnBack = document.getElementById('btnBack');
     const btnNext = document.getElementById('btnNext');
+    const progressFill = document.getElementById('progressFill');
 
     async function carregarQuiz() {
       const { data, error } = await supabase.from('quiz_view').select('*').eq('id_aula', lessonId);
-
       if (error || !data || data.length === 0) {
         stepContent.innerHTML = '<p class="text-red-600">Erro ao carregar perguntas.</p>';
         return;
@@ -63,12 +82,9 @@
       });
 
       steps = Object.values(grouped);
-
-      // Adiciona avaliação qualitativa
       steps.push(
         { type: 'qual', id: 'aprendizado', question: 'Como você se sentiu em relação ao seu aprendizado durante esta aula?', options: [
-          'Aprendi com facilidade e me senti engajado', 'Aprendi com algum esforço, mas consegui acompanhar',
-          'Tive dificuldades para aprender o conteúdo', 'Não consegui me conectar com o aprendizado'] },
+          'Aprendi com facilidade e me senti engajado', 'Aprendi com algum esforço, mas consegui acompanhar', 'Tive dificuldades para aprender o conteúdo', 'Não consegui me conectar com o aprendizado'] },
         { type: 'qual', id: 'sentido', question: 'O conteúdo desta aula fez sentido para você e contribuiu para sua aprendizagem?', options: [
           'Contribuiu muito e fez total sentido', 'Contribuiu parcialmente', 'Trouxe poucas contribuições para mim', 'Não fez sentido para meu momento de aprendizagem'] },
         { type: 'qual', id: 'relevancia', question: 'Este tema dialoga com suas necessidades, interesses ou desafios atuais?', options: [
@@ -83,26 +99,38 @@
       stepContent.innerHTML = '';
 
       const progresso = document.createElement('p');
-      progresso.className = 'text-xs text-slate-500 text-center mb-2';
+      progresso.className = 'text-sm text-slate-500 text-center mb-3';
       progresso.textContent = `Pergunta ${currentStep + 1} de ${steps.length}`;
       stepContent.appendChild(progresso);
 
       const question = document.createElement('p');
-      question.className = 'text-sm font-semibold mb-3';
+      question.className = 'text-base font-semibold mb-4 text-slate-800 text-center';
       question.textContent = step.question;
       stepContent.appendChild(question);
 
+      const radios = [];
+
       step.options.forEach((opt, idx) => {
         const label = document.createElement('label');
-        label.className = 'block mb-2 p-2 rounded-md border border-slate-300 hover:bg-blue-50 cursor-pointer transition-all flex items-center gap-2';
+        label.className = 'block mb-3 p-3 rounded-md border transition-all cursor-pointer bg-white hover:bg-blue-50 border-slate-300 text-slate-800';
+        label.dataset.checked = 'false';
 
         const input = document.createElement('input');
         input.type = 'radio';
         input.name = step.id;
         input.value = idx;
-        input.className = 'accent-blue-600';
-        if (answers[step.id] == idx) input.checked = true;
+        input.className = 'accent-blue-600 mr-2';
+        if (answers[step.id] == idx) {
+          input.checked = true;
+          label.classList.add('bg-blue-100', 'border-blue-500');
+        }
 
+        input.addEventListener('change', () => {
+          radios.forEach(r => r.parentElement.classList.remove('bg-blue-100', 'border-blue-500'));
+          label.classList.add('bg-blue-100', 'border-blue-500');
+        });
+
+        radios.push(input);
         label.appendChild(input);
         label.appendChild(document.createTextNode(opt.text || opt));
         stepContent.appendChild(label);
@@ -110,6 +138,7 @@
 
       btnBack.disabled = currentStep === 0;
       btnNext.textContent = currentStep === steps.length - 1 ? 'Enviar' : 'Avançar';
+      progressFill.style.width = `${((currentStep + 1) / steps.length) * 100}%`;
     }
 
     btnBack.addEventListener('click', () => {
@@ -160,7 +189,10 @@
         if (error) {
           stepContent.innerHTML = '<p class="text-red-500">Erro ao enviar avaliação.</p>';
         } else {
-          stepContent.innerHTML = '<p class="text-green-600 font-medium text-center">✅ Obrigado! Avaliação enviada com sucesso.</p>';
+          stepContent.innerHTML = '<div class="text-center p-6 bg-emerald-50 rounded-xl border border-emerald-200">' +
+            '<h2 class="text-lg font-bold text-emerald-800 mb-2">✅ Avaliação Concluída</h2>' +
+            '<p class="text-slate-700">Suas respostas foram registradas com sucesso. Obrigado por participar!</p>' +
+            '</div>';
           btnBack.style.display = 'none';
           btnNext.style.display = 'none';
         }
