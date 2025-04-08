@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz de Aula - Etapas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-base text-slate-800 font-sans p-4">
+  <div class="max-w-xl mx-auto">
+    <div class="bg-white shadow-md rounded-xl p-6 border border-slate-200">
+      <h1 class="text-xl font-bold text-primary text-center mb-6">Avaliação da Aula</h1>
+      <div id="stepContent" class="space-y-6"></div>
+      <div class="flex justify-between mt-6">
+        <button id="prevBtn" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 hidden">Voltar</button>
+        <button id="nextBtn" class="px-4 py-2 bg-primary text-white rounded hover:brightness-110">Avançar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
+
+    const userId = new URLSearchParams(window.location.search).get('user_id');
+    const lessonId = new URLSearchParams(window.location.search).get('lesson_id');
+
+    if (!userId || !lessonId) {
+      document.getElementById('stepContent').innerHTML = '<p class="text-red-600 font-semibold">Parâmetros "user_id" e "lesson_id" são obrigatórios na URL.</p>';
+      throw new Error('Parâmetros ausentes na URL.');
+    }
+
+    let quiz = [], currentStep = 0, answers = [], feedbacks = { aprendizado: '', sentido: '', relevancia: '' };
+
+    async function loadQuiz() {
+      const { data, error } = await supabase.from('quiz_view').select('*').eq('id_aula', lessonId);
+      if (error || !data || data.length === 0) {
+        document.getElementById('stepContent').innerHTML = `<p class="text-red-600">Erro ao carregar perguntas.</p>`;
+        return;
+      }
+
+      const grouped = {};
+      data.forEach(row => {
+        if (!grouped[row.id_pergunta]) {
+          grouped[row.id_pergunta] = {
+            id_pergunta: row.id_pergunta,
+            pergunta: row.pergunta,
+            quiz_id: row.id_quiz,
+            alternativas: []
+          };
+        }
+        grouped[row.id_pergunta].alternativas.push({ alternativa: row.alternativa, is_correct: row.is_correct });
+      });
+
+      quiz = Object.values(grouped);
+      renderStep();
+    }
+
+    function renderStep() {
+      const stepEl = document.getElementById('stepContent');
+      stepEl.innerHTML = '';
+
+      if (currentStep < quiz.length) {
+        const q = quiz[currentStep];
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `<p class="font-semibold text-slate-800 mb-4">${currentStep + 1}. ${q.pergunta}</p>`;
+
+        q.alternativas.forEach((alt, i) => {
+          const label = document.createElement('label');
+          label.className = 'flex items-center space-x-2 mb-2';
+
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = 'alternativa';
+          input.value = i;
+          input.required = true;
+
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(alt.alternativa));
+          wrapper.appendChild(label);
+        });
+
+        stepEl.appendChild(wrapper);
+      } else {
+        stepEl.innerHTML = `
+          <label class="block mb-4">
+            <span class="font-semibold">Como você se sentiu em relação ao seu aprendizado durante esta aula?</span>
+            <select name="aprendizado" required class="w-full p-2 mt-1 border rounded">
+              <option value="">Selecione uma opção</option>
+              <option>Aprendi com facilidade e me senti engajado</option>
+              <option>Aprendi com algum esforço, mas consegui acompanhar</option>
+              <option>Tive dificuldades para aprender o conteúdo</option>
+              <option>Não consegui me conectar com o aprendizado</option>
+            </select>
+          </label>
+          <label class="block mb-4">
+            <span class="font-semibold">O conteúdo desta aula fez sentido para você e contribuiu para sua aprendizagem?</span>
+            <select name="sentido" required class="w-full p-2 mt-1 border rounded">
+              <option value="">Selecione uma opção</option>
+              <option>Contribuiu muito e fez total sentido</option>
+              <option>Contribuiu parcialmente</option>
+              <option>Trouxe poucas contribuições para mim</option>
+              <option>Não fez sentido para meu momento de aprendizagem</option>
+            </select>
+          </label>
+          <label class="block mb-4">
+            <span class="font-semibold">Este tema dialoga com suas necessidades, interesses ou desafios atuais?</span>
+            <select name="relevancia" required class="w-full p-2 mt-1 border rounded">
+              <option value="">Selecione uma opção</option>
+              <option>Sim, totalmente</option>
+              <option>Em parte</option>
+              <option>Pouco</option>
+              <option>Não dialoga</option>
+            </select>
+          </label>
+        `;
+      }
+
+      document.getElementById('prevBtn').style.display = currentStep > 0 ? 'inline-block' : 'none';
+      document.getElementById('nextBtn').textContent = currentStep < quiz.length ? 'Avançar' : 'Enviar';
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (currentStep > 0) currentStep--;
+      renderStep();
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', async () => {
+      const radios = document.querySelectorAll('input[name="alternativa"]');
+      const selects = document.querySelectorAll('select');
+
+      if (currentStep < quiz.length) {
+        const selected = [...radios].find(r => r.checked);
+        if (!selected) return alert('Por favor, selecione uma resposta.');
+        answers.push({ question_id: quiz[currentStep].id_pergunta, selected_index: selected.value });
+        currentStep++;
+        renderStep();
+      } else {
+        for (const s of selects) {
+          if (!s.value) return alert('Responda todas as perguntas.');
+        }
+        feedbacks.aprendizado = selects[0].value;
+        feedbacks.sentido = selects[1].value;
+        feedbacks.relevancia = selects[2].value;
+
+        const payload = {
+          user_id: userId,
+          lesson_id: lessonId,
+          quiz_id: quiz[0].quiz_id,
+          answers,
+          score: calculateScore(answers, quiz),
+          total: quiz.length,
+          ...feedbacks
+        };
+
+        const { error } = await supabase.from('user_quiz_results').insert(payload);
+        if (error) return alert('Erro ao enviar respostas.');
+
+        document.getElementById('stepContent').innerHTML = `<p class="text-green-600 font-semibold text-center">Obrigado! Avaliação registrada com sucesso.</p>`;
+        document.getElementById('prevBtn').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'none';
+      }
+    });
+
+    function calculateScore(answers, quiz) {
+      return answers.reduce((acc, curr) => {
+        const correct = quiz.find(q => q.id_pergunta === curr.question_id).alternativas[curr.selected_index].is_correct;
+        return acc + (correct ? 1 : 0);
+      }, 0);
+    }
+
+    loadQuiz();
+  </script>
+</body>
+</html>
