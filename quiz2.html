@@ -174,7 +174,8 @@ const payload = {
   user_id: userId,
   lesson_id: lessonId,
   quiz_id: quizId,
-  answers: JSON.stringify(quizAnswers),
+  answers: quizAnswers,
+
   score,
   total: quizAnswers.length,
   aprendizado: steps.find(s => s.id === 'aprendizado').options[answers['aprendizado']],
@@ -182,6 +183,7 @@ const payload = {
   relevancia: steps.find(s => s.id === 'relevancia').options[answers['relevancia']]
 };
 
+   console.log('Payload:', payload);
 
         const { error } = await supabase.from('user_quiz_results').insert(payload);
         if (error) {
