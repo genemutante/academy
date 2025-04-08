@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Interativo Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            primary: '#2563eb',
+            surface: '#f8fafc',
+            dark: '#0f172a',
+            accent: '#38bdf8'
+          },
+          boxShadow: {
+            glow: '0 0 10px rgba(56, 189, 248, 0.3)'
+          },
+          borderRadius: {
+            xl: '1rem',
+            '2xl': '1.5rem'
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body class="font-sans p-6 min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900 transition-colors">
+  <div class="w-full max-w-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white p-6 md:p-8 rounded-2xl shadow-xl space-y-6 min-h-[540px] relative" id="quizContainer">
+    <div class="text-center">
+      <div class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-300 mb-1">
+        <span id="progressText">Progresso</span>
+        <span id="timer" class="font-semibold text-primary">Tempo restante: 10:00</span>
+      </div>
+      <div class="relative w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-2">
+        <div id="progressBar" class="absolute top-0 left-0 h-full bg-accent transition-all" style="width: 0%"></div>
+      </div>
+    </div>
+    <div id="stepContent" class="transition-all duration-500 ease-in-out min-h-[220px]"></div>
+    <div class="flex justify-between gap-2">
+      <button id="btnBack" class="px-4 py-2 rounded bg-gray-300 dark:bg-slate-600 text-gray-800 dark:text-white disabled:opacity-40 transition">← Voltar</button>
+      <button id="btnNext" class="px-4 py-2 rounded bg-primary text-white hover:bg-blue-700 transition flex items-center gap-1">Avançar →</button>
+    </div>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
+
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get('user_id');
+    const lessonId = params.get('lesson_id');
+
+    let currentStep = 0;
+    let steps = [];
+    const answers = {};
+    let timerInterval;
+    let timeRemaining = 600; // 10 minutos por questão
+
+    const stepContent = document.getElementById('stepContent');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const timerEl = document.getElementById('timer');
+    const btnNext = document.getElementById('btnNext');
+    const btnBack = document.getElementById('btnBack');
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeRemaining = 600;
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          btnNext.click();
+        }
+        updateTimerDisplay();
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const m = String(Math.floor(timeRemaining / 60)).padStart(2, '0');
+      const s = String(timeRemaining % 60).padStart(2, '0');
+      timerEl.textContent = `Tempo restante: ${m}:${s}`;
+    }
+
+    async function loadQuiz() {
+      const { data, error } = await supabase.from('quiz_view').select('*').eq('id_aula', lessonId);
+      if (error || !data || data.length === 0) {
+        stepContent.innerHTML = '<p class="text-red-500">Erro ao carregar perguntas.</p>';
+        return;
+      }
+
+      const grouped = {};
+      data.forEach(row => {
+        const pid = row.id_pergunta;
+        if (!grouped[pid]) {
+          grouped[pid] = {
+            type: 'quiz',
+            id: pid,
+            question: row.pergunta,
+            quiz_id: row.id_quiz,
+            options: []
+          };
+        }
+        grouped[pid].options.push({ text: row.alternativa, is_correct: row.is_correct });
+      });
+
+      steps = Object.values(grouped);
+      steps.push(
+        { type: 'qual', id: 'aprendizado', question: 'Como você se sentiu em relação ao seu aprendizado durante esta aula?', options: ['Aprendi com facilidade e me senti engajado', 'Aprendi com algum esforço', 'Tive dificuldades', 'Não me conectei'] },
+        { type: 'qual', id: 'sentido', question: 'O conteúdo desta aula fez sentido para você?', options: ['Contribuiu muito', 'Parcialmente', 'Pouco', 'Não fez sentido'] },
+        { type: 'qual', id: 'relevancia', question: 'Este tema dialoga com suas necessidades?', options: ['Totalmente', 'Em parte', 'Pouco', 'Não dialoga'] }
+      );
+
+      renderStep();
+    }
+
+    function renderStep() {
+      const step = steps[currentStep];
+      stepContent.innerHTML = '';
+      progressBar.style.width = `${((currentStep + 1) / steps.length) * 100}%`;
+      progressText.textContent = `Questão ${currentStep + 1} de ${steps.length}`;
+
+      const question = document.createElement('p');
+      question.className = 'font-semibold text-lg mb-4 text-center min-h-[3.5rem] flex items-center justify-center text-center';
+      question.textContent = step.question;
+      stepContent.appendChild(question);
+
+      step.options.forEach((opt, idx) => {
+        const label = document.createElement('label');
+        label.className = 'block mb-3 p-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-600 transition';
+
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = step.id;
+        input.value = idx;
+        input.className = 'mr-2 accent-primary';
+
+        if (answers[step.id] == idx) {
+          input.checked = true;
+          label.classList.add('bg-blue-100', 'dark:bg-blue-900');
+        }
+
+        input.addEventListener('change', () => {
+          answers[step.id] = idx;
+          renderStep();
+        });
+
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(opt.text || opt));
+        stepContent.appendChild(label);
+      });
+
+      btnBack.disabled = currentStep === 0;
+      btnNext.textContent = currentStep === steps.length - 1 ? 'Enviar' : 'Avançar';
+      startTimer();
+    }
+
+    btnBack.addEventListener('click', () => {
+      if (currentStep > 0) currentStep--;
+      renderStep();
+    });
+
+    btnNext.addEventListener('click', async () => {
+      const selected = answers[steps[currentStep].id];
+      if (selected === undefined) {
+        alert('Selecione uma opção para continuar.');
+        return;
+      }
+
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        renderStep();
+      } else {
+        clearInterval(timerInterval);
+        btnNext.disabled = true;
+        btnNext.textContent = 'Enviando...';
+
+        const quizId = steps.find(s => s.quiz_id)?.quiz_id;
+        const quizAnswers = steps.filter(s => s.type === 'quiz').map(s => ({
+          question_id: s.id,
+          selected_index: answers[s.id]
+        }));
+
+        const score = steps.filter(s => s.type === 'quiz').reduce((acc, s) => {
+          const opt = s.options[answers[s.id]];
+          return acc + (opt && opt.is_correct ? 1 : 0);
+        }, 0);
+
+        const payload = {
+          user_id: userId,
+          lesson_id: lessonId,
+          quiz_id: quizId,
+          answers: quizAnswers,
+          score,
+          total: quizAnswers.length,
+          aprendizado: steps.find(s => s.id === 'aprendizado').options[answers['aprendizado']],
+          sentido: steps.find(s => s.id === 'sentido').options[answers['sentido']],
+          relevancia: steps.find(s => s.id === 'relevancia').options[answers['relevancia']]
+        };
+
+        const { error } = await supabase.from('user_quiz_results').insert(payload);
+        if (error) {
+          stepContent.innerHTML = '<p class="text-red-600">Erro ao enviar avaliação.</p>';
+          return;
+        }
+
+        stepContent.innerHTML = `
+          <div class="text-center p-6 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl border border-emerald-300 dark:border-emerald-600">
+            <h2 class="text-lg font-bold text-emerald-700 dark:text-emerald-300 mb-2">✅ Avaliação Concluída</h2>
+            <p class="text-sm">Suas respostas foram registradas com sucesso.<br/>Obrigado por participar!</p>
+            <p class="text-sm mt-4">Pontuação: <strong>${score} de ${quizAnswers.length}</strong></p>
+          </div>`;
+        btnBack.style.display = 'none';
+        btnNext.style.display = 'none';
+      }
+    });
+
+    loadQuiz();
+  </script>
+</body>
+</html>
