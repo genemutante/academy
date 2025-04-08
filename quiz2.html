@@ -158,7 +158,8 @@ const supabase = window.supabase.createClient(
         btnNext.disabled = true;
         btnNext.textContent = 'Enviando...';
 
-        const quizId = steps[0].quiz_id;
+        const quizId = steps.find(s => s.quiz_id)?.quiz_id || 'quiz-fallback-id';
+
         const quizAnswers = steps.filter(s => s.type === 'quiz').map(s => ({
           question_id: s.id,
           selected_index: answers[s.id]
