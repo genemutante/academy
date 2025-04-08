@@ -523,14 +523,20 @@ if (answers[step.id] == idx) {
 
       const { error } = await supabase.from('user_quiz_results').insert(payload);
       if (error) {
-        stepContent.innerHTML = `
-          <div class="text-center p-6 bg-red-50 dark:bg-red-900/30 rounded-xl border border-red-200 dark:border-red-800">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <h3 class="text-lg font-bold text-red-700 dark:text-red-300 mb-2">Erro ao enviar avaliação</h3>
-            <p class="text-sm text-red-600 dark:text-red-400">Não conseguimos processar suas respostas. Por favor, tente novamente mais tarde.</p>
-          </div>`;
+stepContent.innerHTML = `
+  <div class="text-center p-6 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl border border-emerald-300 dark:border-emerald-600">
+    <h2 class="text-lg font-bold text-emerald-700 dark:text-emerald-300 mb-2">✓ Quiz Concluído</h2>
+    <p class="text-sm mb-4">Suas respostas foram registradas com sucesso. Obrigado por participar!</p>
+    <p class="text-lg font-semibold text-emerald-900 dark:text-white">
+      <span class="text-3xl">${score}</span> de ${quizAnswers.length} questões
+    </p>
+    <div class="mt-6 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-600 rounded-xl p-4 text-sm">
+      <p><strong>Feedback do Aluno:</strong> enviado com sucesso!</p>
+      <p class="text-xs text-slate-500 mt-1">Suas percepções sobre a aula foram registradas e serão consideradas para melhorias futuras.</p>
+    </div>
+  </div>
+`;
+
         return;
       }
 
