@@ -326,7 +326,7 @@
 
       step.options.forEach((opt, idx) => {
         const label = document.createElement('label');
-        label.className = 'block mb-3 p-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer transition';
+        label.className = 'block mb-3 p-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer transition relative';
 
 if (answers[step.id] == idx) {
   label.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
