@@ -12,12 +12,14 @@
       theme: {
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            primary: '#2563eb',
-            surface: '#f8fafc',
-            dark: '#0f172a',
-            accent: '#38bdf8'
-          },
+colors: {
+  primary: '#0f172a',      // Azul petróleo escuro sofisticado
+  surface: '#f8fafc',      // Claro para light mode
+  dark: '#0f172a',         // Mantém consistência dark
+  accent: '#f97316',       // Laranja refinado
+  highlight: '#000000'     // Preto para hover
+}
+
           boxShadow: {
             glow: '0 0 10px rgba(56, 189, 248, 0.3)'
           },
@@ -44,8 +46,19 @@
     </div>
     <div id="stepContent" class="transition-all duration-500 ease-in-out min-h-[220px]"></div>
     <div class="flex justify-between gap-2">
-      <button id="btnBack" class="px-4 py-2 rounded bg-gray-300 dark:bg-slate-600 text-gray-800 dark:text-white disabled:opacity-40 transition">← Voltar</button>
-      <button id="btnNext" class="px-4 py-2 rounded bg-primary text-white hover:bg-black transition flex items-center gap-1">Avançar →</button>
+      
+     <!-- Botão Voltar -->
+<button id="btnBack"
+  class="px-4 py-2 rounded bg-slate-300 dark:bg-slate-600 text-gray-800 dark:text-white hover:bg-highlight transition disabled:opacity-40">
+  ← Voltar
+</button>
+
+      <!-- Botão Avançar -->
+<button id="btnNext"
+  class="px-4 py-2 rounded bg-primary text-white hover:bg-highlight transition flex items-center gap-1">
+  Avançar →
+</button>
+
     </div>
   </div>
 
