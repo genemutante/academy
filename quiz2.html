@@ -135,8 +135,71 @@
           </div>
         </div>`;
 
-      const { data, error } = await supabase.from('quiz_view').select('*').eq('id_aula', lessonId);
-      if (error || !data || data.length === 0) {
+      try {
+        const { data, error } = await supabase.from('quiz_view').select('*').eq('id_aula', lessonId);
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+          throw new Error('Nenhuma pergunta encontrada para esta aula.');
+        }
+
+        const grouped = {};
+        data.forEach(row => {
+          const pid = row.id_pergunta;
+          if (!grouped[pid]) {
+            grouped[pid] = {
+              type: 'quiz',
+              id: pid,
+              question: row.pergunta,
+              quiz_id: row.id_quiz,
+              options: []
+            };
+          }
+          grouped[pid].options.push({ text: row.alternativa, is_correct: row.is_correct });
+        });
+
+        steps = Object.values(grouped);
+        steps.push(
+          { 
+            type: 'qual', 
+            id: 'aprendizado', 
+            question: 'Como você se sentiu em relação ao seu aprendizado durante esta aula?', 
+            options: [
+              'Aprendi com facilidade e me senti engajado', 
+              'Aprendi com algum esforço, mas consegui acompanhar', 
+              'Tive dificuldades para aprender o conteúdo', 
+              'Não consegui me conectar com o aprendizado'
+            ] 
+          },
+          { 
+            type: 'qual', 
+            id: 'sentido', 
+            question: 'O conteúdo desta aula fez sentido para você e contribuiu para sua aprendizagem?', 
+            options: [
+              'Contribuiu muito e fez total sentido', 
+              'Contribuiu parcialmente', 
+              'Trouxe poucas contribuições para mim', 
+              'Não fez sentido para meu momento de aprendizagem'
+            ] 
+          },
+          { 
+            type: 'qual', 
+            id: 'relevancia', 
+            question: 'Este tema dialoga com suas necessidades, interesses ou desafios atuais?', 
+            options: [
+              'Sim, totalmente', 
+              'Em parte', 
+              'Pouco', 
+              'Não dialoga'
+            ] 
+          }
+        );
+
+        startTime = Date.now();
+        renderStep();
+        
+      } catch (error) {
+        console.error('Erro ao carregar quiz:', error);
         stepContent.innerHTML = `
           <div class="flex justify-center items-center h-[280px]">
             <div class="text-center p-6 bg-red-50 rounded-xl border border-red-200 max-w-md">
@@ -144,66 +207,12 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <h2 class="text-lg font-bold text-red-800 mb-2">Erro ao Carregar Perguntas</h2>
-              <p class="text-slate-700">Não foi possível carregar o questionário para esta aula. Por favor, tente novamente mais tarde.</p>
+              <p class="text-slate-700">Não foi possível carregar o questionário para esta aula.</p>
+              <p class="text-sm text-red-600 mt-2">${error.message}</p>
+              <button class="mt-4 bg-primary-600 text-white px-4 py-2 rounded-lg text-sm" onclick="location.reload()">Tentar Novamente</button>
             </div>
           </div>`;
-        return;
       }
-
-      const grouped = {};
-      data.forEach(row => {
-        const pid = row.id_pergunta;
-        if (!grouped[pid]) {
-          grouped[pid] = {
-            type: 'quiz',
-            id: pid,
-            question: row.pergunta,
-            quiz_id: row.id_quiz,
-            options: []
-          };
-        }
-        grouped[pid].options.push({ text: row.alternativa, is_correct: row.is_correct });
-      });
-
-      steps = Object.values(grouped);
-      steps.push(
-        { 
-          type: 'qual', 
-          id: 'aprendizado', 
-          question: 'Como você se sentiu em relação ao seu aprendizado durante esta aula?', 
-          options: [
-            'Aprendi com facilidade e me senti engajado', 
-            'Aprendi com algum esforço, mas consegui acompanhar', 
-            'Tive dificuldades para aprender o conteúdo', 
-            'Não consegui me conectar com o aprendizado'
-          ] 
-        },
-        { 
-          type: 'qual', 
-          id: 'sentido', 
-          question: 'O conteúdo desta aula fez sentido para você e contribuiu para sua aprendizagem?', 
-          options: [
-            'Contribuiu muito e fez total sentido', 
-            'Contribuiu parcialmente', 
-            'Trouxe poucas contribuições para mim', 
-            'Não fez sentido para meu momento de aprendizagem'
-          ] 
-        },
-        { 
-          type: 'qual', 
-          id: 'relevancia', 
-          question: 'Este tema dialoga com suas necessidades, interesses ou desafios atuais?', 
-          options: [
-            'Sim, totalmente', 
-            'Em parte', 
-            'Pouco', 
-            'Não dialoga'
-          ] 
-        }
-      );
-
-      startTime = Date.now();
-      renderStep();
     }
 
     function renderStep() {
@@ -218,7 +227,7 @@
       
       const questionType = document.createElement('span');
       questionType.className = 'inline-block text-xs font-semibold uppercase tracking-wide text-primary-600 mb-2';
-      questionType.textContent = step.type === 'quiz' ? 'CONHECIMENTO' : 'FEEDBACK';
+      questionType.textContent = step.type === 'quiz' ? 'Conhecimento' : 'Feedback';
       questionDiv.appendChild(questionType);
 
       const question = document.createElement('h2');
@@ -228,58 +237,81 @@
 
       stepContent.appendChild(questionDiv);
 
-      const optionsContainer = document.createElement('form');
-      optionsContainer.className = 'space-y-3';
-      optionsContainer.id = `form-${step.id}`;
+      const optionsContainer = document.createElement('div');
+      optionsContainer.className = 'space-y-3 options-container';
+      optionsContainer.id = `options-${step.id}`;
       
-      // CORREÇÃO: Uso do ID único para o grupo de radio buttons
-      const radioGroupName = `question-${step.id}`; 
-
       step.options.forEach((opt, idx) => {
+        const optionId = `option-${step.id}-${idx}`;
+        
         const label = document.createElement('label');
         label.className = 'flex items-center p-4 rounded-lg border border-slate-200 transition-all cursor-pointer hover:bg-slate-50';
+        label.htmlFor = optionId;
         
-        // Marca a opção previamente selecionada, se houver
         if (answers[step.id] == idx) {
           label.classList.add('bg-primary-50', 'border-primary-300');
         }
 
-        // Cria o input radio com z-index para garantir clicabilidade
+        const radioContainer = document.createElement('div');
+        radioContainer.className = 'mr-3 flex-shrink-0';
+        
+        const customRadio = document.createElement('div');
+        customRadio.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center';
+        
+        if (answers[step.id] == idx) {
+          customRadio.className = 'w-5 h-5 rounded-full border-2 border-primary-600 flex items-center justify-center';
+          const innerDot = document.createElement('div');
+          innerDot.className = 'w-2.5 h-2.5 rounded-full bg-primary-600';
+          customRadio.appendChild(innerDot);
+        }
+        
+        radioContainer.appendChild(customRadio);
+        
         const input = document.createElement('input');
         input.type = 'radio';
-        input.name = radioGroupName; // CORREÇÃO: Nome consistente para o grupo
+        input.name = step.id;
+        input.id = optionId;
         input.value = idx;
-        input.className = 'w-5 h-5 text-primary-600 border-slate-300 focus:ring-primary-500 cursor-pointer';
-        input.style.zIndex = '10'; // Garante que o input esteja acima de outros elementos
+        input.className = 'sr-only option-radio';
+        input.dataset.questionId = step.id;
+        input.dataset.optionIndex = idx;
         
         if (answers[step.id] == idx) {
           input.checked = true;
         }
 
-        // CORREÇÃO: Event listener simplificado e melhorado
-        input.addEventListener('click', () => {
-          // Remove a seleção visual de todas as opções
-          document.querySelectorAll(`#form-${step.id} label`).forEach(l => {
-            l.classList.remove('bg-primary-50', 'border-primary-300');
-          });
-          
-          // Aplica o estilo à opção selecionada
-          label.classList.add('bg-primary-50', 'border-primary-300');
-          
-          // Armazena a resposta imediatamente
-          answers[step.id] = idx;
-        });
-
-        const textContainer = document.createElement('span');
-        textContainer.className = 'ml-3';
-        textContainer.textContent = opt.text || opt;
+        radioContainer.appendChild(input);
+        label.appendChild(radioContainer);
         
-        label.appendChild(input);
+        const textContainer = document.createElement('div');
+        textContainer.className = 'flex-grow';
+        textContainer.textContent = opt.text || opt;
         label.appendChild(textContainer);
+        
         optionsContainer.appendChild(label);
       });
 
       stepContent.appendChild(optionsContainer);
+
+      // Adicionar listeners para opções
+      document.querySelectorAll('.option-radio').forEach(radio => {
+        radio.addEventListener('change', handleOptionSelect);
+      });
+
+      // Clicar no label também seleciona a opção
+      document.querySelectorAll(`#options-${step.id} label`).forEach(label => {
+        label.addEventListener('click', function(e) {
+          const radioId = this.getAttribute('for');
+          const radio = document.getElementById(radioId);
+          if (radio && !radio.checked) {
+            radio.checked = true;
+            
+            // Disparar o evento change manualmente
+            const event = new Event('change');
+            radio.dispatchEvent(event);
+          }
+        });
+      });
       
       btnBack.disabled = currentStep === 0;
       btnNext.innerHTML = currentStep === steps.length - 1 ? 
@@ -287,6 +319,43 @@
         'Avançar <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>';
       
       progressFill.style.width = `${((currentStep + 1) / steps.length) * 100}%`;
+    }
+
+    function handleOptionSelect(e) {
+      const radio = e.target;
+      const questionId = radio.dataset.questionId;
+      const optionIndex = radio.dataset.optionIndex;
+      
+      // Atualizar a aparência de todas as opções deste grupo
+      const container = document.getElementById(`options-${questionId}`);
+      if (!container) return;
+      
+      // Remover seleção visual de todas as opções
+      container.querySelectorAll('label').forEach(lbl => {
+        lbl.classList.remove('bg-primary-50', 'border-primary-300');
+        const customRadio = lbl.querySelector('div.w-5');
+        if (customRadio) {
+          customRadio.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center';
+          customRadio.innerHTML = '';
+        }
+      });
+      
+      // Aplicar seleção visual à opção clicada
+      const label = document.querySelector(`label[for="option-${questionId}-${optionIndex}"]`);
+      if (label) {
+        label.classList.add('bg-primary-50', 'border-primary-300');
+        const customRadio = label.querySelector('div.w-5');
+        if (customRadio) {
+          customRadio.className = 'w-5 h-5 rounded-full border-2 border-primary-600 flex items-center justify-center';
+          const innerDot = document.createElement('div');
+          innerDot.className = 'w-2.5 h-2.5 rounded-full bg-primary-600';
+          customRadio.innerHTML = '';
+          customRadio.appendChild(innerDot);
+        }
+      }
+      
+      // Salvar resposta
+      answers[questionId] = optionIndex;
     }
 
     btnBack.addEventListener('click', () => {
@@ -299,14 +368,10 @@
     });
 
     btnNext.addEventListener('click', async () => {
-      const currentStepId = steps[currentStep].id;
-      const radioGroupName = `question-${currentStepId}`;
+      const step = steps[currentStep];
+      const selectedOption = document.querySelector(`input[name="${step.id}"]:checked`);
       
-      // CORREÇÃO: Seletor corrigido para capturar inputs do grupo atual
-      const radios = document.querySelectorAll(`input[name="${radioGroupName}"]`);
-      const selected = [...radios].find(r => r.checked);
-      
-      if (!selected && !(currentStepId in answers)) {
+      if (!selectedOption) {
         // Aviso de seleção obrigatória
         const existingAlert = document.getElementById('alertMessage');
         if (!existingAlert) {
@@ -333,6 +398,8 @@
         }
         return;
       }
+      
+      // Já salvamos a resposta no evento de mudança do radio
 
       if (currentStep < steps.length - 1) {
         currentStep++;
@@ -349,40 +416,75 @@
             Enviando...
           </span>`;
 
-        const quizId = steps[0].quiz_id;
-        const quizAnswers = steps.filter(s => s.type === 'quiz').map(s => ({
-          question_id: s.id,
-          selected_index: answers[s.id]
-        }));
-
-        const score = steps.filter(s => s.type === 'quiz').reduce((acc, s) => {
-          const correct = s.options[answers[s.id]];
-          return acc + (correct && correct.is_correct ? 1 : 0);
-        }, 0);
-
-        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-
-        const payload = {
-          user_id: userId,
-          lesson_id: lessonId,
-          quiz_id: quizId,
-          answers: quizAnswers,
-          score,
-          total: quizAnswers.length,
-          elapsed_time: elapsedTime,
-          aprendizado: steps.find(s => s.id === 'aprendizado').options[answers['aprendizado']],
-          sentido: steps.find(s => s.id === 'sentido').options[answers['sentido']],
-          relevancia: steps.find(s => s.id === 'relevancia').options[answers['relevancia']]
-        };
-
         try {
-          const { error } = await supabase.from('user_quiz_results').insert(payload);
+          // Encontrar o quiz_id
+          const quizStep = steps.find(s => s.type === 'quiz');
+          const quizId = quizStep ? quizStep.quiz_id : null;
+          
+          if (!quizId) {
+            throw new Error('ID do quiz não encontrado');
+          }
+
+          // Processar respostas do quiz
+          const quizSteps = steps.filter(s => s.type === 'quiz');
+          const quizAnswers = [];
+          
+          quizSteps.forEach(s => {
+            if (answers[s.id] !== undefined) {
+              quizAnswers.push({
+                question_id: s.id,
+                selected_index: parseInt(answers[s.id])
+              });
+            }
+          });
+
+          // Calcular pontuação
+          const score = quizSteps.reduce((acc, s) => {
+            if (answers[s.id] === undefined) return acc;
+            const selectedIndex = parseInt(answers[s.id]);
+            const option = s.options[selectedIndex];
+            return acc + (option && option.is_correct ? 1 : 0);
+          }, 0);
+
+          // Calcular tempo decorrido
+          const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+
+          // Respostas qualitativas
+          const qualitativeAnswers = {};
+          ['aprendizado', 'sentido', 'relevancia'].forEach(field => {
+            if (answers[field] !== undefined) {
+              const step = steps.find(s => s.id === field);
+              if (step) {
+                qualitativeAnswers[field] = step.options[answers[field]];
+              }
+            }
+          });
+
+          // Montar payload simplificado
+          const payload = {
+            user_id: userId,
+            lesson_id: lessonId,
+            quiz_id: quizId,
+            score: score,
+            total_questions: quizSteps.length,
+            elapsed_time: elapsedTime,
+            quiz_answers: JSON.stringify(quizAnswers),
+            feedback: JSON.stringify(qualitativeAnswers)
+          };
+
+          console.log('Enviando payload:', payload);
+
+          // Enviar para o Supabase
+          const { data, error } = await supabase
+            .from('user_quiz_results')
+            .insert(payload)
+            .select();
+
           if (error) throw error;
           
-          // Animação de sucesso
+          // Mostrar resultado de sucesso
           document.getElementById('progressFill').style.width = '100%';
           
-          // Mostrar resultado
           stepContent.innerHTML = `
             <div class="flex flex-col items-center justify-center py-8">
               <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
@@ -396,10 +498,10 @@
               <div class="bg-slate-50 rounded-lg p-4 w-full">
                 <div class="flex justify-between items-center">
                   <span class="text-slate-500">Pontuação</span>
-                  <span class="text-lg font-bold text-primary-600">${score}/${quizAnswers.length}</span>
+                  <span class="text-lg font-bold text-primary-600">${score}/${quizSteps.length}</span>
                 </div>
                 <div class="w-full bg-slate-200 rounded-full h-2 mt-2">
-                  <div class="bg-primary-600 h-2 rounded-full" style="width: ${(score/quizAnswers.length*100)}%"></div>
+                  <div class="bg-primary-600 h-2 rounded-full" style="width: ${(score/quizSteps.length*100)}%"></div>
                 </div>
               </div>
             </div>`;
@@ -409,6 +511,8 @@
           btnNext.style.display = 'none';
           
         } catch (error) {
+          console.error('Erro ao enviar avaliação:', error);
+          
           stepContent.innerHTML = `
             <div class="flex flex-col items-center justify-center py-6">
               <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
@@ -418,41 +522,15 @@
               </div>
               <h2 class="text-xl font-bold text-slate-800 mb-2">Erro ao Enviar Avaliação</h2>
               <p class="text-slate-500 text-center mb-4">Não foi possível salvar suas respostas. Por favor, tente novamente.</p>
+              <div class="bg-red-50 p-3 rounded-lg text-sm text-red-700 mb-4 max-w-md overflow-auto">
+                <p class="font-semibold">Detalhes do erro:</p>
+                <code class="block mt-1">${error.message || 'Erro desconhecido'}</code>
+              </div>
               <button class="bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700 transition shadow-sm" onclick="location.reload()">
                 Tentar Novamente
               </button>
             </div>`;
-        }
-      }
-    });
-
-    // Adicionar timer para a aparência mais premium
-    let timerInterval;
-    function startTimer() {
-      const maxTime = 600; // 10 minutos
-      let timeLeft = maxTime;
-      
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          // Apenas para demonstração - na versão real poderia forçar o envio
-          timeRemaining.textContent = "Tempo esgotado";
-          timeRemaining.classList.add('text-red-600');
-        } else {
-          timeRemaining.textContent = `Tempo restante: ${formatTime(timeLeft)}`;
-          if (timeLeft < 60) {
-            timeRemaining.classList.add('text-red-600');
-          }
-        }
-      }, 1000);
-      
-      timeRemaining.textContent = `Tempo restante: ${formatTime(timeLeft)}`;
-    }
-
-    // Iniciar o quiz
-    carregarQuiz();
-    startTimer();
-  </script>
-</body>
-</html>
+            
+          btnNext.disabled = false;
+          btnBack.disabled = false;
+          btnNext.innerHTML = 'Finalizar <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6
