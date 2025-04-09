@@ -112,12 +112,16 @@ async function verificarQuizRespondido(userId, lessonId) {
     }
 
 function atualizarIndicadorLocal(segundos, duracao) {
-  const pct = Math.min(100, Math.round((segundos / duracao) * 100));
   const progressoTexto = document.getElementById("progressoTexto");
   if (progressoTexto) {
-    progressoTexto.textContent = `⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%`;
+    progressoTexto.textContent = `⏱️ ${segundos}s / ${duracao}s 📊 ${Math.min(100, Math.round((segundos / duracao) * 100))}%`;
+    progressoTexto.classList.add("animate-pulse");
+
+    // Remove animação após 1s (feedback sutil de atualização)
+    setTimeout(() => progressoTexto.classList.remove("animate-pulse"), 1000);
   }
 }
+
 
 
 function mostrarNotificacao(texto) {
@@ -388,7 +392,9 @@ async function trackProgress() {
     aulaAtual.status = item.status;
 
     if (item.status === '✔ Concluída') {
-      infoAssistido.textContent = '✅ Aula concluída';
+      document.getElementById("progressoTexto").textContent = '✅ Aula concluída';
+      document.getElementById("recomecarSugestao").textContent = '';
+
       await habilitarQuiz(aulaAtual.id); // <-- também aqui
     } else {
       atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
