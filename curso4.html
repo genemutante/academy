@@ -487,14 +487,22 @@ if (proxima && proxima.status !== '✔ Concluída') {
       console.log("User ID:", user_id, "| Aula ID:", aulaId);
       console.log("Resultado Supabase:", jaFez);
 
-      if (jaFez) {
-        btnQuiz.disabled = true;
-        btnQuiz.textContent = "✅ Avaliação enviada";
-        btnQuiz.className = "bg-gray-200 text-gray-600 px-4 py-2 rounded text-sm cursor-not-allowed";
-        btnQuiz.title = "Você já respondeu esta avaliação";
-        btnQuiz.onclick = null;
-        return;
-      }
+if (jaFez) {
+  btnQuiz.disabled = true;
+  btnQuiz.textContent = "✅ Avaliação enviada";
+  btnQuiz.className = "bg-gray-200 text-gray-600 px-4 py-2 rounded text-sm cursor-not-allowed";
+  btnQuiz.title = "Você já respondeu esta avaliação";
+  btnQuiz.onclick = null;
+
+  // ✅ Marcar que o quiz foi respondido (para os ícones)
+  const index = aulas.findIndex(a => a.id === aulaId);
+  if (index !== -1) {
+    aulas[index].quizRespondido = true;
+  }
+
+  listarAulas(); // re-renderiza com o novo ícone
+  return;
+}
 
       btnQuiz.disabled = false;
       btnQuiz.textContent = "📝 Fazer Avaliação da Aula";
