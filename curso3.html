@@ -135,73 +135,80 @@
 
     
   async function carregarDados() {
-    const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
-    tituloCurso.textContent = curso.title;
-    descricaoCurso.textContent = curso.description;
+  const { data: curso } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('id', course_id)
+    .single();
+    
+  tituloCurso.textContent = curso.title;
+  descricaoCurso.textContent = curso.description;
 
-    const { data: lista } = await supabase.from('lessons').select('*').eq('course_id', course_id).order('order');
-    aulas = lista || [];
+  const { data: lista } = await supabase
+    .from('lessons')
+    .select('*')
+    .eq('course_id', course_id)
+    .order('order');
 
-    const promises = aulas.map(async (aula) => {
-      const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-        p_user_id: user_id,
-        p_lesson_id: aula.id
-      });
-      aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
+  aulas = lista || [];
 
-      // Novo: verificar se quiz foi enviado
-      const { data: quiz } = await supabase
-        .from('user_quiz_results')
-        .select('id')
-        .eq('user_id', user_id)
-        .eq('lesson_id', aula.id)
-        .limit(1);
-
-      aula.quizEnviado = !!(quiz && quiz.length > 0);
-
-      return aula;
+  const promises = aulas.map(async (aula) => {
+    const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+      p_user_id: user_id,
+      p_lesson_id: aula.id
     });
-    aulas = await Promise.all(promises);
-    listarAulas();
-    if (aulas.length) selecionarAula(aulas[0]);
-    carregarProgressoCurso();
-  }
+
+    aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
+
+    const { data: quiz } = await supabase
+      .from('user_quiz_results')
+      .select('id')
+      .eq('user_id', user_id)
+      .eq('lesson_id', aula.id)
+      .limit(1);
+
+    aula.quizEnviado = !!(quiz && quiz.length > 0);
+
+    return aula;
+  });
+
+  aulas = await Promise.all(promises);
+  listarAulas();
+  if (aulas.length) selecionarAula(aulas[0]);
+  carregarProgressoCurso();
+}
 
 
 
 
-  function listarAulas() {
-    listaAulas.innerHTML = '';
-    aulas.forEach((aula, index) => {
-      const li = document.createElement('li');
-      li.className = 'grid grid-cols-[20px_1fr] items-center gap-2 text-gray-700 text-sm';
 
-      const podeAcessar = index === 0 || aulas[index - 1]?.status === '✔ Concluída';
+ function listarAulas() {
+  listaAulas.innerHTML = '';
+  aulas.forEach((aula, index) => {
+    const li = document.createElement('li');
+    li.className = 'grid grid-cols-[20px_1fr] items-center gap-2 text-gray-700 text-sm';
 
-      let statusIcon = '';
-      if (aula.status === '✔ Concluída') statusIcon = '✅';
-      else if (aula.status === '🔓 Desbloqueada') statusIcon = '🔓';
+    const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
+    const quizIcon = aula.quizEnviado ? '📩' : '';
+    const podeAcessar = index === 0 || (
+      aulas[index - 1]?.status === '✔ Concluída' &&
+      aulas[index - 1]?.quizEnviado === true
+    );
 
-      let quizIcon = aula.quizEnviado ? '📩' : '';
+    const aulaLabel = `${statusIcon}${quizIcon} ${aula.order}. ${aula.title}`;
+    li.innerHTML = `<span class="text-center">${statusIcon}${quizIcon}</span><span>${aula.order}. ${aula.title}</span>`;
 
-      const aulaLabel = `${!podeAcessar ? '🔒 ' : ''}${aula.order}. ${aula.title}`;
+    if (podeAcessar) {
+      li.classList.add('cursor-pointer', 'hover:underline');
+      li.onclick = () => selecionarAula(aula);
+    } else {
+      li.classList.add('opacity-50', 'cursor-not-allowed');
+      li.title = 'Conclua a aula anterior e envie a avaliação para desbloquear';
+    }
 
-      li.innerHTML = `
-        <span class="text-center" title="${aula.status === '✔ Concluída' ? 'Aula concluída' : ''}">${statusIcon}</span>
-        <span>${aulaLabel} ${quizIcon ? `<span title='Avaliação enviada' class='ml-1'>${quizIcon}</span>` : ''}</span>
-      `;
-
-      if (podeAcessar) {
-        li.classList.add('cursor-pointer', 'hover:underline');
-        li.onclick = () => selecionarAula(aula);
-      } else {
-        li.classList.add('opacity-50', 'cursor-not-allowed');
-        li.title = 'Conclua a aula anterior para acessar esta';
-      }
-
-      listaAulas.appendChild(li);
-    });
-  }
+    listaAulas.appendChild(li);
+  });
+}
 
 
     
