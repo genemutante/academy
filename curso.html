@@ -164,33 +164,40 @@ async function verificarQuizRespondido(userId, lessonId) {
       }
     }
 
-    async function selecionarAula(aula) {
-      aulaAtual = aula;
-      tituloAula.textContent = aula.title;
-      infoAssistido.textContent = '';
-      btnQuiz.disabled = true;
-      btnQuiz.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-      btnQuiz.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-      clearInterval(interval);
-      lastTime = 0;
-      initPlayer();
-          await habilitarQuiz(aula.id); // <-- aqui tem que ter o await
-      
-      const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-        p_user_id: user_id,
-        p_lesson_id: aula.id
-      });
-      if (progresso?.length > 0) {
-        const item = progresso[0];
-        if (item.status === '✔ Concluída') {
-          infoAssistido.textContent = '✅ Aula concluída';
-        } else {
-          atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
-        }
-      } else {
-        atualizarIndicadorLocal(0, aula.duration);
-      }
+async function selecionarAula(aula) {
+  aulaAtual = aula;
+  tituloAula.textContent = aula.title;
+  infoAssistido.textContent = '';
+
+  // Sempre desabilita o botão inicialmente
+  btnQuiz.disabled = true;
+  btnQuiz.textContent = "Fazer Avaliação da Aula";
+  btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
+  btnQuiz.onclick = null;
+
+  clearInterval(interval);
+  lastTime = 0;
+  initPlayer();
+
+  const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+    p_user_id: user_id,
+    p_lesson_id: aula.id
+  });
+
+  if (progresso?.length > 0) {
+    const item = progresso[0];
+
+    if (item.status === '✔ Concluída') {
+      infoAssistido.textContent = '✅ Aula concluída';
+      await habilitarQuiz(aula.id); // ✅ só habilita se concluída
+    } else {
+      atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
     }
+  } else {
+    atualizarIndicadorLocal(0, aula.duration);
+  }
+}
+
 
     function loadYouTubeAPI() {
       return new Promise(resolve => {
