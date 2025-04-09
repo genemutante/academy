@@ -174,7 +174,8 @@ async function verificarQuizRespondido(userId, lessonId) {
       clearInterval(interval);
       lastTime = 0;
       initPlayer();
-
+          await habilitarQuiz(aula.id); // <-- aqui tem que ter o await
+      
       const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
         p_lesson_id: aula.id
@@ -183,7 +184,6 @@ async function verificarQuizRespondido(userId, lessonId) {
         const item = progresso[0];
         if (item.status === '✔ Concluída') {
           infoAssistido.textContent = '✅ Aula concluída';
-          await habilitarQuiz(aula.id); // <-- aqui tem que ter o await
         } else {
           atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
         }
