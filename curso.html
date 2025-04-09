@@ -169,9 +169,10 @@
         const item = progresso[0];
         if (item.status === '✔ Concluída') {
           infoAssistido.textContent = '✅ Aula concluída';
-          btnQuiz.disabled = false;
-          btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-          btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+
+          
+         habilitarQuiz(aula.id);
+
         } else {
           atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
         }
@@ -280,9 +281,7 @@ async function trackProgress() {
 
     if (item.status === '✔ Concluída') {
       infoAssistido.textContent = '✅ Aula concluída';
-      btnQuiz.disabled = false;
-      btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-      btnQuiz.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+      habilitarQuiz(aulaAtual.id);
     } else {
       atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
     }
@@ -304,6 +303,29 @@ async function trackProgress() {
         popupMaterial.classList.add('hidden');
       }
     });
+
+
+function habilitarQuiz(aulaId) {
+  btnQuiz.disabled = false;
+  btnQuiz.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+  btnQuiz.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+
+  btnQuiz.onclick = () => {
+    const quizContainer = document.createElement('div');
+    quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
+
+    quizContainer.innerHTML = `
+      <div class="bg-white w-full max-w-2xl h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
+        <button onclick="this.parentElement.parentElement.remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
+        <iframe src="quiz.html?user_id=${user_id}&lesson_id=${aulaId}" class="w-full h-full rounded-lg border border-slate-200" frameborder="0"></iframe>
+      </div>
+    `;
+
+    document.body.appendChild(quizContainer);
+  };
+}
+
+    
 
     carregarDados();
   </script>
