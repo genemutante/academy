@@ -47,7 +47,14 @@
   <!-- Painel principal do quiz -->
   <div class="w-full max-w-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white p-4 md:p-6 rounded-2xl shadow-xl space-y-5 min-h-[540px] relative" id="quizContainer">
     
-    <div class="absolute -top-2 -right-2 bg-primary-600 text-white text-xs uppercase tracking-wider font-bold px-3 py-1 rounded-full">Premium</div>
+    <!-- ⏱️ Temporizador fixo no topo direito -->
+<div id="timer" class="absolute -top-2 -right-2 bg-primary-600 text-white text-xs uppercase tracking-wider font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-md z-10">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6a8 8 0 100 12 8 8 0 000-12zm0 2v4l2.5 2.5" />
+  </svg>
+  <span id="timerValue">--:--</span>
+</div>
+
 
     <div class="mb-6">
       <h1 class="font-display text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-2 bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent">Avaliação da Jornada do Aluno</h1>
@@ -59,7 +66,7 @@
               <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
             </svg>
           </div>
-          <span id="progressText" class="font-medium text-slate-600 dark:text-slate-300">Questão 1 de 5</span>
+        
         </div>
         
         <div class="flex items-center gap-2">
@@ -138,28 +145,27 @@ const storageKey = `quiz-${userId}-${lessonId}`;
       }, 1000);
     }
 
-    function updateTimer() {
-      const m = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
-      const s = String(tempoRestante % 60).padStart(2, '0');
-      timerEl.textContent = `Tempo restante: ${m}:${s}`;
-      
-      // Adicionar aviso visual quando o tempo está acabando
-      if (tempoRestante < 60) {
-        timerEl.classList.add('timer-warning');
-      } else {
-        timerEl.classList.remove('timer-warning');
-      }
-      
-      const perc = ((tempoRestante / (steps.length * tempoPorPergunta)) * 100).toFixed(2);
-      progressBar.style.width = `${perc}%`;
-      
-      // Adicionar efeito de pulsar quando o tempo estiver abaixo de 30%
-      if (perc < 30) {
-        progressBar.classList.add('progress-pulse');
-      } else {
-        progressBar.classList.remove('progress-pulse');
-      }
-    }
+function updateTimer() {
+  const m = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
+  const s = String(tempoRestante % 60).padStart(2, '0');
+  document.getElementById('timerValue').textContent = `${m}:${s}`;
+
+  const perc = ((tempoRestante / (steps.length * tempoPorPergunta)) * 100).toFixed(2);
+  progressBar.style.width = `${perc}%`;
+
+  if (tempoRestante < 60) {
+    document.getElementById('timer').classList.add('timer-warning');
+  } else {
+    document.getElementById('timer').classList.remove('timer-warning');
+  }
+
+  if (perc < 30) {
+    progressBar.classList.add('progress-pulse');
+  } else {
+    progressBar.classList.remove('progress-pulse');
+  }
+}
+
 
     async function loadQuiz() {
       stepContent.innerHTML = `
@@ -256,7 +262,7 @@ function renderQuestionNavigator() {
     function renderStep() {
       const step = steps[currentStep];
       stepContent.innerHTML = '';
-      progressText.textContent = `Questão ${currentStep + 1} de ${steps.length}`;
+      
 
       // Adicionar subtítulo com ícone e estilo especial de acordo com o tipo de pergunta
       const headerContainer = document.createElement('div');
