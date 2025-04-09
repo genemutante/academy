@@ -151,24 +151,34 @@
       carregarProgressoCurso();
     }
 
+
+
 function listarAulas() {
   listaAulas.innerHTML = '';
   aulas.forEach((aula, index) => {
     const li = document.createElement('li');
     li.className = 'grid grid-cols-[20px_1fr] items-center gap-2 text-gray-700 text-sm';
 
-    // 🔒 BLOQUEIO: só libera clique se for a primeira aula OU a anterior estiver concluída
+    // 🔐 BLOQUEIO: só libera clique se for a primeira aula OU a anterior estiver concluída
     const podeAcessar = index === 0 || aulas[index - 1]?.status === '✔ Concluída';
+
+    // ✅ Ícone de status
+    let statusIcon = '';
+    if (aula.status === '✔ Concluída') statusIcon = '✅';
+    else if (aula.status === '🔓 Desbloqueada') statusIcon = '🔓';
+    else statusIcon = '';
+
     const lockIcon = !podeAcessar ? '🔒 ' : '';
     const aulaLabel = `${lockIcon}${aula.order}. ${aula.title}`;
 
     li.innerHTML = `<span class="text-center">${statusIcon}</span><span>${aulaLabel}</span>`;
 
-
-
     if (podeAcessar) {
       li.classList.add('cursor-pointer', 'hover:underline');
       li.onclick = () => selecionarAula(aula);
+      li.title = aula.status === '✔ Concluída'
+        ? 'Aula concluída'
+        : 'Clique para assistir esta aula';
     } else {
       li.classList.add('opacity-50', 'cursor-not-allowed');
       li.title = 'Conclua a aula anterior para acessar esta';
@@ -177,6 +187,9 @@ function listarAulas() {
     listaAulas.appendChild(li);
   });
 }
+
+
+    
 
     async function carregarProgressoCurso() {
       const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
