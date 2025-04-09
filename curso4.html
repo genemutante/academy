@@ -244,6 +244,13 @@ async function listarAulas() {
     aula.quizRespondido = quizRespondido; // salva no objeto da aula para futuras validações
     listaAulas.appendChild(li);
   }
+
+ if (!aulaAtual && aulas.length > 0) {
+    selecionarAula(aulas[0]);
+  }
+}
+
+  
 }
 
 
