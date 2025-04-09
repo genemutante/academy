@@ -112,6 +112,23 @@ async function verificarQuizRespondido(userId, lessonId) {
       infoAssistido.textContent = `⏱️ ${segundos}s / ${duracao}s 📊 ${pct}%`;
     }
 
+function mostrarNotificacao(texto) {
+  const aviso = document.createElement('div');
+  aviso.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50 text-sm font-medium transition-opacity';
+  aviso.textContent = texto;
+
+  document.body.appendChild(aviso);
+
+  setTimeout(() => {
+    aviso.classList.add('opacity-0');
+    setTimeout(() => aviso.remove(), 500);
+  }, 2500);
+}
+
+
+
+
+    
     async function carregarDados() {
       const { data: curso } = await supabase.from('courses').select('*').eq('id', course_id).single();
       tituloCurso.textContent = curso.title;
@@ -168,6 +185,10 @@ async function verificarQuizRespondido(userId, lessonId) {
 
 let pontoRetomada = null; // novo controle global
 
+
+
+    
+
 async function selecionarAula(aula) {
   aulaAtual = aula;
   tituloAula.textContent = aula.title;
@@ -200,6 +221,28 @@ async function selecionarAula(aula) {
 
       // define o ponto global de retomada para usar em onPlayerReady
       pontoRetomada = Math.max(0, item.segundos_assistidos - 15);
+
+// Adiciona link clicável
+const minutos = Math.floor(pontoRetomada / 60);
+const segundos = pontoRetomada % 60;
+const retomadaLabel = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
+
+const link = document.createElement('span');
+link.className = 'text-sm text-blue-600 underline cursor-pointer ml-2 hover:text-blue-800 transition';
+link.textContent = `🔄 Retomar a partir de ${retomadaLabel}`;
+link.onclick = () => {
+  if (player && typeof player.seekTo === 'function') {
+    player.seekTo(pontoRetomada, true);
+    player.playVideo?.();
+    mostrarNotificacao(`⏩ Pulando para ${retomadaLabel}`);
+  }
+};
+
+infoAssistido.appendChild(link);
+
+
+
+      
     }
   } else {
     atualizarIndicadorLocal(0, aula.duration);
