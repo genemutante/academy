@@ -200,44 +200,50 @@ async function carregarDados() {
 
 
 
-function listarAulas() {
+async function listarAulas() {
   listaAulas.innerHTML = '';
-  aulas.forEach((aula, index) => {
+
+  for (let i = 0; i < aulas.length; i++) {
+    const aula = aulas[i];
+
+    // Verifica se quiz foi respondido
+    const { data: quizData } = await supabase
+      .from('user_quiz_results')
+      .select('id')
+      .eq('user_id', user_id)
+      .eq('lesson_id', aula.id)
+      .limit(1);
+
+    const quizRespondido = quizData?.length > 0;
+
+    const podeAcessar = i === 0 || aulas.slice(0, i).every(a =>
+      a.status === '✔ Concluída' &&
+      a.quizRespondido !== false // falsy ou true
+    );
+
+    const iconeConclusao = aula.status === '✔ Concluída' ? '✅' : '';
+    const iconeQuiz = quizRespondido ? '📩' : '';
+
     const li = document.createElement('li');
-    const podeAcessar = index === 0 || aulas.slice(0, index).every(a => a.status === '✔ Concluída' && a.quizRespondido);
-    const aulaLabel = `${aula.order}. ${aula.title}`;
+    li.className = 'grid grid-cols-[20px_20px_1fr] items-center gap-2 text-gray-700 text-sm';
 
-    // Criação do container com layout grid fixo para alinhar ícones e texto
-    li.className = 'grid grid-cols-[24px_24px_1fr] items-center gap-2 text-sm px-2 py-1 rounded hover:bg-slate-100 transition';
-
-    // Ícone de aula concluída
-    const iconeStatus = document.createElement('span');
-    iconeStatus.className = 'text-green-500 text-base';
-    iconeStatus.innerHTML = aula.status === '✔ Concluída' ? '✅' : '';
-
-    // Ícone de avaliação enviada
-    const iconeQuiz = document.createElement('span');
-    iconeQuiz.className = 'text-pink-500 text-base';
-    iconeQuiz.innerHTML = aula.quizRespondido ? '📩' : '';
-
-    // Texto da aula
-    const texto = document.createElement('span');
-    texto.textContent = aulaLabel;
+    li.innerHTML = `
+      <span class="text-center">${iconeConclusao}</span>
+      <span class="text-center">${iconeQuiz}</span>
+      <span>${aula.order}. ${aula.title}</span>
+    `;
 
     if (podeAcessar) {
-      li.classList.add('cursor-pointer');
-      texto.classList.add('text-gray-800', 'hover:underline');
+      li.classList.add('cursor-pointer', 'hover:underline');
       li.onclick = () => selecionarAula(aula);
     } else {
       li.classList.add('opacity-50', 'cursor-not-allowed');
-      texto.title = 'Conclua a aula anterior para acessar esta';
+      li.title = 'Conclua as aulas anteriores e envie a avaliação para acessar esta.';
     }
 
-    li.appendChild(iconeStatus);
-    li.appendChild(iconeQuiz);
-    li.appendChild(texto);
+    aula.quizRespondido = quizRespondido; // salva no objeto da aula para futuras validações
     listaAulas.appendChild(li);
-  });
+  }
 }
 
 
