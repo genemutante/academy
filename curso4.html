@@ -410,87 +410,99 @@ async function selecionarAula(aula) {
     }
     let maiorTempoVisualizado = 0;
 
-    async function trackProgress() {
-      if (!player || typeof player.getCurrentTime !== 'function') {
-        console.warn('🚫 Player não está pronto ou inválido');
-        return;
+
+
+async function trackProgress() {
+  console.log("📡 Executando trackProgress em:", new Date().toISOString());
+
+  if (!player || typeof player.getCurrentTime !== 'function') {
+    console.warn('🚫 Player não está pronto ou inválido');
+    return;
+  }
+
+  const state = player.getPlayerState();
+  if (state !== YT.PlayerState.PLAYING) {
+    console.log('⏸️ Vídeo não está tocando.');
+    return;
+  }
+
+  const tempoAtual = Math.floor(player.getCurrentTime());
+  const diff = tempoAtual - lastTime;
+
+  if (tempoAtual > maiorTempoVisualizado) {
+    maiorTempoVisualizado = tempoAtual;
+    atualizarIndicadorLocal(maiorTempoVisualizado, duration);
+  }
+
+  if (diff <= 0 || diff > 30) {
+    console.warn('⛔ Ignorando salto inválido.', { tempoAtual, lastTime });
+    return;
+  }
+
+  const segmento = {
+    user_id,
+    course_id,
+    lesson_id: aulaAtual.id,
+    duration: Math.floor(duration),
+    segment: { start: lastTime, end: tempoAtual }
+  };
+
+  console.log("📤 Segmento enviado ao Supabase:", segmento);
+
+  const { error: insertError } = await supabase
+    .from('progress_segments')
+    .insert(segmento);
+
+  if (insertError) {
+    console.error('❌ Erro ao salvar segmento no Supabase:', insertError);
+    return;
+  }
+
+  lastTime = tempoAtual;
+
+  const { data: progressoAtualizado, error: erroProgresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+    p_user_id: user_id,
+    p_lesson_id: aulaAtual.id
+  });
+
+  if (erroProgresso) {
+    console.error('❌ Erro ao consultar progresso atualizado:', erroProgresso);
+    return;
+  }
+
+  if (progressoAtualizado?.length > 0) {
+    const item = progressoAtualizado[0];
+    aulaAtual.status = item.status;
+
+    if (item.status === '✔ Concluída') {
+      document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
+      document.getElementById("recomecarSugestao").innerHTML = "";
+      await habilitarQuiz(aulaAtual.id);
+
+      // 🔄 Atualizar a próxima aula dinamicamente
+      const indexAtual = aulas.findIndex(a => a.id === aulaAtual.id);
+      const proxima = aulas[indexAtual + 1];
+
+      if (proxima && proxima.status !== '✔ Concluída') {
+        console.log('🔓 Desbloqueando próxima aula:', proxima.title);
+        proxima.status = '🔓 Desbloqueada';
+        listarAulas();
       }
+    }
 
-      const state = player.getPlayerState();
-      if (state !== YT.PlayerState.PLAYING) {
-        console.log('⏸️ Vídeo não está tocando.');
-        return;
-      }
-
-      const tempoAtual = Math.floor(player.getCurrentTime());
-      const diff = tempoAtual - lastTime;
-
-      if (tempoAtual > maiorTempoVisualizado) {
-        maiorTempoVisualizado = tempoAtual;
-        atualizarIndicadorLocal(maiorTempoVisualizado, duration);
-      }
-
-      if (diff <= 0 || diff > 30) {
-        console.warn('⛔ Ignorando salto inválido.');
-        return;
-      }
-
-      const segmento = {
-        user_id,
-        course_id,
-        lesson_id: aulaAtual.id,
-        duration: Math.floor(duration),
-        segment: { start: lastTime, end: tempoAtual }
-      };
-
-      const { error: insertError } = await supabase
-        .from('progress_segments')
-        .insert(segmento);
-
-      if (insertError) {
-        console.error('❌ Erro ao salvar segmento:', insertError);
-        return;
-      }
-
-      lastTime = tempoAtual;
-
-      const { data: progressoAtualizado, error: erroProgresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-        p_user_id: user_id,
-        p_lesson_id: aulaAtual.id
-      });
-
-      if (erroProgresso) {
-        console.error('❌ Erro ao consultar progresso atualizado:', erroProgresso);
-        return;
-      }
-
-      if (progressoAtualizado?.length > 0) {
-        const item = progressoAtualizado[0];
-        aulaAtual.status = item.status;
-
-        if (item.status === '✔ Concluída') {
-          document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
-          document.getElementById("recomecarSugestao").innerHTML = "";
-          await habilitarQuiz(aulaAtual.id);
-
-// 🔄 Atualizar a próxima aula dinamicamente
-const indexAtual = aulas.findIndex(a => a.id === aulaAtual.id);
-const proxima = aulas[indexAtual + 1];
-
-if (proxima && proxima.status !== '✔ Concluída') {
-  console.log('🔓 Desbloqueando próxima aula:', proxima.title);
-  proxima.status = '🔓 Desbloqueada'; // status intermediário opcional
-  listarAulas(); // re-renderiza a lista com a próxima liberada
+    listarAulas();
+    carregarProgressoCurso();
+  }
 }
 
 
-          
-        }
 
-        listarAulas();
-        carregarProgressoCurso();
-      }
-    }
+
+
+
+
+
+    
 
     btnMaterial.addEventListener('click', () => popupMaterial.classList.toggle('hidden'));
 
