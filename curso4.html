@@ -272,6 +272,11 @@ async function listarAulas() {
       aulaAtual = aula;
       tituloAula.textContent = aula.title;
 
+      btnMaterial.disabled = true;
+      btnMaterial.classList.add('opacity-50', 'cursor-not-allowed');
+      btnMaterial.onclick = null;
+
+
       const progressoEl = document.getElementById("progressoTexto");
       const sugestaoEl = document.getElementById("recomecarSugestao");
 
