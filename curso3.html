@@ -7,12 +7,52 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+  tailwind.config = {
+    darkMode: 'media',
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Outfit', 'sans-serif'],
+          display: ['Nunito', 'sans-serif']
+        },
+        colors: {
+          primary: {
+            50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 400: '#60A5FA',
+            500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 800: '#1E40AF', 900: '#1E3A8A'
+          },
+          surface: {
+            50: '#F8FAFC', 100: '#F1F5F9', 800: '#1E293B', 900: '#0F172A'
+          },
+          accent: {
+            400: '#38BDF8', 500: '#0EA5E9'
+          }
+        },
+        boxShadow: {
+          glow: '0 0 20px rgba(56, 189, 248, 0.3)',
+          'glow-lg': '0 0 30px rgba(56, 189, 248, 0.2)'
+        },
+        borderRadius: {
+          xl: '1rem', '2xl': '1.5rem', '3xl': '2rem'
+        }
+      }
+    }
+  };
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
-<header class="w-full flex items-center justify-between mb-6 px-4 md:px-8 py-3 rounded-xl shadow bg-white dark:bg-slate-800 text-slate-700 dark:text-white border border-slate-200 dark:border-slate-700">
-  <h1 class="text-lg font-bold tracking-tight text-primary-700 dark:text-primary-300">Academy-Tools</h1>
-  <span id="nomeAluno" class="text-sm font-medium text-slate-500 dark:text-slate-300">Carregando aluno...</span>
+<body class="font-sans bg-gradient-to-br from-surface-50 to-surface-100 text-gray-800 min-h-screen transition-colors duration-300">
+
+<header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
+  <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
+    <h1 class="text-xl font-display font-bold tracking-tight">Academy-Tools</h1>
+    <span id="nomeAluno" class="text-sm font-medium text-white/90 truncate"></span>
+  </div>
 </header>
+
 
 
   <div class="max-w-6xl mx-auto px-4 py-6">
@@ -500,24 +540,15 @@ if (proxima && proxima.status !== '✔ Concluída') {
       
 // Buscar nome do aluno
 async function carregarNomeAluno() {
-  const { data, error } = await supabase
-    .from('users')
-    .select('name')
-    .eq('id', userId)
-    .single();
-
-  if (data && data.name) {
-    document.getElementById('nomeAluno').textContent = data.name;
-  } else {
-    document.getElementById('nomeAluno').textContent = 'Aluno';
+  const { data: user } = await supabase.from('users').select('full_name').eq('id', user_id).single();
+  if (user) {
+    document.getElementById('nomeAluno').textContent = user.full_name;
   }
 }
 
+      carregarDados();
 carregarNomeAluno();
 
-      
-      
-      carregarDados();
     });
   </script>
 </body>
