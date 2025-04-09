@@ -34,7 +34,15 @@
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
 </head>
+
+  
 <body class="font-sans antialiased p-4 md:p-8 min-h-screen flex items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800 transition-colors duration-300">
+
+<!-- 🔹 Barra lateral de navegação -->
+<div id="questionNav" class="fixed left-4 top-1/2 transform -translate-y-1/2 space-y-2 hidden md:block z-50">
+</div>
+
+  
   <div class="w-full max-w-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white p-4 md:p-6 rounded-2xl shadow-xl space-y-5 min-h-[540px] relative" id="quizContainer">
 
     <div class="absolute -top-2 -right-2 bg-primary-600 text-white text-xs uppercase tracking-wider font-bold px-3 py-1 rounded-full">Premium</div>
@@ -212,6 +220,35 @@ if (saved) {
       iniciarTimerGlobal();
     }
 
+
+
+function renderQuestionNavigator() {
+  const navContainer = document.getElementById('questionNav');
+  if (!navContainer || steps.length === 0) return;
+
+  navContainer.innerHTML = '';
+
+  steps.forEach((step, index) => {
+    const btn = document.createElement('button');
+    btn.className = `w-10 h-10 rounded-full text-sm font-bold transition-all border focus:outline-none
+      ${index === currentStep ? 'bg-primary-600 text-white border-primary-700' :
+      answers[step.id] !== undefined ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' :
+      'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'}`;
+
+    btn.textContent = index + 1;
+    btn.title = step.question.slice(0, 40);
+
+    btn.addEventListener('click', () => {
+      currentStep = index;
+      renderStep();
+    });
+
+    navContainer.appendChild(btn);
+  });
+}
+
+// Atualiza também o renderizador principal para incluir o navigator
+   
     function renderStep() {
       const step = steps[currentStep];
       stepContent.innerHTML = '';
@@ -358,6 +395,9 @@ if (answers[step.id] == idx) {
       btnNext.innerHTML = currentStep === steps.length - 1 ? 
         'Finalizar <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>' : 
         'Avançar <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>';
+   
+    renderQuestionNavigator(); 
+    
     }
 
     btnBack.addEventListener('click', () => {
