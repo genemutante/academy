@@ -12,90 +12,41 @@
       darkMode: 'media',
       theme: {
         extend: {
-          fontFamily: { 
+          fontFamily: {
             sans: ['Outfit', 'sans-serif'],
             display: ['Nunito', 'sans-serif']
           },
           colors: {
-            primary: {
-              50: '#EFF6FF',
-              100: '#DBEAFE',
-              200: '#BFDBFE',
-              300: '#93C5FD',
-              400: '#60A5FA',
-              500: '#3B82F6',
-              600: '#2563EB',
-              700: '#1D4ED8',
-              800: '#1E40AF',
-              900: '#1E3A8A'
-            },
-            surface: {
-              50: '#F8FAFC',
-              100: '#F1F5F9',
-              800: '#1E293B',
-              900: '#0F172A'
-            },
-            accent: {
-              400: '#38BDF8',
-              500: '#0EA5E9'
-            }
+            primary: { 50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 400: '#60A5FA', 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 800: '#1E40AF', 900: '#1E3A8A' },
+            surface: { 50: '#F8FAFC', 100: '#F1F5F9', 800: '#1E293B', 900: '#0F172A' },
+            accent: { 400: '#38BDF8', 500: '#0EA5E9' }
           },
           boxShadow: {
             glow: '0 0 20px rgba(56, 189, 248, 0.3)',
             'glow-lg': '0 0 30px rgba(56, 189, 248, 0.2)'
           },
           borderRadius: {
-            xl: '1rem',
-            '2xl': '1.5rem',
-            '3xl': '2rem'
+            xl: '1rem', '2xl': '1.5rem', '3xl': '2rem'
           }
         }
       }
     }
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    .option-enter {
-      animation: fadeSlideIn 0.5s ease forwards;
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    @keyframes fadeSlideIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .progress-pulse {
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-    .quiz-container {
-      background-image: radial-gradient(circle at top right, rgba(56, 189, 248, 0.05), transparent 400px);
-    }
-    .option-selected {
-      border-color: #3B82F6;
-      background-color: rgba(59, 130, 246, 0.08);
-      box-shadow: 0 0 0 1px #3B82F6;
-    }
-    .timer-warning {
-      animation: timerPulse 1s infinite;
-    }
-    @keyframes timerPulse {
-      0%, 100% { color: #EF4444; }
-      50% { color: #B91C1C; }
-    }
-    .quiz-badge {
-      background-image: linear-gradient(135deg, #2563eb, #1d4ed8);
-    }
-    .feedback-badge {
-      background-image: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    }
-  </style>
 </head>
-<body class="font-sans antialiased p-4 md:p-8 min-h-screen flex items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800 transition-colors duration-300">
-  <div class="w-full max-w-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white p-4 md:p-6 rounded-2xl shadow-xl space-y-5 min-h-[540px] relative" id="quizContainer">
 
+  
+<body class="font-sans antialiased p-4 md:p-8 min-h-screen flex items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800 transition-colors duration-300">
+
+<div class="flex justify-center items-start gap-6 w-full">
+  <!-- Barra lateral de navegação -->
+  <div id="questionNav" class="hidden md:flex flex-col gap-2 pt-2">
+    <!-- Botões são inseridos dinamicamente -->
+  </div>
+
+  <!-- Painel principal do quiz -->
+  <div class="w-full max-w-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white p-4 md:p-6 rounded-2xl shadow-xl space-y-5 min-h-[540px] relative" id="quizContainer">
+    
     <div class="absolute -top-2 -right-2 bg-primary-600 text-white text-xs uppercase tracking-wider font-bold px-3 py-1 rounded-full">Premium</div>
 
     <div class="mb-6">
@@ -151,9 +102,14 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
     );
 
-    const params = new URLSearchParams(window.location.search);
-    const userId = params.get('user_id');
-    const lessonId = params.get('lesson_id');
+
+const params = new URLSearchParams(window.location.search);
+const userId = params.get('user_id');
+const lessonId = params.get('lesson_id');
+
+// Agora que os valores foram definidos, podemos usar:
+const storageKey = `quiz-${userId}-${lessonId}`;
+
 
     let currentStep = 0;
     let steps = [];
@@ -256,12 +212,47 @@
         { type: 'qual', id: 'relevancia', question: 'Este tema dialoga com suas necessidades?', options: ['Totalmente', 'Em parte', 'Pouco', 'Não dialoga'] }
       );
 
+      const saved = localStorage.getItem(storageKey);
+if (saved) {
+  Object.assign(answers, JSON.parse(saved));
+}
+
+
       tempoRestante = steps.length * tempoPorPergunta;
       inicioProva = Date.now(); // captura o início em milissegundos
       renderStep();
       iniciarTimerGlobal();
     }
 
+
+
+function renderQuestionNavigator() {
+  const navContainer = document.getElementById('questionNav');
+  if (!navContainer || steps.length === 0) return;
+
+  navContainer.innerHTML = '';
+
+  steps.forEach((step, index) => {
+    const btn = document.createElement('button');
+    btn.className = `w-10 h-10 rounded-full text-sm font-bold transition-all border focus:outline-none
+      ${index === currentStep ? 'bg-primary-600 text-white border-primary-700' :
+      answers[step.id] !== undefined ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' :
+      'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'}`;
+
+    btn.textContent = index + 1;
+    btn.title = step.question.slice(0, 40);
+
+    btn.addEventListener('click', () => {
+      currentStep = index;
+      renderStep();
+    });
+
+    navContainer.appendChild(btn);
+  });
+}
+
+// Atualiza também o renderizador principal para incluir o navigator
+   
     function renderStep() {
       const step = steps[currentStep];
       stepContent.innerHTML = '';
@@ -379,8 +370,12 @@ if (answers[step.id] == idx) {
               });
             }
           });
+          localStorage.setItem(storageKey, JSON.stringify(answers));
           renderStep();
         });
+
+
+        
 
         radioWrapper.appendChild(radioInner);
         contentWrapper.appendChild(radioWrapper);
@@ -404,6 +399,9 @@ if (answers[step.id] == idx) {
       btnNext.innerHTML = currentStep === steps.length - 1 ? 
         'Finalizar <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>' : 
         'Avançar <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>';
+   
+    renderQuestionNavigator(); 
+    
     }
 
     btnBack.addEventListener('click', () => {
@@ -616,6 +614,10 @@ async function enviarRespostas() {
 
   btnBack.style.display = 'none';
   btnNext.style.display = 'none';
+  
+  localStorage.removeItem(storageKey);
+
+  
 }
 
 // ENVIAR RESPOSTAS FIM
