@@ -96,7 +96,7 @@ async function verificarQuizRespondido(userId, lessonId) {
     .eq('lesson_id', lessonId)
     .limit(1);
 
-  return !!data; // retorna true se já respondeu
+  return !!(data && data.length > 0); // ← Correção aqui
 }
 
 
