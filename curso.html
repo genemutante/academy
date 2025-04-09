@@ -192,6 +192,19 @@ async function selecionarAula(aula) {
       await habilitarQuiz(aula.id); // ✅ só habilita se concluída
     } else {
       atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
+
+ // 🆕 SUGESTÃO DE RETOMADA
+    const ponto = Math.max(0, item.segundos_assistidos - 15); // volta um pouco
+    const minutos = Math.floor(ponto / 60);
+    const segundos = ponto % 60;
+    const retomada = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
+
+    const msg = document.createElement('div');
+    msg.className = 'text-sm text-blue-600 mt-1';
+    msg.textContent = `📍 Retome a partir de ${retomada}`;
+    infoAssistido.appendChild(msg);
+
+      
     }
   } else {
     atualizarIndicadorLocal(0, aula.duration);
