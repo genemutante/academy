@@ -204,7 +204,9 @@ let pontoRetomada = null; // novo controle global
 async function selecionarAula(aula) {
   aulaAtual = aula;
   tituloAula.textContent = aula.title;
-  infoAssistido.textContent = '';
+  document.getElementById("progressoTexto").textContent = "";
+  document.getElementById("recomecarSugestao").innerHTML = "";
+
   pontoRetomada = null; // limpa retomada anterior
 
   // Desativa botão de quiz por padrão
@@ -226,7 +228,9 @@ async function selecionarAula(aula) {
     const item = progresso[0];
 
     if (item.status === '✔ Concluída') {
-      infoAssistido.textContent = '✅ Aula concluída';
+      document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
+      document.getElementById("recomecarSugestao").innerHTML = "";
+
       await habilitarQuiz(aula.id);
     } else {
       atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
