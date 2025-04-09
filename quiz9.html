@@ -94,7 +94,8 @@
   </style>
 </head>
 <body class="font-sans antialiased p-4 md:p-8 min-h-screen flex items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800 transition-colors duration-300">
-  <div class="quiz-container w-full max-w-2xl bg-white/90 dark:bg-surface-800/90 backdrop-blur-sm text-slate-800 dark:text-white p-6 md:p-10 rounded-3xl shadow-xl shadow-slate-200 dark:shadow-black/30 space-y-8 min-h-[540px] relative border border-slate-100 dark:border-slate-700" id="quizContainer">
+  <div class="w-full max-w-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white p-4 md:p-6 rounded-2xl shadow-xl space-y-5 min-h-[540px] relative" id="quizContainer">
+
     <div class="absolute -top-2 -right-2 bg-primary-600 text-white text-xs uppercase tracking-wider font-bold px-3 py-1 rounded-full">Premium</div>
 
     <div class="mb-6">
@@ -121,20 +122,21 @@
       </div>
     </div>
 
-    <div class="relative w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+    <div class="relative w-full h-[6px] bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+
       <div id="progressBarGlobal" class="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-600 to-accent-500 transition-all duration-300 rounded-full" style="width: 100%"></div>
     </div>
 
     <div id="stepContent" class="transition-all duration-500 ease-in-out min-h-[260px] flex flex-col gap-4"></div>
 
     <div class="flex justify-between gap-3 mt-8">
-      <button id="btnBack" class="px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium disabled:opacity-40 transition hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 shadow-sm">
+      <button id="btnBack" class="px-3 py-1.5 rounded text-sm-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium disabled:opacity-40 transition hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 shadow-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
         Voltar
       </button>
-      <button id="btnNext" class="px-6 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white font-medium shadow-md hover:shadow-lg transition duration-200 flex items-center gap-2">
+      <button id="btnNext"class="px-3 py-1.5 rounded text-sm-xl bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white font-medium shadow-md hover:shadow-lg transition duration-200 flex items-center gap-2">
         Avançar
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -292,7 +294,8 @@
       
       // Adicionar o título da pergunta com estilo aprimorado
       const question = document.createElement('h2');
-      question.className = 'font-display font-bold text-xl md:text-2xl text-slate-800 dark:text-white';
+      question.className = 'font-semibold text-lg mb-3 text-center min-h-[3.5rem] flex items-center justify-center text-center';
+
       question.textContent = step.question;
       headerContainer.appendChild(question);
       
@@ -323,7 +326,14 @@
 
       step.options.forEach((opt, idx) => {
         const label = document.createElement('label');
-        label.className = 'option-enter block p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 transition-all duration-200 relative overflow-hidden';
+        label.className = 'block mb-3 p-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer transition relative';
+
+if (answers[step.id] == idx) {
+  label.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
+} else {
+  label.classList.add('hover:bg-blue-50', 'dark:hover:bg-slate-600');
+}
+
         label.style.animationDelay = `${idx * 100}ms`;
 
         if (answers[step.id] == idx) {
@@ -474,113 +484,125 @@
       }
     });
 
-    async function enviarRespostas() {
-      clearInterval(timerInterval);
-      btnNext.disabled = true;
-      btnNext.innerHTML = `
-        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        Enviando...
-      `;
 
-      const quizId = steps.find(s => s.quiz_id)?.quiz_id;
-      const quizAnswers = steps.filter(s => s.type === 'quiz').map(s => ({
-        question_id: s.id,
-        selected_index: answers[s.id]
-      }));
+ // ENVIAR RESPOSTAS INÍCIO
+    
+async function enviarRespostas() {
+  clearInterval(timerInterval);
+  btnNext.disabled = true;
+  btnNext.innerHTML = `
+    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    Enviando...
+  `;
 
-      const score = steps.filter(s => s.type === 'quiz').reduce((acc, s) => {
-        const opt = s.options[answers[s.id]];
-        return acc + (opt && opt.is_correct ? 1 : 0);
-      }, 0);
+  const quizId = steps.find(s => s.quiz_id)?.quiz_id;
 
-      const payload = {
-        user_id: userId,
-        lesson_id: lessonId,
-        quiz_id: quizId,
-        answers: quizAnswers,
-        score,
-        total: quizAnswers.length,
-        aprendizado: steps.find(s => s.id === 'aprendizado').options[answers['aprendizado']],
-        sentido: steps.find(s => s.id === 'sentido').options[answers['sentido']],
-        relevancia: steps.find(s => s.id === 'relevancia').options[answers['relevancia']]
-      };
+  const quizSteps = steps.filter(s => s.type === 'quiz');
+  const feedbackSteps = steps.filter(s => s.type === 'qual');
 
-         // Simular tempo de carregamento para demonstrar a animação
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const quizAnswers = quizSteps.map(s => ({
+    question_id: s.id,
+    selected_index: answers[s.id]
+  }));
 
-      const { error } = await supabase.from('user_quiz_results').insert(payload);
-      if (error) {
-stepContent.innerHTML = `
-  <div class="text-center p-6 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl border border-emerald-300 dark:border-emerald-600">
-    <h2 class="text-lg font-bold text-emerald-700 dark:text-emerald-300 mb-2">✓ Quiz Concluído</h2>
-    <p class="text-sm mb-4">Suas respostas foram registradas com sucesso. Obrigado por participar!</p>
-    <p class="text-lg font-semibold text-emerald-900 dark:text-white">
-      <span class="text-3xl">${score}</span> de ${quizAnswers.length} questões
-    </p>
-    <div class="mt-6 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-600 rounded-xl p-4 text-sm">
-      <p><strong>Feedback do Aluno:</strong> enviado com sucesso!</p>
-      <p class="text-xs text-slate-500 mt-1">Suas percepções sobre a aula foram registradas e serão consideradas para melhorias futuras.</p>
-    </div>
-  </div>
-`;
+  const score = quizSteps.reduce((acc, s) => {
+    const opt = s.options[answers[s.id]];
+    return acc + (opt && opt.is_correct ? 1 : 0);
+  }, 0);
 
-        return;
-      }
+  const payload = {
+    user_id: userId,
+    lesson_id: lessonId,
+    quiz_id: quizId,
+    answers: quizAnswers,
+    score,
+    total: quizAnswers.length,
+    aprendizado: steps.find(s => s.id === 'aprendizado').options[answers['aprendizado']],
+    sentido: steps.find(s => s.id === 'sentido').options[answers['sentido']],
+    relevancia: steps.find(s => s.id === 'relevancia').options[answers['relevancia']]
+  };
 
-      gsap.to(stepContent, {
-        opacity: 0,
-        scale: 0.95,
-        duration: 0.3,
-        onComplete: () => {
-          stepContent.innerHTML = `
-            <div class="text-center p-8 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800 relative overflow-hidden">
-              <div class="absolute inset-0 bg-gradient-to-br from-emerald-100/50 to-transparent dark:from-emerald-700/10 dark:to-transparent"></div>
-              
-              <div class="relative z-10">
-                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 mb-4 mx-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                
-                <h2 class="text-2xl font-bold font-display text-emerald-700 dark:text-emerald-300 mb-4">Quiz Concluído</h2>
-                <p class="text-emerald-600 dark:text-emerald-400 mb-6">Suas respostas foram registradas com sucesso. Obrigado por participar!</p>
-                
-                <div class="flex justify-center">
-                  <div class="inline-flex items-center bg-white dark:bg-emerald-900/30 px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                    <div class="text-4xl font-bold text-emerald-600 dark:text-emerald-400 mr-3">${score}</div>
-                    <div class="text-left">
-                      <div class="text-xs uppercase tracking-wide text-emerald-500 dark:text-emerald-500 font-medium">Sua pontuação</div>
-                      <div class="text-emerald-700 dark:text-emerald-300">de ${quizAnswers.length} questões</div>
-                    </div>
-                  </div>
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  const { error } = await supabase.from('user_quiz_results').insert(payload);
+  if (error) {
+    stepContent.innerHTML = `
+      <div class="text-center p-6 bg-red-50 dark:bg-red-900/30 rounded-xl border border-red-200 dark:border-red-600">
+        <h2 class="text-lg font-bold text-red-700 dark:text-red-300 mb-2">❌ Erro ao enviar respostas</h2>
+        <p class="text-sm">Tente novamente em instantes. Se o erro persistir, contate o suporte.</p>
+      </div>
+    `;
+    return;
+  }
+
+  gsap.to(stepContent, {
+    opacity: 0,
+    scale: 0.95,
+    duration: 0.3,
+    onComplete: () => {
+      stepContent.innerHTML = `
+        <div class="text-center p-8 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800 relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-emerald-100/50 to-transparent dark:from-emerald-700/10 dark:to-transparent"></div>
+
+          <div class="relative z-10">
+            <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 mb-4 mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <h2 class="text-2xl font-bold font-display text-emerald-700 dark:text-emerald-300 mb-2">Quiz Concluído</h2>
+            <p class="text-emerald-600 dark:text-emerald-400 mb-6">Suas respostas foram registradas com sucesso. Obrigado por participar!</p>
+
+            <div class="flex justify-center gap-4 flex-wrap">
+              <div class="inline-flex items-center bg-white dark:bg-emerald-900/30 px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                <div class="text-4xl font-bold text-emerald-600 dark:text-emerald-400 mr-3">${score}</div>
+                <div class="text-left">
+                  <div class="text-xs uppercase tracking-wide text-emerald-500 dark:text-emerald-500 font-medium">Acertos</div>
+                  <div class="text-emerald-700 dark:text-emerald-300">de ${quizAnswers.length} questões</div>
                 </div>
               </div>
-            </div>`;
-          
-          gsap.from(".inline-flex", {
-            scale: 0.8,
-            opacity: 0,
-            duration: 0.5,
-            delay: 0.3,
-            ease: "back.out(1.7)"
-          });
-          
-          gsap.to(stepContent, {
-            opacity: 1,
-            scale: 1,
-            duration: 0.5
-          });
-        }
-      });
-      
-      btnBack.style.display = 'none';
-      btnNext.style.display = 'none';
-    }
 
+              <div class="inline-flex items-center bg-white dark:bg-purple-900/20 px-4 py-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div class="text-4xl font-bold text-purple-600 dark:text-purple-300 mr-3">${feedbackSteps.length}</div>
+                <div class="text-left">
+                  <div class="text-xs uppercase tracking-wide text-purple-500 dark:text-purple-400 font-medium">Feedback</div>
+                  <div class="text-purple-700 dark:text-purple-300">respostas recebidas</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      gsap.from(".inline-flex", {
+        scale: 0.8,
+        opacity: 0,
+        duration: 0.5,
+        delay: 0.3,
+        ease: "back.out(1.7)"
+      });
+
+      gsap.to(stepContent, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.5
+      });
+    }
+  });
+
+  btnBack.style.display = 'none';
+  btnNext.style.display = 'none';
+}
+
+    
+// ENVIAR RESPOSTAS FIM
+
+
+    
     // Iniciar com uma animação de entrada
     gsap.from("#quizContainer", {
       opacity: 0,
