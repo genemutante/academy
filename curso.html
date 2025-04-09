@@ -183,10 +183,7 @@ async function verificarQuizRespondido(userId, lessonId) {
         const item = progresso[0];
         if (item.status === '✔ Concluída') {
           infoAssistido.textContent = '✅ Aula concluída';
-
-          
-         habilitarQuiz(aula.id);
-
+          await habilitarQuiz(aula.id); // <-- aqui tem que ter o await
         } else {
           atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
         }
@@ -295,7 +292,7 @@ async function trackProgress() {
 
     if (item.status === '✔ Concluída') {
       infoAssistido.textContent = '✅ Aula concluída';
-      habilitarQuiz(aulaAtual.id);
+      await habilitarQuiz(aulaAtual.id); // <-- também aqui
     } else {
       atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
     }
@@ -321,6 +318,11 @@ async function trackProgress() {
 
 async function habilitarQuiz(aulaId) {
   const jaFez = await verificarQuizRespondido(user_id, aulaId);
+
+
+  console.log("📋 Verificando se quiz já foi respondido...");
+console.log("User ID:", user_id, "| Aula ID:", aulaId);
+console.log("Resultado Supabase:", jaFez);
 
   if (jaFez) {
     btnQuiz.disabled = true;
