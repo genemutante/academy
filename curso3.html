@@ -182,20 +182,20 @@
 
 
 
- function listarAulas() {
+function listarAulas() {
   listaAulas.innerHTML = '';
+
+  let todasAnterioresCompletas = true;
+
   aulas.forEach((aula, index) => {
     const li = document.createElement('li');
     li.className = 'grid grid-cols-[20px_1fr] items-center gap-2 text-gray-700 text-sm';
 
     const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
     const quizIcon = aula.quizEnviado ? '📩' : '';
-    const podeAcessar = index === 0 || (
-      aulas[index - 1]?.status === '✔ Concluída' &&
-      aulas[index - 1]?.quizEnviado === true
-    );
 
-    const aulaLabel = `${statusIcon}${quizIcon} ${aula.order}. ${aula.title}`;
+    const podeAcessar = todasAnterioresCompletas;
+
     li.innerHTML = `<span class="text-center">${statusIcon}${quizIcon}</span><span>${aula.order}. ${aula.title}</span>`;
 
     if (podeAcessar) {
@@ -203,7 +203,12 @@
       li.onclick = () => selecionarAula(aula);
     } else {
       li.classList.add('opacity-50', 'cursor-not-allowed');
-      li.title = 'Conclua a aula anterior e envie a avaliação para desbloquear';
+      li.title = 'Conclua todas as aulas anteriores com avaliação para desbloquear esta';
+    }
+
+    // Se esta aula ainda não está completa, as próximas serão bloqueadas
+    if (aula.status !== '✔ Concluída' || !aula.quizEnviado) {
+      todasAnterioresCompletas = false;
     }
 
     listaAulas.appendChild(li);
