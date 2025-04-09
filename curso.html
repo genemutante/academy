@@ -164,12 +164,17 @@ async function verificarQuizRespondido(userId, lessonId) {
       }
     }
 
+
+
+let pontoRetomada = null; // novo controle global
+
 async function selecionarAula(aula) {
   aulaAtual = aula;
   tituloAula.textContent = aula.title;
   infoAssistido.textContent = '';
+  pontoRetomada = null; // limpa retomada anterior
 
-  // Sempre desabilita o botão inicialmente
+  // Desativa botão de quiz por padrão
   btnQuiz.disabled = true;
   btnQuiz.textContent = "Fazer Avaliação da Aula";
   btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
@@ -177,8 +182,8 @@ async function selecionarAula(aula) {
 
   clearInterval(interval);
   lastTime = 0;
-  initPlayer();
 
+  // Progresso da aula
   const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
     p_user_id: user_id,
     p_lesson_id: aula.id
@@ -193,28 +198,18 @@ async function selecionarAula(aula) {
     } else {
       atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
 
-      // 🆕 SUGESTÃO CLICÁVEL DE RETOMADA
-      const ponto = Math.max(0, item.segundos_assistidos - 15); // volta 15s
-      const minutos = Math.floor(ponto / 60);
-      const segundos = ponto % 60;
-      const retomada = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
-
-      const link = document.createElement('button');
-      link.className = 'text-sm text-blue-600 hover:underline mt-1';
-      link.textContent = `📍 Retomar a partir de ${retomada}`;
-      link.onclick = () => {
-        if (player && typeof player.seekTo === 'function') {
-          player.seekTo(ponto, true);
-          player.playVideo?.(); // inicia se pausado
-        }
-      };
-
-      infoAssistido.appendChild(link);
+      // define o ponto global de retomada para usar em onPlayerReady
+      pontoRetomada = Math.max(0, item.segundos_assistidos - 15);
     }
   } else {
     atualizarIndicadorLocal(0, aula.duration);
+    pontoRetomada = null;
   }
+
+  initPlayer(); // inicia depois de calcular ponto
 }
+
+    
 
 
 
@@ -236,21 +231,30 @@ async function selecionarAula(aula) {
       });
     }
 
+
+
 async function onPlayerReady() {
   console.log('🎬 Player pronto, iniciando monitoramento...');
-  
+
   if (!player || typeof player.getDuration !== 'function') {
     console.warn('⚠️ Player inválido, tentando novamente...');
     setTimeout(onPlayerReady, 300);
     return;
   }
 
-  
   duration = player.getDuration();
   console.log('⏱️ Duração total do vídeo:', duration);
 
+  // Aplica ponto de retomada aqui
+  if (pontoRetomada !== null) {
+    console.log('⏩ Retomando do ponto:', pontoRetomada);
+    player.seekTo(pontoRetomada, true);
+    player.playVideo?.(); // inicia
+  }
+
   interval = setInterval(trackProgress, 5000);
 }
+
 
 
 
