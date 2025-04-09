@@ -157,14 +157,14 @@ function listarAulas() {
     const li = document.createElement('li');
     li.className = 'grid grid-cols-[20px_1fr] items-center gap-2 text-gray-700 text-sm';
 
-
+    // 🔒 BLOQUEIO: só libera clique se for a primeira aula OU a anterior estiver concluída
+    const podeAcessar = index === 0 || aulas[index - 1]?.status === '✔ Concluída';
     const lockIcon = !podeAcessar ? '🔒 ' : '';
     const aulaLabel = `${lockIcon}${aula.order}. ${aula.title}`;
 
     li.innerHTML = `<span class="text-center">${statusIcon}</span><span>${aulaLabel}</span>`;
 
-    // 🔒 BLOQUEIO: só libera clique se for a primeira aula OU a anterior estiver concluída
-    const podeAcessar = index === 0 || aulas[index - 1]?.status === '✔ Concluída';
+
 
     if (podeAcessar) {
       li.classList.add('cursor-pointer', 'hover:underline');
