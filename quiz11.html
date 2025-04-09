@@ -101,11 +101,13 @@
     );
 
 
-    const storageKey = `quiz-${userId}-${lessonId}`;
+const params = new URLSearchParams(window.location.search);
+const userId = params.get('user_id');
+const lessonId = params.get('lesson_id');
 
-    const params = new URLSearchParams(window.location.search);
-    const userId = params.get('user_id');
-    const lessonId = params.get('lesson_id');
+// Agora que os valores foram definidos, podemos usar:
+const storageKey = `quiz-${userId}-${lessonId}`;
+
 
     let currentStep = 0;
     let steps = [];
