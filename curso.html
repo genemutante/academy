@@ -189,27 +189,33 @@ async function selecionarAula(aula) {
 
     if (item.status === '✔ Concluída') {
       infoAssistido.textContent = '✅ Aula concluída';
-      await habilitarQuiz(aula.id); // ✅ só habilita se concluída
+      await habilitarQuiz(aula.id);
     } else {
       atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
 
- // 🆕 SUGESTÃO DE RETOMADA
-    const ponto = Math.max(0, item.segundos_assistidos - 15); // volta um pouco
-    const minutos = Math.floor(ponto / 60);
-    const segundos = ponto % 60;
-    const retomada = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
+      // 🆕 SUGESTÃO CLICÁVEL DE RETOMADA
+      const ponto = Math.max(0, item.segundos_assistidos - 15); // volta 15s
+      const minutos = Math.floor(ponto / 60);
+      const segundos = ponto % 60;
+      const retomada = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
 
-    const msg = document.createElement('div');
-    msg.className = 'text-sm text-blue-600 mt-1';
-    msg.textContent = `📍 Retome a partir de ${retomada}`;
-    infoAssistido.appendChild(msg);
+      const link = document.createElement('button');
+      link.className = 'text-sm text-blue-600 hover:underline mt-1';
+      link.textContent = `📍 Retomar a partir de ${retomada}`;
+      link.onclick = () => {
+        if (player && typeof player.seekTo === 'function') {
+          player.seekTo(ponto, true);
+          player.playVideo?.(); // inicia se pausado
+        }
+      };
 
-      
+      infoAssistido.appendChild(link);
     }
   } else {
     atualizarIndicadorLocal(0, aula.duration);
   }
 }
+
 
 
     function loadYouTubeAPI() {
