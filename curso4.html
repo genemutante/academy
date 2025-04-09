@@ -406,6 +406,10 @@ async function selecionarAula(aula) {
         player.playVideo?.();
       }
 
+lastTime = Math.floor(player.getCurrentTime());
+
+
+      
       interval = setInterval(trackProgress, 5000);
     }
     let maiorTempoVisualizado = 0;
