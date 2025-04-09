@@ -151,20 +151,34 @@
       carregarProgressoCurso();
     }
 
-    function listarAulas() {
-      listaAulas.innerHTML = '';
-      aulas.forEach(aula => {
-        const li = document.createElement('li');
-        li.className = 'cursor-pointer hover:underline grid grid-cols-[20px_1fr] items-center gap-2';
-        const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
-        li.innerHTML = `
-          <span class="text-center">${statusIcon}</span>
-          <span>${aula.order}. ${aula.title}</span>
-        `;
-        li.onclick = () => selecionarAula(aula);
-        listaAulas.appendChild(li);
-      });
+function listarAulas() {
+  listaAulas.innerHTML = '';
+  aulas.forEach((aula, index) => {
+    const li = document.createElement('li');
+    li.className = 'grid grid-cols-[20px_1fr] items-center gap-2 text-gray-700 text-sm';
+
+    const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
+    const aulaLabel = `${aula.order}. ${aula.title}`;
+
+    const lockIcon = !podeAcessar ? '🔒 ' : '';
+    const aulaLabel = `${lockIcon}${aula.order}. ${aula.title}`;
+
+    li.innerHTML = `<span class="text-center">${statusIcon}</span><span>${aulaLabel}</span>`;
+
+    // 🔒 BLOQUEIO: só libera clique se for a primeira aula OU a anterior estiver concluída
+    const podeAcessar = index === 0 || aulas[index - 1]?.status === '✔ Concluída';
+
+    if (podeAcessar) {
+      li.classList.add('cursor-pointer', 'hover:underline');
+      li.onclick = () => selecionarAula(aula);
+    } else {
+      li.classList.add('opacity-50', 'cursor-not-allowed');
+      li.title = 'Conclua a aula anterior para acessar esta';
     }
+
+    listaAulas.appendChild(li);
+  });
+}
 
     async function carregarProgressoCurso() {
       const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
@@ -366,6 +380,19 @@
           document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
           document.getElementById("recomecarSugestao").innerHTML = "";
           await habilitarQuiz(aulaAtual.id);
+
+// 🔄 Atualizar a próxima aula dinamicamente
+const indexAtual = aulas.findIndex(a => a.id === aulaAtual.id);
+const proxima = aulas[indexAtual + 1];
+
+if (proxima && proxima.status !== '✔ Concluída') {
+  console.log('🔓 Desbloqueando próxima aula:', proxima.title);
+  proxima.status = '🔓 Desbloqueada'; // status intermediário opcional
+  listarAulas(); // re-renderiza a lista com a próxima liberada
+}
+
+
+          
         }
 
         listarAulas();
