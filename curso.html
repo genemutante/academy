@@ -230,13 +230,36 @@ const retomadaLabel = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
 const link = document.createElement('span');
 link.className = 'text-sm text-blue-600 underline cursor-pointer ml-2 hover:text-blue-800 transition';
 link.textContent = `🔄 Retomar a partir de ${retomadaLabel}`;
-link.onclick = () => {
-  if (player && typeof player.seekTo === 'function') {
+
+
+link.onclick = async () => {
+  if (!player || typeof player.seekTo !== 'function') {
+    console.warn('⚠️ Player ainda não está pronto. Aguardando...');
+    return;
+  }
+
+  mostrarNotificacao(`⏩ Pulando para ${retomadaLabel}...`);
+
+  // Garante que o player esteja em estado válido
+  try {
     player.seekTo(pontoRetomada, true);
-    player.playVideo?.();
-    mostrarNotificacao(`⏩ Pulando para ${retomadaLabel}`);
+
+    // ⚠️ O player pode precisar de um pequeno delay antes do play
+    setTimeout(() => {
+      if (typeof player.playVideo === 'function') {
+        player.playVideo();
+        console.log(`▶️ Pulando e iniciando em ${retomadaLabel}`);
+      } else {
+        console.warn('🚫 player.playVideo não está disponível!');
+      }
+    }, 500); // ajuste fino: tempo entre seek e play
+  } catch (err) {
+    console.error('❌ Erro ao pular para ponto:', err);
+    mostrarNotificacao('Erro ao tentar retomar o vídeo');
   }
 };
+
+      
 
 infoAssistido.appendChild(link);
 
