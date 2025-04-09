@@ -9,13 +9,11 @@
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
-  <header class="bg-blue-600 text-white h-12 flex items-center">
-    <div class="max-w-6xl mx-auto px-4">
-      <h1 class="text-lg font-bold truncate">
-        Plataforma de Cursos Online
-      </h1>
-    </div>
-  </header>
+<header class="w-full flex items-center justify-between mb-6 px-4 md:px-8 py-3 rounded-xl shadow bg-white dark:bg-slate-800 text-slate-700 dark:text-white border border-slate-200 dark:border-slate-700">
+  <h1 class="text-lg font-bold tracking-tight text-primary-700 dark:text-primary-300">Academy-Tools</h1>
+  <span id="nomeAluno" class="text-sm font-medium text-slate-500 dark:text-slate-300">Carregando aluno...</span>
+</header>
+
 
   <div class="max-w-6xl mx-auto px-4 py-6">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -498,6 +496,27 @@ if (proxima && proxima.status !== '✔ Concluída') {
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+     
+      
+// Buscar nome do aluno
+async function carregarNomeAluno() {
+  const { data, error } = await supabase
+    .from('users')
+    .select('name')
+    .eq('id', userId)
+    .single();
+
+  if (data && data.name) {
+    document.getElementById('nomeAluno').textContent = data.name;
+  } else {
+    document.getElementById('nomeAluno').textContent = 'Aluno';
+  }
+}
+
+carregarNomeAluno();
+
+      
+      
       carregarDados();
     });
   </script>
