@@ -12,86 +12,27 @@
       darkMode: 'media',
       theme: {
         extend: {
-          fontFamily: { 
+          fontFamily: {
             sans: ['Outfit', 'sans-serif'],
             display: ['Nunito', 'sans-serif']
           },
           colors: {
-            primary: {
-              50: '#EFF6FF',
-              100: '#DBEAFE',
-              200: '#BFDBFE',
-              300: '#93C5FD',
-              400: '#60A5FA',
-              500: '#3B82F6',
-              600: '#2563EB',
-              700: '#1D4ED8',
-              800: '#1E40AF',
-              900: '#1E3A8A'
-            },
-            surface: {
-              50: '#F8FAFC',
-              100: '#F1F5F9',
-              800: '#1E293B',
-              900: '#0F172A'
-            },
-            accent: {
-              400: '#38BDF8',
-              500: '#0EA5E9'
-            }
+            primary: { 50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 400: '#60A5FA', 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 800: '#1E40AF', 900: '#1E3A8A' },
+            surface: { 50: '#F8FAFC', 100: '#F1F5F9', 800: '#1E293B', 900: '#0F172A' },
+            accent: { 400: '#38BDF8', 500: '#0EA5E9' }
           },
           boxShadow: {
             glow: '0 0 20px rgba(56, 189, 248, 0.3)',
             'glow-lg': '0 0 30px rgba(56, 189, 248, 0.2)'
           },
           borderRadius: {
-            xl: '1rem',
-            '2xl': '1.5rem',
-            '3xl': '2rem'
+            xl: '1rem', '2xl': '1.5rem', '3xl': '2rem'
           }
         }
       }
     }
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    .option-enter {
-      animation: fadeSlideIn 0.5s ease forwards;
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    @keyframes fadeSlideIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .progress-pulse {
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-    .quiz-container {
-      background-image: radial-gradient(circle at top right, rgba(56, 189, 248, 0.05), transparent 400px);
-    }
-    .option-selected {
-      border-color: #3B82F6;
-      background-color: rgba(59, 130, 246, 0.08);
-      box-shadow: 0 0 0 1px #3B82F6;
-    }
-    .timer-warning {
-      animation: timerPulse 1s infinite;
-    }
-    @keyframes timerPulse {
-      0%, 100% { color: #EF4444; }
-      50% { color: #B91C1C; }
-    }
-    .quiz-badge {
-      background-image: linear-gradient(135deg, #2563eb, #1d4ed8);
-    }
-    .feedback-badge {
-      background-image: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    }
-  </style>
 </head>
 <body class="font-sans antialiased p-4 md:p-8 min-h-screen flex items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800 transition-colors duration-300">
   <div class="w-full max-w-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white p-4 md:p-6 rounded-2xl shadow-xl space-y-5 min-h-[540px] relative" id="quizContainer">
