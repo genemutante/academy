@@ -215,51 +215,39 @@
 
 function listarAulas() {
   listaAulas.innerHTML = '';
-  let todasAnterioresCompletas = true;
-
   aulas.forEach((aula, index) => {
     const li = document.createElement('li');
-    li.className = 'flex items-center gap-2 text-gray-700 text-sm px-1';
+    li.className = 'text-gray-700 text-sm';
 
-    const podeAcessar = todasAnterioresCompletas;
+    const podeAcessar = index === 0 || aulas[index - 1]?.status === '✔ Concluída' &&
+      aulas[index - 1]?.quizRespondido;
 
-    // Container de ícones
-    const icones = document.createElement('div');
-    icones.className = 'flex gap-1 w-[34px] justify-start text-base';
+    const statusIcon = aula.status === '✔ Concluída' ? '✅' : '';
+    const quizIcon = aula.quizRespondido ? '📩' : '';
 
-    if (aula.status === '✔ Concluída') {
-      icones.innerHTML += `<span title="Aula assistida">✅</span>`;
-    }
+    const aulaLabel = `${aula.order}. ${aula.title}`;
 
-    if (aula.quizEnviado) {
-      icones.innerHTML += `<span title="Avaliação enviada">📩</span>`;
-    }
-
-    // Texto da aula
-    const label = document.createElement('span');
-    label.textContent = `${aula.order}. ${aula.title}`;
+    // Novo HTML com alinhamento visual corrigido
+    li.innerHTML = `
+      <div class="flex items-center gap-2">
+        ${statusIcon ? `<span title="Aula concluída" class="text-green-500 text-base">✅</span>` : ''}
+        ${quizIcon ? `<span title="Avaliação enviada" class="text-pink-500 text-base">📩</span>` : ''}
+        <span>${aulaLabel}</span>
+      </div>
+    `;
 
     if (podeAcessar) {
       li.classList.add('cursor-pointer', 'hover:underline');
       li.onclick = () => selecionarAula(aula);
     } else {
       li.classList.add('opacity-50', 'cursor-not-allowed');
-      li.title = 'Conclua todas as aulas anteriores com avaliação para desbloquear esta';
-      // ⏱️ Deixa o tooltip aparecer mais rápido
-      li.style.pointerEvents = 'all';
-      li.style.transition = 'none';
+      li.title = 'Conclua a aula anterior e a avaliação para desbloquear';
     }
-
-    li.appendChild(icones);
-    li.appendChild(label);
 
     listaAulas.appendChild(li);
-
-    if (aula.status !== '✔ Concluída' || !aula.quizEnviado) {
-      todasAnterioresCompletas = false;
-    }
   });
 }
+
 
 
     
