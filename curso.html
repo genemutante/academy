@@ -94,7 +94,7 @@ async function verificarQuizRespondido(userId, lessonId) {
     .select('id')
     .eq('user_id', userId)
     .eq('lesson_id', lessonId)
-    .maybeSingle();
+    .limit(1);
 
   return !!data; // retorna true se já respondeu
 }
