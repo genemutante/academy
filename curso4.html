@@ -383,11 +383,34 @@ function initPlayer() {
         showinfo: 0          // Oculta info do vídeo no início
       },
       events: {
-        onReady: onPlayerReady
+        onReady: onPlayerReady,
+        onStateChange: async (event) => {
+          if (event.data === YT.PlayerState.ENDED) {
+            console.log("🏁 Vídeo finalizado!");
+            
+            // Força salvar progresso final
+            await trackProgress();
+
+            // Confere status atualizado
+            const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+              p_user_id: user_id,
+              p_lesson_id: aulaAtual.id
+            });
+
+            if (progressoAtualizado?.[0]?.status === '✔ Concluída') {
+              document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
+              document.getElementById("recomecarSugestao").innerHTML = "";
+              await habilitarQuiz(aulaAtual.id);
+              listarAulas();
+              carregarProgressoCurso();
+            }
+          }
+        }
       }
     });
   });
 }
+
 
 
 
@@ -456,6 +479,11 @@ function initPlayer() {
       }
 
       lastTime = tempoAtual;
+
+      if (maiorTempoVisualizado >= duration - 1) {
+  console.log("⏱️ Marcando aula como concluída (assistido até o fim)");
+  await habilitarQuiz(aulaAtual.id); // força atualização
+}
 
       const { data: progressoAtualizado, error: erroProgresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
