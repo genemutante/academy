@@ -359,7 +359,6 @@ async function selecionarAula(aula) {
 
 
 
-
 function initPlayer() {
   const videoId = getYouTubeId(aulaAtual.youtube_url);
 
@@ -369,18 +368,15 @@ function initPlayer() {
     return;
   }
 
-  // Inicializa o player via iframe API
-  loadYouTubeAPI().then(() => {
-    player = new YT.Player('videoPlayer', {
-      videoId,
-      events: {
-        onReady: onPlayerReady,
-        onError: (e) => {
-          console.error("❌ Erro ao carregar player:", e);
-          mostrarNotificacao("Erro ao carregar o vídeo da aula.");
-        }
-      }
-    });
+  // Cria iframe vazio
+  playerFrame.src = "";
+
+  // Garante que iframe será gerenciado pela YouTube API
+  player = new YT.Player('videoPlayer', {
+    videoId,
+    events: {
+      onReady: onPlayerReady
+    }
   });
 }
 
@@ -389,7 +385,14 @@ function initPlayer() {
 
 
 
+
+if (typeof player.getDuration === 'function') {
   duration = player.getDuration();
+} else {
+  console.warn("⚠️ getDuration não está disponível no player.");
+  duration = 0;
+}
+
   console.log('⏱️ Duração total do vídeo:', duration);
 
   if (pontoRetomada !== null) {
