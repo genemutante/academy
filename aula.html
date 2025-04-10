@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aula</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'media',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            display: ['Nunito', 'sans-serif']
+          },
+          colors: {
+            primary: {
+              50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 400: '#60A5FA',
+              500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 800: '#1E40AF', 900: '#1E3A8A'
+            },
+            surface: {
+              50: '#F8FAFC', 100: '#F1F5F9', 800: '#1E293B', 900: '#0F172A'
+            },
+            accent: {
+              400: '#38BDF8', 500: '#0EA5E9'
+            }
+          },
+          boxShadow: {
+            glow: '0 0 20px rgba(56, 189, 248, 0.3)',
+            'glow-lg': '0 0 30px rgba(56, 189, 248, 0.2)'
+          },
+          borderRadius: {
+            xl: '1rem', '2xl': '1.5rem', '3xl': '2rem'
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="font-sans bg-gradient-to-br from-surface-50 to-surface-100 text-gray-800 min-h-screen transition-colors duration-300">
+
+  <header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
+    <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
+      <h1 class="text-xl font-display font-bold tracking-tight">Academy-Tools</h1>
+      <span id="nomeAluno" class="text-sm font-medium text-white/90 truncate"></span>
+    </div>
+  </header>
+
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-1">
+        <div class="mb-6">
+          <p class="text-sm mb-1">
+            <span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span>
+          </p>
+          <div class="w-full h-3 bg-gray-200 rounded">
+            <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
+          </div>
+        </div>
+        <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
+        <p id="descricaoCurso" class="mb-4 text-gray-600 text-sm leading-relaxed"></p>
+        <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
+        <ul id="listaAulas" class="list-none space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
+      </div>
+
+      <div class="lg:col-span-2">
+        <div class="aspect-video w-full rounded overflow-hidden shadow mb-4">
+          <iframe id="videoPlayer" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
+          <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
+          <div class="flex items-center gap-2">
+            <button id="btnMaterial" class="text-sm bg-white border border-gray-300 rounded px-3 py-2 shadow-sm hover:bg-gray-100 relative">
+              📎 Material de Apoio
+              <div id="popupMaterial" class="hidden absolute z-10 mt-2 w-64 bg-white border border-gray-300 rounded shadow-md p-4 text-sm text-gray-700">
+                <p class="mb-1 font-semibold">Links úteis:</p>
+                <ul class="list-disc list-inside">
+                  <li><a href="#" class="text-blue-600 hover:underline">PDF da aula</a></li>
+                  <li><a href="#" class="text-blue-600 hover:underline">Slides</a></li>
+                  <li><a href="#" class="text-blue-600 hover:underline">Referência externa</a></li>
+                </ul>
+              </div>
+            </button>
+            <button id="btnQuiz" disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
+              Fazer Avaliação da Aula
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
+        <p class="text-sm mt-2 text-gray-700 flex gap-2 items-center">
+          <span id="progressoTexto" class="text-blue-600 animate-pulse font-medium"></span>
+          <span id="recomecarSugestao"></span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
