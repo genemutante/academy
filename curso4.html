@@ -388,33 +388,33 @@ async function selecionarAula(aula) {
       });
     }
 
-    async function onPlayerReady() {
-      console.log('🎬 Player pronto, iniciando monitoramento...');
+async function onPlayerReady() {
+  console.log('🎬 Player pronto, iniciando monitoramento...');
 
-      if (!player || typeof player.getDuration !== 'function') {
-        console.warn('⚠️ Player inválido, tentando novamente...');
-        setTimeout(onPlayerReady, 300);
-        return;
-      }
+  if (!player || typeof player.getDuration !== 'function') {
+    console.warn('⚠️ Player inválido, tentando novamente...');
+    setTimeout(onPlayerReady, 300);
+    return;
+  }
 
-      duration = player.getDuration();
-      console.log('⏱️ Duração total do vídeo:', duration);
+  duration = player.getDuration();
+  console.log('⏱️ Duração total do vídeo:', duration);
 
-      if (pontoRetomada !== null) {
-        console.log('⏩ Retomando do ponto:', pontoRetomada);
-        player.seekTo(pontoRetomada, true);
-        player.playVideo?.();
-      }
+  if (pontoRetomada !== null) {
+    console.log('⏩ Retomando do ponto:', pontoRetomada);
+    player.seekTo(pontoRetomada, true);
+    player.playVideo?.();
+  }
 
-lastTime = Math.floor(player.getCurrentTime());
+  // ✅ Define o ponto inicial de progresso para evitar "salto inválido"
+  lastTime = Math.floor(player.getCurrentTime());
+  console.log('🟢 lastTime inicial definido para:', lastTime);
 
+  interval = setInterval(trackProgress, 5000);
+}
 
-      
-      interval = setInterval(trackProgress, 5000);
-    }
-    let maiorTempoVisualizado = 0;
-
-
+    
+let maiorTempoVisualizado = 0;
 
 async function trackProgress() {
   console.log("📡 Executando trackProgress em:", new Date().toISOString());
