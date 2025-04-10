@@ -591,7 +591,7 @@ function narrar(texto, tipo = "info") {
     error: "text-red-400"
   };
 
-  li.className = `${cores[tipo] || cores.info]} leading-snug whitespace-pre-wrap`;
+  li.className = `${cores[tipo] || cores.info} leading-snug whitespace-pre-wrap`;
   li.innerText = texto;
   ul.appendChild(li);
 
