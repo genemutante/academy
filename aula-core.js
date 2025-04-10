@@ -43,7 +43,7 @@ async function carregarCurso() {
       elements.descricaoCurso.textContent = curso.description;
     }
   } catch (err) {
-    console.error('❌ Erro ao carregar curso:', err);
+    exibirErro(err, 'carregarCurso');
   }
 }
 
@@ -67,7 +67,7 @@ async function carregarAulas() {
       aula.quizEnviado = !!quiz?.length;
     }
   } catch (err) {
-    console.error('❌ Erro ao carregar aulas:', err);
+    exibirErro(err, 'carregarAulas');
   }
 }
 
@@ -138,4 +138,129 @@ function exibirErro(erro, contexto) {
   mostrarNotificacao('⚠️ Erro ao processar dados. Tente novamente.');
 }
 
-// Continuação será adicionada com lógica completa do player, quiz, tracking e retomada.
+function carregarNomeAluno() {
+  supabase.from('users')
+    .select('name')
+    .eq('id', user_id)
+    .single()
+    .then(({ data }) => {
+      if (data) elements.nomeAluno.textContent = data.name;
+    });
+}
+
+window.onYouTubeIframeAPIReady = () => {
+  console.log('📺 API do YouTube pronta.');
+};
+
+function initPlayer(videoId) {
+  if (!window.YT || !YT.Player) {
+    console.warn('⏳ Aguardando API do YouTube...');
+    setTimeout(() => initPlayer(videoId), 300);
+    return;
+  }
+
+  elements.playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
+
+  player = new YT.Player(elements.playerFrame, {
+    events: {
+      onReady: () => {
+        duration = player.getDuration();
+        elements.loadingVideo?.remove();
+        monitorarProgresso();
+      }
+    }
+  });
+}
+
+function monitorarProgresso() {
+  interval = setInterval(async () => {
+    if (!player || player.getPlayerState() !== YT.PlayerState.PLAYING) return;
+    const tempoAtual = Math.floor(player.getCurrentTime());
+    if (!Number.isFinite(tempoAtual)) return;
+
+    const diff = tempoAtual - lastTime;
+    if (diff <= 0 || diff > 60) return;
+
+    if (tempoAtual > maiorTempoVisualizado) {
+      maiorTempoVisualizado = tempoAtual;
+      atualizarIndicador(maiorTempoVisualizado, duration);
+    }
+
+    const segmento = {
+      user_id,
+      course_id,
+      lesson_id: aulaAtual.id,
+      duration: Math.floor(duration),
+      segment: { start: lastTime, end: tempoAtual }
+    };
+
+    lastTime = tempoAtual;
+
+    try {
+      await supabase.from('progress_segments').insert(segmento);
+      const { data } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+        p_user_id: user_id,
+        p_lesson_id: aulaAtual.id
+      });
+
+      if (data?.[0]?.status === '✔ Concluída') {
+        elements.progressoTexto.textContent = '✅ Aula concluída';
+        elements.sugestaoRetomada.innerHTML = '';
+        await habilitarQuiz(aulaAtual.id);
+        carregarProgressoCurso();
+        listarAulas();
+      }
+    } catch (err) {
+      exibirErro(err, 'Salvar progresso');
+    }
+  }, 5000);
+}
+
+function selecionarAula(aula) {
+  aulaAtual = aula;
+  elements.tituloAula.textContent = aula.title;
+  clearInterval(interval);
+  lastTime = 0;
+  maiorTempoVisualizado = 0;
+
+  const videoId = getYouTubeId(aula.youtube_url);
+  initPlayer(videoId);
+}
+
+function habilitarQuiz(aulaId) {
+  supabase.from('user_quiz_results')
+    .select('id')
+    .eq('user_id', user_id)
+    .eq('lesson_id', aulaId)
+    .limit(1)
+    .then(({ data }) => {
+      if (data?.length) {
+        elements.btnQuiz.disabled = true;
+        elements.btnQuiz.textContent = '✅ Avaliação enviada';
+      } else {
+        elements.btnQuiz.disabled = false;
+        elements.btnQuiz.textContent = '📝 Fazer Avaliação da Aula';
+        elements.btnQuiz.onclick = () => abrirQuiz(aulaId);
+      }
+    });
+}
+
+function abrirQuiz(aulaId) {
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+  modal.innerHTML = `
+    <div class="bg-white w-full max-w-2xl h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
+      <button onclick="this.parentElement.parentElement.remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
+      <iframe src="quiz.html?user_id=${user_id}&lesson_id=${aulaId}" class="w-full h-full rounded-lg border border-slate-200" frameborder="0"></iframe>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  carregarNomeAluno();
+  await carregarCurso();
+  await carregarAulas();
+  listarAulas();
+  carregarProgressoCurso();
+});
