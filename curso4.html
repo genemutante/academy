@@ -367,7 +367,8 @@ function listarAulas() {
 
     function initPlayer() {
       const videoId = getYouTubeId(aulaAtual.youtube_url);
-      playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
+      
+      playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}&rel=0&modestbranding=1&controls=1&disablekb=1`;
 
       loadYouTubeAPI().then(() => {
         player = new YT.Player(playerFrame, {
