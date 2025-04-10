@@ -316,7 +316,7 @@ async function selecionarAula(aula) {
       if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
       if (sugestaoEl) sugestaoEl.innerHTML = "";
       await habilitarQuiz(aula.id);
-      listarAulas();
+    //  listarAulas();
       carregarProgressoCurso();
       return;
     }
