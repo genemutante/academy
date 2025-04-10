@@ -206,15 +206,8 @@ async function listarAulas() {
   for (let i = 0; i < aulas.length; i++) {
     const aula = aulas[i];
 
-    // Verifica se quiz foi respondido
-    const { data: quizData } = await supabase
-      .from('user_quiz_results')
-      .select('id')
-      .eq('user_id', user_id)
-      .eq('lesson_id', aula.id)
-      .limit(1);
+   const quizRespondido = aula.quizRespondido;
 
-    const quizRespondido = quizData?.length > 0;
 
     const podeAcessar = i === 0 || aulas.slice(0, i).every(a =>
       a.status === '✔ Concluída' &&
@@ -379,6 +372,16 @@ async function selecionarAula(aula) {
 
     function initPlayer() {
       const videoId = getYouTubeId(aulaAtual.youtube_url);
+
+if (!videoId) {
+  console.warn("❌ Aula sem vídeo válido.");
+  playerFrame.src = "";
+  return;
+}
+
+
+
+      
       playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
 
       loadYouTubeAPI().then(() => {
@@ -520,12 +523,6 @@ async function trackProgress() {
 }
 
 
-
-
-
-
-
-
     
 
     btnMaterial.addEventListener('click', () => popupMaterial.classList.toggle('hidden'));
@@ -536,12 +533,19 @@ async function trackProgress() {
       }
     });
 
+
+
+    
     async function habilitarQuiz(aulaId) {
       const jaFez = await verificarQuizRespondido(user_id, aulaId);
 
       console.log("📋 Verificando se quiz já foi respondido...");
       console.log("User ID:", user_id, "| Aula ID:", aulaId);
       console.log("Resultado Supabase:", jaFez);
+
+      // Recupera o objeto da aula correspondente
+     const aula = aulas.find(a => a.id === aulaId);
+
 
 if (jaFez) {
   btnQuiz.disabled = true;
@@ -556,7 +560,13 @@ if (jaFez) {
     aulas[index].quizRespondido = true;
   }
 
-  listarAulas(); // re-renderiza com o novo ícone
+  // Atualiza apenas o ícone de quiz da aula correspondente
+const li = [...listaAulas.children].find(el => el.textContent.includes(aula?.title || ''));
+
+
+  
+if (li) li.querySelectorAll('span')[1].textContent = '📩';
+
   return;
 }
 
@@ -580,6 +590,25 @@ if (jaFez) {
       };
     }
 
+// Evento escutado quando quiz é finalizado no iframe
+window.addEventListener('message', async (event) => {
+  if (event.data?.type === 'quizEnviado') {
+    const aulaId = event.data.lessonId;
+    const aula = aulas.find(a => a.id === aulaId);
+
+if (!aula) return;
+
+await habilitarQuiz(aulaId);
+aula.quizRespondido = true;
+
+const li = [...listaAulas.children].find(el => el.textContent.includes(aula?.title || ''));
+if (li) li.querySelectorAll('span')[1].textContent = '📩';
+    
+  }
+});
+
+
+    
     document.addEventListener("DOMContentLoaded", () => {
      
       
@@ -595,6 +624,10 @@ async function carregarNomeAluno() {
 carregarNomeAluno();
 
     });
+
+
+
+    
   </script>
 </body>
 </html>
