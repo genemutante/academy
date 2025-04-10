@@ -217,15 +217,15 @@
 
 function listarAulas() {
   listaAulas.innerHTML = '';
-  let todasAnterioresCompletas = true;
+  let liberarProxima = true;
 
   aulas.forEach((aula, index) => {
     const li = document.createElement('li');
     li.className = 'flex items-center gap-2 text-gray-700 text-sm px-1';
 
-    const podeAcessar = todasAnterioresCompletas;
+    const podeAcessar = liberarProxima;
 
-    // Container de ícones
+    // Ícones de progresso
     const icones = document.createElement('div');
     icones.className = 'flex gap-1 w-[34px] justify-start text-base';
 
@@ -237,7 +237,6 @@ function listarAulas() {
       icones.innerHTML += `<span title="Avaliação enviada">📩</span>`;
     }
 
-    // Texto da aula
     const label = document.createElement('span');
     label.textContent = `${aula.order}. ${aula.title}`;
 
@@ -246,22 +245,22 @@ function listarAulas() {
       li.onclick = () => selecionarAula(aula);
     } else {
       li.classList.add('opacity-50', 'cursor-not-allowed');
-      li.title = 'Conclua todas as aulas anteriores com avaliação para desbloquear esta';
-      // ⏱️ Deixa o tooltip aparecer mais rápido
+      li.title = 'Conclua todas as aulas anteriores e a avaliação para desbloquear esta';
       li.style.pointerEvents = 'all';
       li.style.transition = 'none';
     }
 
     li.appendChild(icones);
     li.appendChild(label);
-
     listaAulas.appendChild(li);
 
-    if (aula.status !== '✔ Concluída' || !aula.quizEnviado) {
-      todasAnterioresCompletas = false;
+    // ⛔️ Após a primeira aula "não 100% concluída", as próximas ficam bloqueadas
+    if (!(aula.status === '✔ Concluída' && aula.quizEnviado)) {
+      liberarProxima = false;
     }
   });
 }
+
 
 
     
