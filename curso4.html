@@ -365,17 +365,25 @@ function listarAulas() {
       });
     }
 
-    function initPlayer() {
-      const videoId = getYouTubeId(aulaAtual.youtube_url);
-      
-      playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}&rel=0&modestbranding=1&controls=1&disablekb=1`;
+function initPlayer() {
+  const videoId = getYouTubeId(aulaAtual.youtube_url);
 
-      loadYouTubeAPI().then(() => {
-        player = new YT.Player(playerFrame, {
-          events: { onReady: onPlayerReady }
-        });
-      });
-    }
+  loadYouTubeAPI().then(() => {
+    player = new YT.Player(playerFrame, {
+      videoId: videoId,
+      playerVars: {
+        enablejsapi: 1,
+        origin: location.origin,
+        rel: 0,
+        modestbranding: 1,
+        controls: 1,
+        disablekb: 1
+      },
+      events: { onReady: onPlayerReady }
+    });
+  });
+}
+
 
     async function onPlayerReady() {
       console.log('🎬 Player pronto, iniciando monitoramento...');
