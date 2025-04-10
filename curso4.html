@@ -278,15 +278,6 @@ function listarAulas() {
       aulaAtual = aula;
       tituloAula.textContent = aula.title;
 
-      // === MATERIAL DE APOIO: desbloqueio dinâmico ===
-  btnMaterial.disabled = true;
-  btnMaterial.className = "text-sm bg-gray-200 text-gray-500 border border-gray-300 rounded px-3 py-2 shadow-sm cursor-not-allowed";
-  btnMaterial.title = "Material de apoio indisponível nesta aula";
-  popupMaterial.classList.add("hidden");
-  popupMaterial.innerHTML = "";
-  btnMaterial.onclick = null;
-
-
       const progressoEl = document.getElementById("progressoTexto");
       const sugestaoEl = document.getElementById("recomecarSugestao");
 
