@@ -442,6 +442,7 @@ async function trackProgress() {
     console.warn('⛔ Ignorando salto inválido.', { tempoAtual, lastTime });
     return;
   }
+console.log("lastTime:", lastTime, "| tempoAtual:", tempoAtual, "| diff:", diff);
 
   const segmento = {
     user_id,
