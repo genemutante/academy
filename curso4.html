@@ -285,40 +285,12 @@ function listarAulas() {
       tituloAula.textContent = aula.title;
 
       // === MATERIAL DE APOIO: desbloqueio dinâmico ===
-if (aula.material_links && aula.material_links.length > 0) {
-  btnMaterial.disabled = false;
-  btnMaterial.className = "text-sm bg-white border border-gray-300 rounded px-3 py-2 shadow-sm hover:bg-gray-100 relative";
-  btnMaterial.title = "Clique para ver os materiais de apoio";
-
-  // Preencher popup com os links reais
-  popupMaterial.innerHTML = `
-    <p class="mb-1 font-semibold">Links úteis:</p>
-    <ul class="list-disc list-inside text-sm text-blue-700 space-y-1">
-      ${aula.material_links.map(link => `<li><a href="${link.url}" target="_blank" class="hover:underline">${link.label}</a></li>`).join('')}
-    </ul>
-  `;
-
-  // Mostrar/esconder popup
-  btnMaterial.onclick = (e) => {
-    e.stopPropagation();
-    popupMaterial.classList.toggle('hidden');
-  };
-
-  // Fechar popup ao clicar fora
-  window.addEventListener('click', (e) => {
-    if (!btnMaterial.contains(e.target) && !popupMaterial.contains(e.target)) {
-      popupMaterial.classList.add('hidden');
-    }
-  });
-
-} else {
   btnMaterial.disabled = true;
   btnMaterial.className = "text-sm bg-gray-200 text-gray-500 border border-gray-300 rounded px-3 py-2 shadow-sm cursor-not-allowed";
   btnMaterial.title = "Material de apoio indisponível nesta aula";
   popupMaterial.classList.add("hidden");
   popupMaterial.innerHTML = "";
   btnMaterial.onclick = null;
-}
 
 
       const progressoEl = document.getElementById("progressoTexto");
