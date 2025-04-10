@@ -360,16 +360,6 @@ async function selecionarAula(aula) {
 
 
 
-
-    
-
-    function loadYouTubeAPI() {
-      return new Promise(resolve => {
-        if (window.YT && window.YT.Player) return resolve();
-        window.onYouTubeIframeAPIReady = resolve;
-      });
-    }
-
 function initPlayer() {
   const videoId = getYouTubeId(aulaAtual.youtube_url);
 
@@ -379,17 +369,17 @@ function initPlayer() {
     return;
   }
 
-  // 🔧 Mata o player antigo (caso exista)
-  if (player && typeof player.destroy === 'function') {
-    player.destroy();
-    player = null;
-  }
-
-  playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
-
+  // Inicializa o player via iframe API
   loadYouTubeAPI().then(() => {
-    player = new YT.Player(playerFrame, {
-      events: { onReady: onPlayerReady }
+    player = new YT.Player('videoPlayer', {
+      videoId,
+      events: {
+        onReady: onPlayerReady,
+        onError: (e) => {
+          console.error("❌ Erro ao carregar player:", e);
+          mostrarNotificacao("Erro ao carregar o vídeo da aula.");
+        }
+      }
     });
   });
 }
@@ -397,14 +387,7 @@ function initPlayer() {
 
 
 
-async function onPlayerReady() {
-  console.log('🎬 Player pronto, iniciando monitoramento...');
 
-  if (!player || typeof player.getDuration !== 'function') {
-    console.warn('⚠️ Player inválido, tentando novamente...');
-    setTimeout(onPlayerReady, 300);
-    return;
-  }
 
   duration = player.getDuration();
   console.log('⏱️ Duração total do vídeo:', duration);
@@ -539,74 +522,67 @@ async function trackProgress() {
 
 
     
-    async function habilitarQuiz(aulaId) {
-      const jaFez = await verificarQuizRespondido(user_id, aulaId);
+async function habilitarQuiz(aulaId) {
+  const jaFez = await verificarQuizRespondido(user_id, aulaId);
+  const aula = aulas.find(a => a.id === aulaId);
 
-      console.log("📋 Verificando se quiz já foi respondido...");
-      console.log("User ID:", user_id, "| Aula ID:", aulaId);
-      console.log("Resultado Supabase:", jaFez);
+  if (jaFez) {
+    btnQuiz.disabled = true;
+    btnQuiz.textContent = "✅ Avaliação enviada";
+    btnQuiz.className = "bg-gray-200 text-gray-600 px-4 py-2 rounded text-sm cursor-not-allowed";
+    btnQuiz.onclick = null;
 
-      // Recupera o objeto da aula correspondente
-     const aula = aulas.find(a => a.id === aulaId);
+    if (aula) aula.quizRespondido = true;
 
+    // Atualiza ícone na listagem lateral
+    const li = [...listaAulas.children].find(el => el.textContent.includes(aula?.title || ""));
+    if (li) li.querySelectorAll('span')[1].textContent = '📩';
 
-if (jaFez) {
-  btnQuiz.disabled = true;
-  btnQuiz.textContent = "✅ Avaliação enviada";
-  btnQuiz.className = "bg-gray-200 text-gray-600 px-4 py-2 rounded text-sm cursor-not-allowed";
-  btnQuiz.title = "Você já respondeu esta avaliação";
-  btnQuiz.onclick = null;
-
-  // ✅ Marcar que o quiz foi respondido (para os ícones)
-  const index = aulas.findIndex(a => a.id === aulaId);
-  if (index !== -1) {
-    aulas[index].quizRespondido = true;
+    return;
   }
 
-  // Atualiza apenas o ícone de quiz da aula correspondente
-const li = [...listaAulas.children].find(el => el.textContent.includes(aula?.title || ''));
-  
-if (li) li.querySelectorAll('span')[1].textContent = '📩';
-listarAulas(); // 👈 <- COLE aqui ao final do bloco `if (jaFez)`
-  return;
+  btnQuiz.disabled = false;
+  btnQuiz.textContent = "📝 Fazer Avaliação da Aula";
+  btnQuiz.className = "bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded text-sm transition";
+  btnQuiz.title = "Abrir avaliação desta aula";
+
+  btnQuiz.onclick = () => {
+    const quizContainer = document.createElement('div');
+    quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
+    quizContainer.innerHTML = `
+      <div class="bg-white w-full max-w-2xl h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
+        <button onclick="this.parentElement.parentElement.remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
+        <iframe src="quiz.html?user_id=${user_id}&lesson_id=${aulaId}" class="w-full h-full rounded-lg border border-slate-200" frameborder="0"></iframe>
+      </div>
+    `;
+    document.body.appendChild(quizContainer);
+  };
 }
 
-      btnQuiz.disabled = false;
-      btnQuiz.textContent = "📝 Fazer Avaliação da Aula";
-      btnQuiz.className = "bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded text-sm transition";
-      btnQuiz.title = "Abrir avaliação desta aula";
 
-      btnQuiz.onclick = () => {
-        const quizContainer = document.createElement('div');
-        quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
 
-        quizContainer.innerHTML = `
-          <div class="bg-white w-full max-w-2xl h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
-            <button onclick="this.parentElement.parentElement.remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
-            <iframe src="quiz.html?user_id=${user_id}&lesson_id=${aulaId}" class="w-full h-full rounded-lg border border-slate-200" frameborder="0"></iframe>
-          </div>
-        `;
 
-        document.body.appendChild(quizContainer);
-      };
-    }
-
-// Evento escutado quando quiz é finalizado no iframe
 window.addEventListener('message', async (event) => {
   if (event.data?.type === 'quizEnviado') {
     const aulaId = event.data.lessonId;
     const aula = aulas.find(a => a.id === aulaId);
+    if (!aula) return;
 
-if (!aula) return;
+    await habilitarQuiz(aulaId);
+    aula.quizRespondido = true;
 
-await habilitarQuiz(aulaId);
-aula.quizRespondido = true;
-
-const li = [...listaAulas.children].find(el => el.textContent.includes(aula?.title || ''));
-if (li) li.querySelectorAll('span')[1].textContent = '📩';
-    
+    const li = [...listaAulas.children].find(el => el.textContent.includes(aula?.title || ''));
+    if (li) li.querySelectorAll('span')[1].textContent = '📩';
   }
 });
+
+    
+
+
+
+
+
+    
 
 
     
