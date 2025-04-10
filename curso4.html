@@ -370,26 +370,29 @@ async function selecionarAula(aula) {
       });
     }
 
-    function initPlayer() {
-      const videoId = getYouTubeId(aulaAtual.youtube_url);
+function initPlayer() {
+  const videoId = getYouTubeId(aulaAtual.youtube_url);
 
-if (!videoId) {
-  console.warn("❌ Aula sem vídeo válido.");
-  playerFrame.src = "";
-  return;
+  if (!videoId) {
+    console.warn("❌ Aula sem vídeo válido.");
+    playerFrame.src = "";
+    return;
+  }
+
+  // 🔧 Mata o player antigo (caso exista)
+  if (player && typeof player.destroy === 'function') {
+    player.destroy();
+    player = null;
+  }
+
+  playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
+
+  loadYouTubeAPI().then(() => {
+    player = new YT.Player(playerFrame, {
+      events: { onReady: onPlayerReady }
+    });
+  });
 }
-
-
-
-      
-      playerFrame.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${location.origin}`;
-
-      loadYouTubeAPI().then(() => {
-        player = new YT.Player(playerFrame, {
-          events: { onReady: onPlayerReady }
-        });
-      });
-    }
 
 
 
@@ -562,11 +565,9 @@ if (jaFez) {
 
   // Atualiza apenas o ícone de quiz da aula correspondente
 const li = [...listaAulas.children].find(el => el.textContent.includes(aula?.title || ''));
-
-
   
 if (li) li.querySelectorAll('span')[1].textContent = '📩';
-
+listarAulas(); // 👈 <- COLE aqui ao final do bloco `if (jaFez)`
   return;
 }
 
