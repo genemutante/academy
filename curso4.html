@@ -369,20 +369,26 @@ function initPlayer() {
   const videoId = getYouTubeId(aulaAtual.youtube_url);
 
   loadYouTubeAPI().then(() => {
-    player = new YT.Player(playerFrame, {
+    player = new YT.Player('videoPlayer', {
       videoId: videoId,
       playerVars: {
-        enablejsapi: 1,
         origin: location.origin,
-        rel: 0,
-        modestbranding: 1,
-        controls: 1,
-        disablekb: 1
+        enablejsapi: 1,
+        modestbranding: 1,   // Remove logo
+        rel: 0,              // Não mostrar vídeos relacionados
+        controls: 1,         // Mostra controles
+        disablekb: 1,        // Bloqueia teclado
+        fs: 0,               // Desativa fullscreen
+        iv_load_policy: 3,   // Oculta anotações
+        showinfo: 0          // Oculta info do vídeo no início
       },
-      events: { onReady: onPlayerReady }
+      events: {
+        onReady: onPlayerReady
+      }
     });
   });
 }
+
 
 
     async function onPlayerReady() {
