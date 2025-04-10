@@ -388,6 +388,9 @@ async function selecionarAula(aula) {
       });
     }
 
+
+
+
 async function onPlayerReady() {
   console.log('🎬 Player pronto, iniciando monitoramento...');
 
@@ -406,12 +409,19 @@ async function onPlayerReady() {
     player.playVideo?.();
   }
 
-  // ✅ Define o ponto inicial de progresso para evitar "salto inválido"
-  lastTime = Math.floor(player.getCurrentTime());
-  console.log('🟢 lastTime inicial definido para:', lastTime);
+  // ✅ Aguarda o início da reprodução para setar corretamente o lastTime
+  setTimeout(() => {
+    lastTime = Math.floor(player.getCurrentTime());
+    console.log('🟢 lastTime inicial corrigido para:', lastTime);
 
-  interval = setInterval(trackProgress, 5000);
+    interval = setInterval(trackProgress, 5000);
+  }, 1000);
 }
+
+
+
+
+    
 
     
 let maiorTempoVisualizado = 0;
