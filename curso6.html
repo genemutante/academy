@@ -537,6 +537,18 @@ async function trackProgress() {
   }
 
   const tempoAtual = Math.floor(player.getCurrentTime());
+
+if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
+  const sugestaoEl = document.getElementById("recomecarSugestao");
+  if (sugestaoEl && sugestaoEl.innerHTML.trim() !== "") {
+    sugestaoEl.innerHTML = "";
+    narrar("🔄 Ocultando sugestão de retomada: usuário já avançou além do ponto indicado.", "info");
+    pontoRetomada = null;
+  }
+}
+
+
+	
   narrar(`🕒 Obtive o tempo atual com 'getCurrentTime()': ${tempoAtual}s.`);
 
   narrar(`📌 Valor anterior salvo em 'lastTime': ${lastTime}s.`);
