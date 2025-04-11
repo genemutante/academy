@@ -549,6 +549,8 @@ timeoutProgressoInicial = setTimeout(() => {
 
 
 
+
+
 async function trackProgress() {
   if (!player || typeof player.getCurrentTime !== 'function') {
     narrar("⚠️ O player ainda não está pronto ou está inválido. Finalizei o ciclo sem ação.", "warning");
@@ -558,7 +560,6 @@ async function trackProgress() {
   const tempoAtual = Math.floor(player.getCurrentTime());
   const diff = tempoAtual - lastTime;
 
-  // Apenas narra nos primeiros ciclos
   if (narrativaCiclosExecutados < narrativaMaxCiclos) {
     narrativaCiclosExecutados++;
     narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
@@ -567,7 +568,7 @@ async function trackProgress() {
     narrar(`🧮 Calculei a diferença: ${diff}s.`);
   }
 
-  // Ignorar saltos anormais ou regressões
+  // ❌ Salto inválido
   if (diff <= 0 || diff > 30) {
     if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
       const motivo = diff < 0
@@ -575,55 +576,43 @@ async function trackProgress() {
         : "o salto foi muito grande (possível pulo manual ou buffer longo)";
       narrar(`⚠️ Diferença de ${diff}s foi considerada inválida porque ${motivo}. Nada será salvo.`, "warning");
     }
-    return;
-  }
+  } else {
+    const segmento = {
+      user_id,
+      course_id,
+      lesson_id: aulaAtual.id,
+      duration: Math.floor(duration),
+      segment: { start: lastTime, end: tempoAtual }
+    };
 
-  const segmento = {
-    user_id,
-    course_id,
-    lesson_id: aulaAtual.id,
-    duration: Math.floor(duration),
-    segment: { start: lastTime, end: tempoAtual }
-  };
-
-  if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
-    narrar(`📦 Enviando segmento com start=${lastTime}s e end=${tempoAtual}s...`);
-  }
-
-  const { error } = await supabase.from('progress_segments').insert(segmento);
-
-  if (error) {
     if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
-      narrar(`❌ Erro ao salvar no Supabase: ${error.message}`, "error");
+      narrar(`📦 Enviando segmento com start=${lastTime}s e end=${tempoAtual}s...`);
     }
-    return;
+
+    const { error } = await supabase.from('progress_segments').insert(segmento);
+    if (error) {
+      narrar(`❌ Erro ao salvar no Supabase: ${error.message}`, "error");
+      return;
+    }
+
+    lastTime = tempoAtual;
+
+    if (tempoAtual > maiorTempoVisualizado) {
+      maiorTempoVisualizado = tempoAtual;
+      atualizarIndicadorLocal(maiorTempoVisualizado, duration);
+    }
+
+    const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
+    if (percentual >= 97) {
+      document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
+      document.getElementById("recomecarSugestao").innerHTML = "";
+      await habilitarQuiz(aulaAtual.id);
+      listarAulas();
+      carregarProgressoCurso();
+    }
   }
 
-  // ✅ Marca o progresso como iniciado com sucesso
-  if (!progressoIniciado) {
-    progressoIniciado = true;
-    if (timeoutProgressoInicial) clearTimeout(timeoutProgressoInicial);
-    narrar("🚀 Primeiro segmento registrado com sucesso. Progresso confirmado!", "success");
-  }
-
-  lastTime = tempoAtual;
-
-  if (tempoAtual > maiorTempoVisualizado) {
-    maiorTempoVisualizado = tempoAtual;
-    atualizarIndicadorLocal(maiorTempoVisualizado, duration);
-  }
-
-  const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
-
-  if (percentual >= 97) {
-    document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
-    document.getElementById("recomecarSugestao").innerHTML = "";
-    await habilitarQuiz(aulaAtual.id);
-    listarAulas();
-    carregarProgressoCurso();
-  }
-
-  // ❌ Sugestão de retomada já ultrapassada? Oculta automaticamente
+  // ✅ Ocultar sugestão de retomada se o usuário passou do ponto
   if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
     const sugestaoEl = document.getElementById("recomecarSugestao");
     if (sugestaoEl && sugestaoEl.innerHTML.trim() !== "") {
