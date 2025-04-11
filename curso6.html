@@ -560,6 +560,25 @@ async function trackProgress() {
   const tempoAtual = Math.floor(player.getCurrentTime());
   const diff = tempoAtual - lastTime;
 
+  // Mostra estado "aguardando progresso" se for o primeiro ciclo válido
+  if (!window.progressoIniciado) {
+    const progressoEl = document.getElementById("progressoTexto");
+    if (progressoEl) {
+      progressoEl.innerHTML = `<span class="animate-pulse">⏳</span> Aguardando início do rastreamento...`;
+    }
+    if (!window._tempoInicioAguardoProgresso) {
+      window._tempoInicioAguardoProgresso = Date.now();
+      narrar("⏳ Aguardando primeiros dados de progresso...", "info");
+    } else {
+      const tempoAguardando = (Date.now() - window._tempoInicioAguardoProgresso) / 1000;
+      if (tempoAguardando > 30 && !window._erroAtrasoProgressoNarrado) {
+        narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
+        window._erroAtrasoProgressoNarrado = true;
+      }
+    }
+  }
+
+  // Apenas narra nos primeiros 5 ciclos
   if (narrativaCiclosExecutados < narrativaMaxCiclos) {
     narrativaCiclosExecutados++;
     narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
@@ -568,7 +587,6 @@ async function trackProgress() {
     narrar(`🧮 Calculei a diferença: ${diff}s.`);
   }
 
-  // ❌ Salto inválido
   if (diff <= 0 || diff > 30) {
     if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
       const motivo = diff < 0
@@ -576,43 +594,49 @@ async function trackProgress() {
         : "o salto foi muito grande (possível pulo manual ou buffer longo)";
       narrar(`⚠️ Diferença de ${diff}s foi considerada inválida porque ${motivo}. Nada será salvo.`, "warning");
     }
-  } else {
-    const segmento = {
-      user_id,
-      course_id,
-      lesson_id: aulaAtual.id,
-      duration: Math.floor(duration),
-      segment: { start: lastTime, end: tempoAtual }
-    };
-
-    if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
-      narrar(`📦 Enviando segmento com start=${lastTime}s e end=${tempoAtual}s...`);
-    }
-
-    const { error } = await supabase.from('progress_segments').insert(segmento);
-    if (error) {
-      narrar(`❌ Erro ao salvar no Supabase: ${error.message}`, "error");
-      return;
-    }
-
-    lastTime = tempoAtual;
-
-    if (tempoAtual > maiorTempoVisualizado) {
-      maiorTempoVisualizado = tempoAtual;
-      atualizarIndicadorLocal(maiorTempoVisualizado, duration);
-    }
-
-    const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
-    if (percentual >= 97) {
-      document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
-      document.getElementById("recomecarSugestao").innerHTML = "";
-      await habilitarQuiz(aulaAtual.id);
-      listarAulas();
-      carregarProgressoCurso();
-    }
+    return;
   }
 
-  // ✅ Ocultar sugestão de retomada se o usuário passou do ponto
+  // 🎯 PROGRESSO REAL COMEÇOU
+  window.progressoIniciado = true;
+
+  const segmento = {
+    user_id,
+    course_id,
+    lesson_id: aulaAtual.id,
+    duration: Math.floor(duration),
+    segment: { start: lastTime, end: tempoAtual }
+  };
+
+  if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
+    narrar(`📦 Enviando segmento com start=${lastTime}s e end=${tempoAtual}s...`);
+  }
+
+  const { error } = await supabase.from('progress_segments').insert(segmento);
+  if (error) {
+    if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
+      narrar(`❌ Erro ao salvar no Supabase: ${error.message}`, "error");
+    }
+    return;
+  }
+
+  lastTime = tempoAtual;
+
+  if (tempoAtual > maiorTempoVisualizado) {
+    maiorTempoVisualizado = tempoAtual;
+    atualizarIndicadorLocal(maiorTempoVisualizado, duration);
+  }
+
+  const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
+
+  if (percentual >= 97) {
+    document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
+    document.getElementById("recomecarSugestao").innerHTML = "";
+    await habilitarQuiz(aulaAtual.id);
+    listarAulas();
+    carregarProgressoCurso();
+  }
+
   if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
     const sugestaoEl = document.getElementById("recomecarSugestao");
     if (sugestaoEl && sugestaoEl.innerHTML.trim() !== "") {
