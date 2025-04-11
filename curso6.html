@@ -354,9 +354,14 @@ narrar("🔄 Reiniciei o contador de ciclos narrativos para nova aula.", "info")
 }
 
 // 🧽 Inicializo variáveis locais para que possamos restaurá-las com base no progresso salvo
-lastTime = 0;
-maiorTempoVisualizado = 0;
-narrar("🔄 Reiniciei temporariamente as variáveis 'lastTime' e 'maiorTempoVisualizado'. Aguardo carregamento do progresso salvo para esta aula.", "info");
+// ⚠️ Cuidado: só reiniciaremos as variáveis se ainda não tivermos progresso
+if (!aula.progressoRestaurado) {
+  lastTime = 0;
+  maiorTempoVisualizado = 0;
+  narrar("🔄 Reiniciei temporariamente as variáveis 'lastTime' e 'maiorTempoVisualizado'. Aguardo carregamento do progresso salvo para esta aula.", "info");
+} else {
+  narrar("📌 Variáveis de progresso já restauradas anteriormente. Mantendo valores atuais.", "info");
+}
 
 
       const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
@@ -371,8 +376,10 @@ narrar("🔄 Reiniciei temporariamente as variáveis 'lastTime' e 'maiorTempoVis
 
 // 🧠 Verifica se há progresso salvo para retomar a contagem local corretamente
 if (item.segundos_assistidos > 0) {
-  lastTime = item.segundos_assistidos;
-  maiorTempoVisualizado = item.segundos_assistidos;
+lastTime = item.segundos_assistidos;
+maiorTempoVisualizado = item.segundos_assistidos;
+aula.progressoRestaurado = true;
+
   narrar(`📥 Encontrei progresso salvo no Supabase: ${item.segundos_assistidos}s. Atualizei 'lastTime' e 'maiorTempoVisualizado' para continuar de onde parou.`, "success");
 } else {
   narrar("📭 Nenhum tempo assistido registrado no Supabase. Mantendo progresso local zerado.", "info");
