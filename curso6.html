@@ -333,129 +333,108 @@ function selecionarAulaInicial() {
 
     let pontoRetomada = null;
 
-    async function selecionarAula(aula) {
+async function selecionarAula(aula) {
+  narrar(`📥 A aula "${aula.title}" foi selecionada. ID: ${aula.id}`, "info");
 
-      narrar(`📥 A aula "${aula.title}" foi selecionada. ID: ${aula.id}`, "info");
+  aulaAtual = aula;
+  tituloAula.textContent = aula.title;
 
+  const progressoEl = document.getElementById("progressoTexto");
+  const sugestaoEl = document.getElementById("recomecarSugestao");
 
-	    
-      aulaAtual = aula;
-      tituloAula.textContent = aula.title;
+  if (progressoEl) progressoEl.textContent = "";
+  if (sugestaoEl) sugestaoEl.innerHTML = "";
 
-      const progressoEl = document.getElementById("progressoTexto");
-      const sugestaoEl = document.getElementById("recomecarSugestao");
+  pontoRetomada = null;
 
-      if (progressoEl) progressoEl.textContent = "";
+  btnQuiz.disabled = true;
+  btnQuiz.textContent = "Fazer Avaliação da Aula";
+  btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
+  btnQuiz.onclick = null;
+
+  // 🧼 Encerrar rastreamento anterior (se houver)
+  if (interval) {
+    clearInterval(interval);
+    narrativaCiclosExecutados = 0;
+    narrar("🔄 Reiniciei o contador de ciclos narrativos para nova aula.", "info");
+    narrar("🛑 Encerrei o ciclo anterior de rastreamento (intervalo setInterval).", "info");
+  } else {
+    narrar("ℹ️ Nenhum ciclo anterior de rastreamento ativo. Nada a encerrar.", "info");
+  }
+
+  // 🔎 Consultar progresso salvo no Supabase
+  const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+    p_user_id: user_id,
+    p_lesson_id: aula.id
+  });
+
+  if (progresso?.length > 0) {
+    const item = progresso[0];
+
+    // ✅ Restaura progresso ANTES de qualquer verificação de status
+    if (item.segundos_assistidos > 0) {
+      lastTime = item.segundos_assistidos;
+      maiorTempoVisualizado = item.segundos_assistidos;
+      aula.progressoRestaurado = true;
+      narrar(`📥 Encontrei progresso salvo no Supabase: ${item.segundos_assistidos}s. Atualizei variáveis.`, "success");
+    } else {
+      narrar("📭 Nenhum tempo assistido registrado. Mantendo progresso local zerado.", "info");
+    }
+
+    if (item.status === '✔ Concluída') {
+      if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
       if (sugestaoEl) sugestaoEl.innerHTML = "";
+      await habilitarQuiz(aula.id);
+    } else {
+      const exibidoTexto = progressoEl?.textContent || "";
+      const match = exibidoTexto.match(/⏱️ (\d+)s/);
+      const segundosExibidos = match ? parseInt(match[1]) : 0;
 
-      pontoRetomada = null;
-
-      btnQuiz.disabled = true;
-      btnQuiz.textContent = "Fazer Avaliação da Aula";
-      btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
-      btnQuiz.onclick = null;
-
-// 🧼 Etapa de limpeza: interrompe o ciclo anterior de rastreamento, se houver
-if (interval) {
-  clearInterval(interval);
-narrativaCiclosExecutados = 0;
-narrar("🔄 Reiniciei o contador de ciclos narrativos para nova aula.", "info");
-
-	
-  narrar("🛑 Encerrei o ciclo anterior de rastreamento (intervalo setInterval). Isso previne múltiplos rastreamentos paralelos ao trocar de aula.", "info");
-} else {
-  narrar("ℹ️ Nenhum ciclo anterior de rastreamento ativo. Nada a encerrar.", "info");
-}
-
-// 🧽 Inicializo variáveis locais para que possamos restaurá-las com base no progresso salvo
-// ⚠️ Cuidado: só reiniciaremos as variáveis se ainda não tivermos progresso
-if (!aula.progressoRestaurado) {
-  lastTime = 0;
-  maiorTempoVisualizado = 0;
-  narrar("🔄 Reiniciei temporariamente as variáveis 'lastTime' e 'maiorTempoVisualizado'. Aguardo carregamento do progresso salvo para esta aula.", "info");
-} else {
-  narrar("📌 Variáveis de progresso já restauradas anteriormente. Mantendo valores atuais.", "info");
-}
-
-
-      const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-        p_user_id: user_id,
-        p_lesson_id: aula.id
-      });
-
-      if (progresso?.length > 0) {
-        const item = progresso[0];
-
-        if (item.status === '✔ Concluída') {
-
-// 🧠 Verifica se há progresso salvo para retomar a contagem local corretamente
-if (item.segundos_assistidos > 0) {
-lastTime = item.segundos_assistidos;
-maiorTempoVisualizado = item.segundos_assistidos;
-aula.progressoRestaurado = true;
-
-  narrar(`📥 Encontrei progresso salvo no Supabase: ${item.segundos_assistidos}s. Atualizei 'lastTime' e 'maiorTempoVisualizado' para continuar de onde parou.`, "success");
-} else {
-  narrar("📭 Nenhum tempo assistido registrado no Supabase. Mantendo progresso local zerado.", "info");
-}
-
-
-
-		
-          if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
-          if (sugestaoEl) sugestaoEl.innerHTML = "";
-          await habilitarQuiz(aula.id);
-        } else {
-          const exibidoTexto = progressoEl?.textContent || "";
-          const match = exibidoTexto.match(/⏱️ (\d+)s/);
-          const segundosExibidos = match ? parseInt(match[1]) : 0;
-
-          if (item.segundos_assistidos > segundosExibidos) {
-            atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
-          }
-
-          pontoRetomada = Math.max(0, item.segundos_assistidos - 15);
-
-          const minutos = Math.floor(pontoRetomada / 60);
-          const segundos = pontoRetomada % 60;
-          const retomadaLabel = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
-
-          const link = document.createElement('span');
-          link.className = 'text-sm text-blue-600 underline cursor-pointer ml-2 hover:text-blue-800 transition';
-          link.textContent = `🔄 Retomar a partir de ${retomadaLabel}`;
-
-          link.onclick = async () => {
-            if (!player || typeof player.seekTo !== 'function') return;
-
-            mostrarNotificacao(`⏩ Pulando para ${retomadaLabel}...`);
-
-            try {
-              player.seekTo(pontoRetomada, true);
-              setTimeout(() => {
-                if (typeof player.playVideo === 'function') {
-                  player.playVideo();
-                  console.log(`▶️ Pulando e iniciando em ${retomadaLabel}`);
-                  if (sugestaoEl) sugestaoEl.textContent = "";
-                }
-              }, 500);
-            } catch (err) {
-              console.error('❌ Erro ao pular para ponto:', err);
-              mostrarNotificacao('Erro ao tentar retomar o vídeo');
-            }
-          };
-
-          if (sugestaoEl) {
-            sugestaoEl.innerHTML = "";
-            sugestaoEl.appendChild(link);
-          }
-        }
-      } else {
-        atualizarIndicadorLocal(0, aula.duration);
-        pontoRetomada = null;
+      if (item.segundos_assistidos > segundosExibidos) {
+        atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
       }
 
-      initPlayer();
+      pontoRetomada = Math.max(0, item.segundos_assistidos - 15);
+      const minutos = Math.floor(pontoRetomada / 60);
+      const segundos = pontoRetomada % 60;
+      const retomadaLabel = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
+
+      const link = document.createElement('span');
+      link.className = 'text-sm text-blue-600 underline cursor-pointer ml-2 hover:text-blue-800 transition';
+      link.textContent = `🔄 Retomar a partir de ${retomadaLabel}`;
+      link.onclick = async () => {
+        if (!player || typeof player.seekTo !== 'function') return;
+        mostrarNotificacao(`⏩ Pulando para ${retomadaLabel}...`);
+
+        try {
+          player.seekTo(pontoRetomada, true);
+          setTimeout(() => {
+            if (typeof player.playVideo === 'function') {
+              player.playVideo();
+              console.log(`▶️ Pulando e iniciando em ${retomadaLabel}`);
+              if (sugestaoEl) sugestaoEl.textContent = "";
+            }
+          }, 500);
+        } catch (err) {
+          console.error('❌ Erro ao pular para ponto:', err);
+          mostrarNotificacao('Erro ao tentar retomar o vídeo');
+        }
+      };
+
+      if (sugestaoEl) {
+        sugestaoEl.innerHTML = "";
+        sugestaoEl.appendChild(link);
+      }
     }
+
+  } else {
+    atualizarIndicadorLocal(0, aula.duration);
+    pontoRetomada = null;
+  }
+
+  initPlayer();
+}
+
 
     function loadYouTubeAPI() {
       return new Promise(resolve => {
