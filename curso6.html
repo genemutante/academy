@@ -656,6 +656,11 @@ if (mensagemEl) {
   if (percentual >= 97) {
     exibirMensagemAluno("✅ Aula concluída! Agora você pode responder a avaliação.", "success");
     progressoEl.textContent = "✅ Aula concluída";
+
+const mensagemEl = document.getElementById("mensagemAluno");
+if (mensagemEl) mensagemEl.textContent = "";
+
+	  
     document.getElementById("recomecarSugestao").innerHTML = "";
     await habilitarQuiz(aulaAtual.id);
     listarAulas();
