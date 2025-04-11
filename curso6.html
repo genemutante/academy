@@ -732,6 +732,26 @@ function exportarNarrativa() {
 }
 	
 	
+// Reiniciar narrativa do zero
+function novaAnaliseNarrativa() {
+  narrativaGravada.length = 0;
+  const ul = document.getElementById("narrativaLog");
+  if (ul) ul.innerHTML = '';
+  narrar("🧹 Iniciei uma nova análise. A narrativa anterior foi limpa.", "info");
+}
+
+// Mostrar botão flutuante quando painel estiver fechado
+const painel = document.getElementById('painelNarrativo');
+const btnAbrir = document.getElementById('abrirPainelBtn');
+
+const observer = new MutationObserver(() => {
+  if (painel.classList.contains('hidden')) {
+    btnAbrir.classList.remove('hidden');
+  } else {
+    btnAbrir.classList.add('hidden');
+  }
+});
+observer.observe(painel, { attributes: true });
 	
 	
   </script>
@@ -740,14 +760,23 @@ function exportarNarrativa() {
   
 <!-- ✅ PAINEL DE NARRATIVA INTELIGENTE -->
 <div id="painelNarrativo" class="fixed top-16 right-4 w-[420px] max-h-[88vh] overflow-y-auto bg-gray-900 text-green-200 text-sm font-mono shadow-xl rounded-xl p-4 z-50 space-y-1">
-  <div class="text-green-400 font-bold mb-3">📜 Narrativa da Execução</div>
-  <button onclick="replayNarrativa()" class="text-xs text-gray-300 hover:text-white mb-3">🔁 Reproduzir Execução</button>
-  <button onclick="exportarNarrativa()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3">📄 Exportar Narrativa</button>
-
-	
+  <div class="flex justify-between items-center mb-3">
+    <div class="text-green-400 font-bold">📜 Narrativa da Execução</div>
+    <button onclick="document.getElementById('painelNarrativo').classList.add('hidden')" class="text-xs text-gray-400 hover:text-red-400 transition">✖ Fechar</button>
+  </div>
+  <div class="mb-2 flex gap-2 flex-wrap">
+    <button onclick="replayNarrativa()" class="text-xs text-gray-300 hover:text-white">🔁 Reproduzir Execução</button>
+    <button onclick="exportarNarrativa()" class="text-xs text-gray-300 hover:text-white">📄 Exportar</button>
+    <button onclick="novaAnaliseNarrativa()" class="text-xs text-yellow-300 hover:text-white">🧹 Nova Análise</button>
+  </div>
   <ul id="narrativaLog" class="space-y-2"></ul>
 </div>
- 
+
+<!-- BOTÃO FLUTUANTE PARA REABRIR -->
+<button onclick="document.getElementById('painelNarrativo').classList.remove('hidden')" class="fixed bottom-6 right-6 z-50 bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm font-medium rounded-full shadow-lg transition hidden" id="abrirPainelBtn">
+  📜 Ver Execução
+</button>
+
   
   
   
