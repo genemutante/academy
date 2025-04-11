@@ -199,10 +199,28 @@ if (!lista || lista.length === 0) {
   aulas = lista || [];
 
   const promises = aulas.map(async (aula) => {
-    const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-      p_user_id: user_id,
-      p_lesson_id: aula.id
-    });
+
+
+narrar("🔍 Consultando progresso salvo no Supabase para esta aula...", "info");
+
+const { data: progresso, error } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+  p_user_id: user_id,
+  p_lesson_id: aula.id
+});
+
+if (error) {
+  narrar(`❌ Erro ao consultar progresso no Supabase: ${error.message}`, "error");
+} else if (progresso?.length > 0) {
+  const item = progresso[0];
+  narrar(`📬 Supabase retornou progresso: ${item.segundos_assistidos}s assistidos. Status: ${item.status}.`, "info");
+
+  // Segue o resto da lógica atual...
+
+} else {
+  narrar("📭 Nenhum progresso registrado no Supabase para esta aula.", "warning");
+}
+
+	  
 
     aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
 
@@ -220,7 +238,16 @@ if (!lista || lista.length === 0) {
 
   aulas = await Promise.all(promises);
   listarAulas();
-  if (aulas.length) selecionarAula(aulas[0]);
+	  
+if (aulas.length) {
+  requestAnimationFrame(() => {
+    narrar("🚀 DOM estável e dados carregados. Selecionando a primeira aula...", "info");
+    selecionarAula(aulas[0]);
+  });
+}
+
+
+	  
   carregarProgressoCurso();
 }
 
@@ -293,6 +320,11 @@ function listarAulas() {
     let pontoRetomada = null;
 
     async function selecionarAula(aula) {
+
+      narrar(`📥 A aula "${aula.title}" foi selecionada. ID: ${aula.id}`, "info");
+
+
+	    
       aulaAtual = aula;
       tituloAula.textContent = aula.title;
 
