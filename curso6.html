@@ -404,7 +404,7 @@ narrar("⏳ Aguardando primeiros segundos de progresso para confirmar rastreamen
       narrar("📭 Nenhum tempo assistido registrado. Mantendo progresso local zerado.", "info");
     }
 
-    if (item.status === '✔ Concluída') {
+    if (aula.status === '✔ Concluída') {
       if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
       if (sugestaoEl) sugestaoEl.innerHTML = "";
       await habilitarQuiz(aula.id);
