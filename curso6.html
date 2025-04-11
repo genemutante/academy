@@ -153,17 +153,18 @@
       return match ? match[1] : '';
     }
 
-    function atualizarIndicadorLocal(segundos, duracao) {
+	  
 
-	    
-const el = document.getElementById("indicadorNumerico");
-if (!el) return;
+function atualizarIndicadorLocal(segundos, duracao) {
+  const el = document.getElementById("indicadorNumerico");
+  if (!el) return;
 
-el.textContent = `${segundos}s / ${duracao}s • ${pct}%`;
+  const pct = Math.min(100, Math.round((segundos / duracao) * 100));
+  el.textContent = `${segundos}s / ${duracao}s • ${pct}%`;
+}
 
+	  
 
-	    
-    }
 
     function mostrarNotificacao(texto) {
       const aviso = document.createElement('div');
@@ -609,7 +610,12 @@ async function trackProgress() {
   }
 
   // ✅ Início oficial do rastreamento
-  progressoIniciado = true;
+const mensagemEl = document.getElementById("mensagemAluno");
+if (mensagemEl) {
+  mensagemEl.textContent = "";
+  mensagemEl.className = "text-sm text-blue-700"; // reseta visual
+}
+
 
   if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
     atualizarIndicadorLocal(maiorTempoVisualizado, duration);
@@ -855,7 +861,8 @@ function exibirMensagemAluno(mensagem, tipo = "info") {
   };
 
   msgEl.className = `text-sm animate-pulse font-medium ${cores[tipo] || cores.info}`;
-  msgEl.innerHTML = mensagem;
+  msgEl.textContent = mensagem;
+
 }
 
 
@@ -900,6 +907,16 @@ function exibirMensagemAluno(mensagem, tipo = "info") {
     }
 
     progressoIniciado = true;
+
+// ⬇️ Apaga mensagem "⏳ Carregando progresso..."
+const mensagemEl = document.getElementById("mensagemAluno");
+if (mensagemEl) {
+  mensagemEl.textContent = "";
+  mensagemEl.className = "text-sm text-blue-700"; // reseta estilo base
+}
+
+
+	  
     exibirMensagemAluno(`✅ Rastreamento iniciado. Agora seu progresso está sendo salvo normalmente.`, "success");
 
     const segmento = {
