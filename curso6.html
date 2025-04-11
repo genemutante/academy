@@ -831,6 +831,12 @@ const observer = new MutationObserver(() => {
     btnAbrir.classList.add('hidden');
   }
 });
+
+if (painel && btnAbrir) {
+  observer.observe(painel, { attributes: true });
+}
+
+	  
 observer.observe(painel, { attributes: true });
 	
 
