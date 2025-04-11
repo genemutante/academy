@@ -114,7 +114,7 @@
     const infoAssistido = document.getElementById('infoAssistido');
     const btnQuiz = document.getElementById('btnQuiz');
 
-
+    let primeiraAulaSelecionada = false;
     let aulas = [], aulaAtual = null, player = null, interval = null;
     let lastTime = 0, duration = 0;
     let narrativaMaxCiclos = 5;
@@ -241,10 +241,11 @@ if (error) {
 	  
 if (aulas.length) {
   requestAnimationFrame(() => {
-    narrar("🚀 DOM estável e dados carregados. Selecionando a primeira aula...", "info");
-    selecionarAula(aulas[0]);
+    narrar("🚀 DOM estável e dados carregados. Selecionando aula apropriada...", "info");
+    selecionarAulaInicial();
   });
 }
+
 
 
 	  
@@ -302,6 +303,23 @@ function listarAulas() {
 }
 
 
+function selecionarAulaInicial() {
+  const emAndamento = aulas.find(a => a.status === '🕒 Em andamento');
+  const ultimaConcluida = [...aulas].reverse().find(a => a.status === '✔ Concluída');
+
+  if (emAndamento) {
+    selecionarAula(emAndamento);
+    narrar(`📌 Aula em andamento detectada: "${emAndamento.title}". Reabrindo automaticamente.`, "info");
+  } else if (ultimaConcluida) {
+    selecionarAula(ultimaConcluida);
+    narrar(`✅ Todas aulas concluídas. Reabrindo última: "${ultimaConcluida.title}".`, "info");
+  } else if (aulas.length > 0) {
+    selecionarAula(aulas[0]);
+    narrar(`🚀 Primeira aula desbloqueada. Iniciando: "${aulas[0].title}"`, "info");
+  } else {
+    narrar("⚠️ Nenhuma aula disponível para seleção.", "warning");
+  }
+}
 
     
 
