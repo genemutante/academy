@@ -551,16 +551,11 @@ timeoutProgressoInicial = setTimeout(() => {
 
 
 
-
 async function trackProgress() {
+  const progressoEl = document.getElementById("progressoTexto");
 
-	
+  console.log("📊 Estado de progressoIniciado:", progressoIniciado);
 
- const progressoEl = document.getElementById("progressoTexto");
-
- console.log("📊 Estado de progressoIniciado:", progressoIniciado);
-
-	
   if (!player || typeof player.getCurrentTime !== 'function') {
     narrar("⚠️ O player ainda não está pronto ou está inválido. Finalizei o ciclo sem ação.", "warning");
     return;
@@ -570,19 +565,21 @@ async function trackProgress() {
   const diff = tempoAtual - lastTime;
 
   // Mostra estado "aguardando progresso" se for o primeiro ciclo válido
-if (!progressoIniciado) {
-  if (maiorTempoVisualizado === 0) {
-    if (progressoEl && !progressoEl.innerText.includes("Aguardando")) {
-      progressoEl.innerHTML = `<span class="animate-pulse">⏳</span> Aguardando início do rastreamento...`;
-      narrar("⏳ Aguardando primeiros dados de progresso...", "info");
-      window._tempoInicioAguardoProgresso = Date.now();
-    } else if (Date.now() - window._tempoInicioAguardoProgresso > 30000 && !window._erroAtrasoProgressoNarrado) {
-      narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
-      window._erroAtrasoProgressoNarrado = true;
+  if (!progressoIniciado) {
+    if (maiorTempoVisualizado === 0) {
+      if (progressoEl && !progressoEl.innerText.includes("Aguardando")) {
+        progressoEl.innerHTML = `<span class="animate-pulse">⏳</span> Aguardando início do rastreamento...`;
+        narrar("⏳ Aguardando primeiros dados de progresso...", "info");
+        window._tempoInicioAguardoProgresso = Date.now();
+      } else if (
+        Date.now() - window._tempoInicioAguardoProgresso > 30000 &&
+        !window._erroAtrasoProgressoNarrado
+      ) {
+        narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
+        window._erroAtrasoProgressoNarrado = true;
+      }
     }
   }
-}
-
 
   // Apenas narra nos primeiros 5 ciclos
   if (narrativaCiclosExecutados < narrativaMaxCiclos) {
@@ -604,21 +601,12 @@ if (!progressoIniciado) {
   }
 
   // 🎯 PROGRESSO REAL COMEÇOU
-  window.progressoIniciado = true;
+  progressoIniciado = true;
 
-if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
-  atualizarIndicadorLocal(maiorTempoVisualizado, duration);
-  narrar("✅ Rastreamento iniciado com sucesso. Indicador visual atualizado.", "success");
-}
-
-	
-// Progresso começou: remover indicador de carregamento
-const progressoEl = document.getElementById("progressoTexto");
-if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
-  atualizarIndicadorLocal(maiorTempoVisualizado, duration);
-  narrar("✅ Rastreamento iniciado com sucesso. Indicador visual atualizado.", "success");
-}
-
+  if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
+    atualizarIndicadorLocal(maiorTempoVisualizado, duration);
+    narrar("✅ Rastreamento iniciado com sucesso. Indicador visual atualizado.", "success");
+  }
 
   const segmento = {
     user_id,
@@ -650,7 +638,7 @@ if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
   const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
 
   if (percentual >= 97) {
-    document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
+    progressoEl.textContent = "✅ Aula concluída";
     document.getElementById("recomecarSugestao").innerHTML = "";
     await habilitarQuiz(aulaAtual.id);
     listarAulas();
