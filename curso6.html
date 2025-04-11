@@ -599,6 +599,13 @@ async function trackProgress() {
 
   // 🎯 PROGRESSO REAL COMEÇOU
   window.progressoIniciado = true;
+// Progresso começou: remover indicador de carregamento
+const progressoEl = document.getElementById("progressoTexto");
+if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
+  atualizarIndicadorLocal(maiorTempoVisualizado, duration);
+  narrar("✅ Rastreamento iniciado com sucesso. Indicador visual atualizado.", "success");
+}
+
 
   const segmento = {
     user_id,
