@@ -87,7 +87,9 @@
         </div>
         <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
         <p class="text-sm mt-2 text-gray-700 flex gap-2 items-center">
+		
           <span id="progressoTexto" class="text-blue-600 animate-pulse font-medium"></span>
+	  <span id="mensagemAluno" class="text-sm"></span>
           <span id="recomecarSugestao"></span>
         </p>
       </div>
@@ -831,21 +833,23 @@ function pausarNarracao() {
 
 
 
-<!-- Aqui está o trecho JS completo com a função exibirMensagemAluno integrada -->
-  function exibirMensagemAluno(mensagem, tipo = "info") {
-    const progressoEl = document.getElementById("progressoTexto");
-    if (!progressoEl) return;
+function exibirMensagemAluno(mensagem, tipo = "info") {
+  const msgEl = document.getElementById("mensagemAluno");
+  if (!msgEl) return;
 
-    const cores = {
-      info: "text-blue-600",
-      warning: "text-yellow-600",
-      error: "text-red-600",
-      success: "text-green-600"
-    };
+  const cores = {
+    info: "text-blue-600",
+    warning: "text-yellow-600",
+    error: "text-red-600",
+    success: "text-green-600"
+  };
 
-    progressoEl.className = `animate-pulse font-medium ${cores[tipo] || cores.info}`;
-    progressoEl.innerHTML = mensagem;
-  }
+  msgEl.className = `text-sm animate-pulse font-medium ${cores[tipo] || cores.info}`;
+  msgEl.innerHTML = mensagem;
+}
+
+
+	  
 
   async function trackProgress() {
     const progressoEl = document.getElementById("progressoTexto");
