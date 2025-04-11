@@ -442,6 +442,19 @@ narrar("⏳ Aguardando primeiros segundos de progresso para confirmar rastreamen
   }
 
   initPlayer();
+
+progressoIniciado = false;
+
+timeoutProgressoInicial = setTimeout(() => {
+  if (!progressoIniciado) {
+    narrar("⚠️ Ainda não detectamos nenhum progresso salvo após 10 segundos. Verifique se o vídeo está sendo reproduzido.", "warning");
+  }
+}, 10000);
+
+narrar("⏳ Aguardando primeiros dados de progresso...", "info");
+
+
+	
 }
 
 
