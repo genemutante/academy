@@ -119,6 +119,8 @@
     let lastTime = 0, duration = 0;
     let narrativaMaxCiclos = 5;
     let narrativaCiclosExecutados = 0;
+    let progressoIniciado = false;
+
     let modoNarrativoAtivo = true;
     let progressoIniciado = false;
     let timeoutProgressoInicial = null;
@@ -552,6 +554,14 @@ timeoutProgressoInicial = setTimeout(() => {
 
 
 async function trackProgress() {
+
+	
+
+ const progressoEl = document.getElementById("progressoTexto");
+
+ console.log("📊 Estado de progressoIniciado:", progressoIniciado);
+
+	
   if (!player || typeof player.getCurrentTime !== 'function') {
     narrar("⚠️ O player ainda não está pronto ou está inválido. Finalizei o ciclo sem ação.", "warning");
     return;
@@ -561,22 +571,19 @@ async function trackProgress() {
   const diff = tempoAtual - lastTime;
 
   // Mostra estado "aguardando progresso" se for o primeiro ciclo válido
-  if (!window.progressoIniciado) {
-    const progressoEl = document.getElementById("progressoTexto");
-    if (progressoEl) {
+if (!progressoIniciado) {
+  if (maiorTempoVisualizado === 0) {
+    if (progressoEl && !progressoEl.innerText.includes("Aguardando")) {
       progressoEl.innerHTML = `<span class="animate-pulse">⏳</span> Aguardando início do rastreamento...`;
-    }
-    if (!window._tempoInicioAguardoProgresso) {
-      window._tempoInicioAguardoProgresso = Date.now();
       narrar("⏳ Aguardando primeiros dados de progresso...", "info");
-    } else {
-      const tempoAguardando = (Date.now() - window._tempoInicioAguardoProgresso) / 1000;
-      if (tempoAguardando > 30 && !window._erroAtrasoProgressoNarrado) {
-        narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
-        window._erroAtrasoProgressoNarrado = true;
-      }
+      window._tempoInicioAguardoProgresso = Date.now();
+    } else if (Date.now() - window._tempoInicioAguardoProgresso > 30000 && !window._erroAtrasoProgressoNarrado) {
+      narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
+      window._erroAtrasoProgressoNarrado = true;
     }
   }
+}
+
 
   // Apenas narra nos primeiros 5 ciclos
   if (narrativaCiclosExecutados < narrativaMaxCiclos) {
@@ -599,6 +606,13 @@ async function trackProgress() {
 
   // 🎯 PROGRESSO REAL COMEÇOU
   window.progressoIniciado = true;
+
+if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
+  atualizarIndicadorLocal(maiorTempoVisualizado, duration);
+  narrar("✅ Rastreamento iniciado com sucesso. Indicador visual atualizado.", "success");
+}
+
+	
 // Progresso começou: remover indicador de carregamento
 const progressoEl = document.getElementById("progressoTexto");
 if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
