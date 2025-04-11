@@ -454,6 +454,7 @@ narrar("⏳ Aguardando primeiros segundos de progresso para confirmar rastreamen
     atualizarIndicadorLocal(0, aula.duration);
     pontoRetomada = null;
   }
+const aulaConcluida = item.status === '✔ Concluída';
 
   initPlayer();
 
@@ -562,10 +563,12 @@ timeoutProgressoInicial = setTimeout(() => {
 
 
 
-
-
 async function trackProgress() {
+  // 🔒 Impede rastreamento em aula já concluída
+  if (window._aulaConcluida) return;
+
   const progressoEl = document.getElementById("progressoTexto");
+  const mensagemEl = document.getElementById("mensagemAluno");
 
   if (!player || typeof player.getCurrentTime !== 'function') {
     narrar("⚠️ O player ainda não está pronto ou está inválido. Finalizei o ciclo sem ação.", "warning");
@@ -610,12 +613,11 @@ async function trackProgress() {
   }
 
   // ✅ Início oficial do rastreamento
-const mensagemEl = document.getElementById("mensagemAluno");
-if (mensagemEl) {
-  mensagemEl.textContent = "";
-  mensagemEl.className = "text-sm text-blue-700"; // reseta visual
-}
-
+  progressoIniciado = true;
+  if (mensagemEl) {
+    mensagemEl.textContent = "";
+    mensagemEl.className = "text-sm text-blue-700";
+  }
 
   if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
     atualizarIndicadorLocal(maiorTempoVisualizado, duration);
@@ -656,11 +658,7 @@ if (mensagemEl) {
   if (percentual >= 97) {
     exibirMensagemAluno("✅ Aula concluída! Agora você pode responder a avaliação.", "success");
     progressoEl.textContent = "✅ Aula concluída";
-
-const mensagemEl = document.getElementById("mensagemAluno");
-if (mensagemEl) mensagemEl.textContent = "";
-
-	  
+    if (mensagemEl) mensagemEl.textContent = "";
     document.getElementById("recomecarSugestao").innerHTML = "";
     await habilitarQuiz(aulaAtual.id);
     listarAulas();
@@ -677,9 +675,6 @@ if (mensagemEl) mensagemEl.textContent = "";
     }
   }
 }
-
-
-
 
 
 
