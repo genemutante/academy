@@ -518,48 +518,30 @@ function initPlayer() {
 
 
 async function trackProgress() {
-  if (narrativaCiclosExecutados >= narrativaMaxCiclos) {
-    return; // Já atingimos o máximo de ciclos de narrativa permitidos
-  }
-
-  narrativaCiclosExecutados++;
-  narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
-
   if (!player || typeof player.getCurrentTime !== 'function') {
     narrar("⚠️ O player ainda não está pronto ou está inválido. Finalizei o ciclo sem ação.", "warning");
     return;
   }
 
-  const state = player.getPlayerState();
-  if (state !== YT.PlayerState.PLAYING) {
-    narrar("⏸️ O vídeo não está em reprodução. O ciclo foi encerrado sem registrar progresso.");
-    return;
-  }
-
   const tempoAtual = Math.floor(player.getCurrentTime());
-
-if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
-  const sugestaoEl = document.getElementById("recomecarSugestao");
-  if (sugestaoEl && sugestaoEl.innerHTML.trim() !== "") {
-    sugestaoEl.innerHTML = "";
-    narrar("🔄 Ocultando sugestão de retomada: usuário já avançou além do ponto indicado.", "info");
-    pontoRetomada = null;
-  }
-}
-
-
-	
-  narrar(`🕒 Obtive o tempo atual com 'getCurrentTime()': ${tempoAtual}s.`);
-
-  narrar(`📌 Valor anterior salvo em 'lastTime': ${lastTime}s.`);
   const diff = tempoAtual - lastTime;
-  narrar(`🧮 Calculei a diferença: ${diff}s.`);
+
+  // Apenas narra nos primeiros 5 ciclos
+  if (narrativaCiclosExecutados < narrativaMaxCiclos) {
+    narrativaCiclosExecutados++;
+    narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
+    narrar(`🕒 Obtive o tempo atual com 'getCurrentTime()': ${tempoAtual}s.`);
+    narrar(`📌 Valor anterior salvo em 'lastTime': ${lastTime}s.`);
+    narrar(`🧮 Calculei a diferença: ${diff}s.`);
+  }
 
   if (diff <= 0 || diff > 30) {
-    const motivo = diff < 0
-      ? "o tempo atual voltou no tempo (talvez o usuário tenha retrocedido manualmente)"
-      : "o salto foi muito grande (possível pulo manual ou buffer longo)";
-    narrar(`⚠️ Diferença de ${diff}s foi considerada inválida porque ${motivo}. Nada será salvo.`, "warning");
+    if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
+      const motivo = diff < 0
+        ? "o tempo atual voltou no tempo (talvez o usuário tenha retrocedido manualmente)"
+        : "o salto foi muito grande (possível pulo manual ou buffer longo)";
+      narrar(`⚠️ Diferença de ${diff}s foi considerada inválida porque ${motivo}. Nada será salvo.`, "warning");
+    }
     return;
   }
 
@@ -571,19 +553,18 @@ if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
     segment: { start: lastTime, end: tempoAtual }
   };
 
-  narrar(`📦 Preparei o objeto 'segmento' com start=${lastTime}s e end=${tempoAtual}s.`);
-  narrar("📤 Enviando para o Supabase...");
+  if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
+    narrar(`📦 Enviando segmento com start=${lastTime}s e end=${tempoAtual}s...`);
+  }
 
-  const { error: insertError } = await supabase
-    .from('progress_segments')
-    .insert(segmento);
-
-  if (insertError) {
-    narrar(`❌ Supabase retornou erro: ${insertError.message}`, "error");
+  const { error } = await supabase.from('progress_segments').insert(segmento);
+  if (error) {
+    if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
+      narrar(`❌ Erro ao salvar no Supabase: ${error.message}`, "error");
+    }
     return;
   }
 
-  narrar(`✅ Segmento salvo com sucesso.`, "success");
   lastTime = tempoAtual;
 
   if (tempoAtual > maiorTempoVisualizado) {
@@ -592,21 +573,26 @@ if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
   }
 
   const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
-  narrar(`📊 Progresso calculado: ${percentual}% do vídeo.`);
 
   if (percentual >= 97) {
-    narrar("🎯 O progresso passou de 97%. Aula será marcada como concluída.", "success");
     document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
     document.getElementById("recomecarSugestao").innerHTML = "";
     await habilitarQuiz(aulaAtual.id);
     listarAulas();
     carregarProgressoCurso();
-  } else {
-    narrar("📌 Aula ainda não foi concluída (progresso abaixo de 97%).", "info");
   }
 
-  narrar("✅ Finalizei o ciclo com sucesso.\n");
+  // ❌ Sugestão de retomada já ultrapassada? Oculta automaticamente
+  if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
+    const sugestaoEl = document.getElementById("recomecarSugestao");
+    if (sugestaoEl && sugestaoEl.innerHTML.trim() !== "") {
+      sugestaoEl.innerHTML = "";
+      pontoRetomada = null;
+      narrar("🔄 Ocultando sugestão de retomada: usuário já avançou além do ponto indicado.", "info");
+    }
+  }
 }
+
 
 
 
