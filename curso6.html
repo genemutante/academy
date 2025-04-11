@@ -119,6 +119,10 @@
     let lastTime = 0, duration = 0;
     let narrativaMaxCiclos = 5;
     let narrativaCiclosExecutados = 0;
+    let modoNarrativoAtivo = true;
+    let progressoIniciado = false;
+    let timeoutProgressoInicial = null;
+
 
 
     async function verificarQuizRespondido(userId, lessonId) {
@@ -347,6 +351,13 @@ async function selecionarAula(aula) {
 
   pontoRetomada = null;
 
+
+const progressoEl = document.getElementById("progressoTexto");
+if (progressoEl) progressoEl.innerHTML = "⏳ Carregando progresso...";
+narrar("⏳ Aguardando primeiros segundos de progresso para confirmar rastreamento...", "info");
+
+	
+
   btnQuiz.disabled = true;
   btnQuiz.textContent = "Fazer Avaliação da Aula";
   btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
@@ -493,6 +504,16 @@ function initPlayer() {
 
 
     async function onPlayerReady() {
+
+timeoutProgressoInicial = setTimeout(() => {
+  if (!progressoIniciado) {
+    narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
+    mostrarNotificacao("❗ Progresso não está sendo salvo. Verifique sua conexão ou recarregue a página.");
+  }
+}, 30000); // 30s
+
+
+	    
       console.log('🎬 Player pronto, iniciando monitoramento...');
 
       if (!player || typeof player.getDuration !== 'function') {
@@ -526,7 +547,7 @@ async function trackProgress() {
   const tempoAtual = Math.floor(player.getCurrentTime());
   const diff = tempoAtual - lastTime;
 
-  // Apenas narra nos primeiros 5 ciclos
+  // Apenas narra nos primeiros ciclos
   if (narrativaCiclosExecutados < narrativaMaxCiclos) {
     narrativaCiclosExecutados++;
     narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
@@ -535,6 +556,7 @@ async function trackProgress() {
     narrar(`🧮 Calculei a diferença: ${diff}s.`);
   }
 
+  // Ignorar saltos anormais ou regressões
   if (diff <= 0 || diff > 30) {
     if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
       const motivo = diff < 0
@@ -558,11 +580,19 @@ async function trackProgress() {
   }
 
   const { error } = await supabase.from('progress_segments').insert(segmento);
+
   if (error) {
     if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
       narrar(`❌ Erro ao salvar no Supabase: ${error.message}`, "error");
     }
     return;
+  }
+
+  // ✅ Marca o progresso como iniciado com sucesso
+  if (!progressoIniciado) {
+    progressoIniciado = true;
+    if (timeoutProgressoInicial) clearTimeout(timeoutProgressoInicial);
+    narrar("🚀 Primeiro segmento registrado com sucesso. Progresso confirmado!", "success");
   }
 
   lastTime = tempoAtual;
@@ -592,6 +622,7 @@ async function trackProgress() {
     }
   }
 }
+
 
 
 
@@ -666,6 +697,8 @@ carregarNomeAluno();
 const narrativaGravada = [];
 
 function narrar(texto, tipo = "info") {
+  if (!modoNarrativoAtivo) return;
+
   const ul = document.getElementById("narrativaLog");
   if (!ul) return;
 
@@ -683,15 +716,13 @@ function narrar(texto, tipo = "info") {
 
   const li = document.createElement("li");
   const cor = cores[tipo] || cores.info;
-   li.className = `${cor} leading-snug whitespace-pre-wrap`;
-
-
-	
+  li.className = `${cor} leading-snug whitespace-pre-wrap`;
   li.innerText = `[${timestamp}] ${texto}`;
   ul.appendChild(li);
 
   ul.parentElement.scrollTop = ul.parentElement.scrollHeight;
 }
+
 
 	  
 
@@ -751,7 +782,24 @@ const observer = new MutationObserver(() => {
 });
 observer.observe(painel, { attributes: true });
 	
-	
+
+function ativarNarracao() {
+  modoNarrativoAtivo = true;
+  document.getElementById("btnAtivarNarra").classList.add("hidden");
+  document.getElementById("btnPausarNarra").classList.remove("hidden");
+  narrar("🔔 Narração reativada manualmente a partir deste ponto.", "info");
+}
+
+function pausarNarracao() {
+  modoNarrativoAtivo = false;
+  document.getElementById("btnPausarNarra").classList.add("hidden");
+  document.getElementById("btnAtivarNarra").classList.remove("hidden");
+}
+
+
+
+
+	  
   </script>
   
   
@@ -763,9 +811,10 @@ observer.observe(painel, { attributes: true });
     <button onclick="document.getElementById('painelNarrativo').classList.add('hidden')" class="text-xs text-gray-400 hover:text-red-400 transition">✖ Fechar</button>
   </div>
   <div class="mb-2 flex gap-2 flex-wrap">
-    <button onclick="replayNarrativa()" class="text-xs text-gray-300 hover:text-white">🔁 Reproduzir Execução</button>
-    <button onclick="exportarNarrativa()" class="text-xs text-gray-300 hover:text-white">📄 Exportar</button>
-    <button onclick="novaAnaliseNarrativa()" class="text-xs text-yellow-300 hover:text-white">🧹 Nova Análise</button>
+<button id="btnAtivarNarra" onclick="ativarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3">▶️ Reativar Narração</button>
+<button id="btnPausarNarra" onclick="pausarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3 hidden">⏹️ Pausar Narração</button>
+<button onclick="exportarNarrativa()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3">📄 Exportar Narrativa</button>
+
   </div>
   <ul id="narrativaLog" class="space-y-2"></ul>
 </div>
