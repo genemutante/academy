@@ -117,6 +117,9 @@
 
     let aulas = [], aulaAtual = null, player = null, interval = null;
     let lastTime = 0, duration = 0;
+    let narrativaMaxCiclos = 5;
+    let narrativaCiclosExecutados = 0;
+
 
     async function verificarQuizRespondido(userId, lessonId) {
       const { data, error } = await supabase
@@ -309,6 +312,10 @@ function listarAulas() {
 // 🧼 Etapa de limpeza: interrompe o ciclo anterior de rastreamento, se houver
 if (interval) {
   clearInterval(interval);
+narrativaCiclosExecutados = 0;
+narrar("🔄 Reiniciei o contador de ciclos narrativos para nova aula.", "info");
+
+	
   narrar("🛑 Encerrei o ciclo anterior de rastreamento (intervalo setInterval). Isso previne múltiplos rastreamentos paralelos ao trocar de aula.", "info");
 } else {
   narrar("ℹ️ Nenhum ciclo anterior de rastreamento ativo. Nada a encerrar.", "info");
@@ -479,6 +486,12 @@ function initPlayer() {
 
 
 async function trackProgress() {
+  if (narrativaCiclosExecutados >= narrativaMaxCiclos) {
+    return; // Já atingimos o máximo de ciclos de narrativa permitidos
+  }
+
+  narrativaCiclosExecutados++;
+  narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
   narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
 
   if (!player || typeof player.getCurrentTime !== 'function') {
