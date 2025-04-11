@@ -168,7 +168,15 @@
     .select('*')
     .eq('id', course_id)
     .single();
-    
+
+if (!curso) {
+  narrar("❌ Falha ao carregar dados do curso no Supabase. Verifique o course_id ou a conexão.", "error");
+  tituloCurso.textContent = "❌ Erro ao carregar curso";
+  return;
+}
+
+
+	  
   tituloCurso.textContent = curso.title;
   descricaoCurso.textContent = curso.description;
 
@@ -177,6 +185,13 @@
     .select('*')
     .eq('course_id', course_id)
     .order('order');
+
+if (!lista || lista.length === 0) {
+  narrar("⚠️ Nenhuma aula encontrada para este curso.", "warning");
+  tituloCurso.textContent += " (sem aulas)";
+  return;
+}
+  
 
   aulas = lista || [];
 
@@ -562,11 +577,10 @@ async function trackProgress() {
       btnQuiz.className = "bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded text-sm transition";
       btnQuiz.title = "Abrir avaliação desta aula";
 
-btnQuiz.onclick = () => {
+btnQuiz.addEventListener("click", () => {
   const quizContainer = document.createElement('div');
   quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
 
-  // ✅ Criando o HTML com template string corretamente
   const modalHTML = `
     <div class="bg-white w-full max-w-2xl h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
       <button onclick="this.closest('div').parentElement.remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
@@ -577,12 +591,11 @@ btnQuiz.onclick = () => {
       ></iframe>
     </div>
   `;
-
-  // ✅ Atribui o HTML e adiciona ao DOM
+  
   quizContainer.innerHTML = modalHTML;
   document.body.appendChild(quizContainer);
-};
-;
+});
+
 
 	    
     }
@@ -627,7 +640,11 @@ function narrar(texto, tipo = "info") {
   narrativaGravada.push({ texto, tipo, timestamp });
 
   const li = document.createElement("li");
-  li.className = `${cores[tipo] || cores.info]} leading-snug whitespace-pre-wrap`;
+  const cor = cores[tipo] || cores.info;
+   li.className = `${cor} leading-snug whitespace-pre-wrap`;
+
+
+	
   li.innerText = `[${timestamp}] ${texto}`;
   ul.appendChild(li);
 
