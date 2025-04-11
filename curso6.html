@@ -291,8 +291,19 @@ function listarAulas() {
       btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
       btnQuiz.onclick = null;
 
-      clearInterval(interval);
-      lastTime = 0;
+// 🧼 Etapa de limpeza: interrompe o ciclo anterior de rastreamento, se houver
+if (interval) {
+  clearInterval(interval);
+  narrar("🛑 Encerrei o ciclo anterior de rastreamento (intervalo setInterval). Isso previne múltiplos rastreamentos paralelos ao trocar de aula.", "info");
+} else {
+  narrar("ℹ️ Nenhum ciclo anterior de rastreamento ativo. Nada a encerrar.", "info");
+}
+
+// 🧽 Inicializo variáveis locais para que possamos restaurá-las com base no progresso salvo
+lastTime = 0;
+maiorTempoVisualizado = 0;
+narrar("🔄 Reiniciei temporariamente as variáveis 'lastTime' e 'maiorTempoVisualizado'. Aguardo carregamento do progresso salvo para esta aula.", "info");
+
 
       const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
         p_user_id: user_id,
@@ -303,6 +314,19 @@ function listarAulas() {
         const item = progresso[0];
 
         if (item.status === '✔ Concluída') {
+
+// 🧠 Verifica se há progresso salvo para retomar a contagem local corretamente
+if (item.segundos_assistidos > 0) {
+  lastTime = item.segundos_assistidos;
+  maiorTempoVisualizado = item.segundos_assistidos;
+  narrar(`📥 Encontrei progresso salvo no Supabase: ${item.segundos_assistidos}s. Atualizei 'lastTime' e 'maiorTempoVisualizado' para continuar de onde parou.`, "success");
+} else {
+  narrar("📭 Nenhum tempo assistido registrado no Supabase. Mantendo progresso local zerado.", "info");
+}
+
+
+
+		
           if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
           if (sugestaoEl) sugestaoEl.innerHTML = "";
           await habilitarQuiz(aula.id);
@@ -577,12 +601,8 @@ carregarNomeAluno();
 const narrativaGravada = [];
 
 function narrar(texto, tipo = "info") {
-  narrativaGravada.push({ texto, tipo, timestamp: Date.now() });
-
   const ul = document.getElementById("narrativaLog");
   if (!ul) return;
-
-  const li = document.createElement("li");
 
   const cores = {
     info: "text-blue-300",
@@ -591,12 +611,20 @@ function narrar(texto, tipo = "info") {
     error: "text-red-400"
   };
 
-  li.className = `${cores[tipo] || cores.info} leading-snug whitespace-pre-wrap`;
-  li.innerText = texto;
+  const agora = new Date();
+  const timestamp = agora.toLocaleTimeString('pt-BR', { hour12: false });
+
+  narrativaGravada.push({ texto, tipo, timestamp });
+
+  const li = document.createElement("li");
+  li.className = `${cores[tipo] || cores.info]} leading-snug whitespace-pre-wrap`;
+  li.innerText = `[${timestamp}] ${texto}`;
   ul.appendChild(li);
 
   ul.parentElement.scrollTop = ul.parentElement.scrollHeight;
 }
+
+	  
 
 async function replayNarrativa(velocidade = 1) {
   const ul = document.getElementById("narrativaLog");
@@ -609,6 +637,28 @@ async function replayNarrativa(velocidade = 1) {
   }
 }
 
+	  
+function exportarNarrativa() {
+  if (!narrativaGravada.length) {
+    alert("Nenhuma narrativa registrada ainda.");
+    return;
+  }
+
+  let conteudo = `📜 LOG DE EXECUÇÃO NARRADA - ${new Date().toLocaleString()}\n\n`;
+  narrativaGravada.forEach(({ timestamp, texto, tipo }) => {
+    conteudo += `[${timestamp}] (${tipo.toUpperCase()}) ${texto}\n`;
+  });
+
+  const blob = new Blob([conteudo], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `narrativa_execucao_${Date.now()}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 	
 	
 	
@@ -621,6 +671,9 @@ async function replayNarrativa(velocidade = 1) {
 <div id="painelNarrativo" class="fixed top-16 right-4 w-[420px] max-h-[88vh] overflow-y-auto bg-gray-900 text-green-200 text-sm font-mono shadow-xl rounded-xl p-4 z-50 space-y-1">
   <div class="text-green-400 font-bold mb-3">📜 Narrativa da Execução</div>
   <button onclick="replayNarrativa()" class="text-xs text-gray-300 hover:text-white mb-3">🔁 Reproduzir Execução</button>
+  <button onclick="exportarNarrativa()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3">📄 Exportar Narrativa</button>
+
+	
   <ul id="narrativaLog" class="space-y-2"></ul>
 </div>
  
