@@ -646,7 +646,8 @@ if (aulaAtual?.status === '✔ Concluída' && aulaAtual.quizEnviado) {
     mensagemEl.className = "text-sm text-blue-700";
   }
 
-  if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
+ if (progressoEl && (progressoEl.innerText.includes("Aguardando") || progressoEl.innerText.includes("Carregando"))) {
+
     atualizarIndicadorLocal(maiorTempoVisualizado, duration);
     exibirMensagemAluno(`✅ Rastreamento em andamento!`, "success");
     narrar("✅ Progresso iniciado com sucesso. Indicador visual atualizado.", "success");
@@ -960,6 +961,8 @@ async function trackProgress() {
   console.log("📡 trackProgress iniciado!");
 
   const progressoEl = document.getElementById("progressoTexto");
+  const mensagemEl = document.getElementById("mensagemAluno");
+
   if (!player || typeof player.getCurrentTime !== 'function') {
     narrar("⚠️ O player ainda não está pronto ou inválido. Ciclo cancelado.", "warning");
     return;
@@ -968,45 +971,56 @@ async function trackProgress() {
   const tempoAtual = Math.floor(player.getCurrentTime());
   const diff = tempoAtual - lastTime;
 
-  if (!progressoIniciado && maiorTempoVisualizado === 0) {
-    const tempoAguardando = Date.now() - (window._tempoInicioAguardoProgresso || 0);
-    if (!window._tempoInicioAguardoProgresso) {
-      window._tempoInicioAguardoProgresso = Date.now();
-      exibirMensagemAluno("⏳ Aguardando início do rastreamento...", "info");
-      narrar("⏳ Aguardando primeiros dados de progresso...", "info");
-    } else if (tempoAguardando > 10000 && !window._erroAtrasoProgressoNarrado) {
-      exibirMensagemAluno("⚠️ Verifique se o vídeo está em reprodução.", "warning");
-      narrar("⛔ Ainda sem progresso após 10s. Pode ser erro no player ou Supabase.", "error");
-      window._erroAtrasoProgressoNarrado = true;
-    }
-  }
+  console.log(`⏱️ Tempo atual: ${tempoAtual}s | Último salvo: ${lastTime}s | Diferença: ${diff}s`);
 
-  if (narrativaCiclosExecutados < narrativaMaxCiclos) {
-    narrativaCiclosExecutados++;
-    narrar(`📍 Rastreamento: ${tempoAtual}s (diff: ${diff})`);
-  }
-
-  if (diff < 0 || diff > 30) {
-    if (diff < 0) {
-      exibirMensagemAluno("🔄 Você voltou para rever um trecho. Rastreamento retomará após seguir assistindo.", "info");
-    } else {
-      exibirMensagemAluno("⏭️ Você adiantou o vídeo. O rastreamento será retomado ao seguir normalmente.", "info");
-    }
+  // Ignora rastreamento se ainda está nos primeiros segundos
+  if (!progressoIniciado && tempoAtual < 10) {
+    narrar("🕓 Ignorando rastreamento inicial: tempo ainda muito curto para validação.", "info");
     return;
   }
 
-  // ✅ Rastreamento iniciado
+  // Evita retrocessos iniciais serem salvos como progresso
+  if (diff < 0 && maiorTempoVisualizado === 0) {
+    narrar("↩️ Tempo voltou nos primeiros segundos. Ignorando por segurança.", "info");
+    return;
+  }
+
+  // 🧠 Feedback técnico limitado a 5 ciclos
+  if (narrativaCiclosExecutados < narrativaMaxCiclos) {
+    narrativaCiclosExecutados++;
+    narrar(`📍 Rastreamento válido: ${tempoAtual}s (diff: ${diff})`);
+  }
+
+  // Se detectado pulo ou retrocesso
+  if (diff <= 0 || diff > 30) {
+    const tipo = diff < 0 ? "voltou" : "adiantou";
+    const msg = diff < 0
+      ? "🔄 Você voltou para rever um trecho. Rastreamento será retomado logo após."
+      : "⏭️ Você adiantou o vídeo. Rastreamento retomará após fluxo normal.";
+    exibirMensagemAluno(msg, "info");
+    narrar(`⏸️ Rastreamento pausado porque o aluno ${tipo} o vídeo.`, "info");
+    return;
+  }
+
+  // ✅ Marca como iniciado
   progressoIniciado = true;
-  const mensagemEl = document.getElementById("mensagemAluno");
+  window._tempoInicioAguardoProgresso = null;
+
+  // Limpa mensagem do aluno
   if (mensagemEl) {
     mensagemEl.textContent = "";
     mensagemEl.className = "text-sm text-blue-700";
   }
 
-  btnQuiz.disabled = true;
-  btnQuiz.textContent = "🕓 Aguardando conclusão...";
-  btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
+  // ✅ Corrige a exibição do indicador se ainda mostra “Carregando…” ou “Aguardando…”
+  if (progressoEl && (progressoEl.innerText.includes("Aguardando") || progressoEl.innerText.includes("Carregando"))) {
+    progressoEl.textContent = "";
+    atualizarIndicadorLocal(maiorTempoVisualizado, duration);
+    exibirMensagemAluno(`✅ Rastreamento em andamento!`, "success");
+    narrar("✅ Progresso iniciado com sucesso. Indicador visual atualizado.", "success");
+  }
 
+  // 🔐 Salva no Supabase
   const segmento = {
     user_id,
     course_id,
@@ -1029,42 +1043,26 @@ async function trackProgress() {
 
   const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
 
-  if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
-    atualizarIndicadorLocal(maiorTempoVisualizado, duration);
-    exibirMensagemAluno(`✅ Rastreamento em andamento`, "success");
-    narrar("✅ Progresso iniciado com sucesso!", "success");
-  }
-
-  // 🏁 Aula concluída
+  // ✅ Aula completa
   if (percentual >= 97) {
     progressoEl.textContent = "✅ Aula concluída";
     document.getElementById("recomecarSugestao").innerHTML = "";
     await habilitarQuiz(aulaAtual.id);
     listarAulas();
     carregarProgressoCurso();
-
     exibirMensagemAluno("✅ Aula concluída! A próxima começará em 5 segundos...", "success");
 
-    // ⏭️ Carregar próxima aula automaticamente com contador
+    // ⏭️ Transição automática
     const atualIndex = aulas.findIndex(a => a.id === aulaAtual.id);
     const proximaAula = aulas[atualIndex + 1];
-
     if (proximaAula) {
-      let segundos = 5;
-      const intervalo = setInterval(() => {
-        segundos--;
-        exibirMensagemAluno(`⏭️ Próxima aula inicia em ${segundos}s...`, "success");
-        if (segundos === 0) {
-          clearInterval(intervalo);
-          selecionarAula(proximaAula);
-        }
-      }, 1000);
+      mostrarTransicaoParaProximaAula(proximaAula);
     } else {
       exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
     }
   }
 
-  // 🔕 Ocultar sugestão de retomada se passou
+  // 🧼 Oculta sugestão de retomada se ponto já foi superado
   if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
     const sugestaoEl = document.getElementById("recomecarSugestao");
     if (sugestaoEl && sugestaoEl.innerHTML.trim() !== "") {
