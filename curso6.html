@@ -320,20 +320,22 @@ function listarAulas() {
 function selecionarAulaInicial() {
   const emAndamento = aulas.find(a => a.status === '🕒 Em andamento');
   const ultimaConcluida = [...aulas].reverse().find(a => a.status === '✔ Concluída');
+  const proxima = aulas.find(a => !(a.status === '✔ Concluída' && a.quizEnviado));
 
   if (emAndamento) {
     selecionarAula(emAndamento);
     narrar(`📌 Aula em andamento detectada: "${emAndamento.title}". Reabrindo automaticamente.`, "info");
+  } else if (proxima) {
+    selecionarAula(proxima);
+    narrar(`🚀 Iniciando próxima aula desbloqueada: "${proxima.title}"`, "info");
   } else if (ultimaConcluida) {
+    narrar(`🎉 Todas as aulas e quizzes foram concluídos! Última aula foi: "${ultimaConcluida.title}"`, "success");
     selecionarAula(ultimaConcluida);
-    narrar(`✅ Todas aulas concluídas. Reabrindo última: "${ultimaConcluida.title}".`, "info");
-  } else if (aulas.length > 0) {
-    selecionarAula(aulas[0]);
-    narrar(`🚀 Primeira aula desbloqueada. Iniciando: "${aulas[0].title}"`, "info");
   } else {
     narrar("⚠️ Nenhuma aula disponível para seleção.", "warning");
   }
 }
+
 
     
 
@@ -368,6 +370,22 @@ progressoIniciado = false;
 
   aulaAtual = aula;
   tituloAula.textContent = aula.title;
+
+// 🧼 Reset visual da aula anterior
+document.getElementById("mensagemAluno").textContent = "";
+document.getElementById("mensagemAluno").className = "";
+document.getElementById("recomecarSugestao").innerHTML = "";
+document.getElementById("indicadorNumerico").textContent = "";
+
+// 🔁 Reset interno
+maiorTempoVisualizado = 0;
+lastTime = 0;
+window._tempoInicioAguardoProgresso = null;
+window._erroAtrasoProgressoNarrado = false;
+pontoRetomada = null;
+progressoIniciado = false;
+
+	
 
   const progressoEl = document.getElementById("progressoTexto");
   const sugestaoEl = document.getElementById("recomecarSugestao");
@@ -569,6 +587,13 @@ timeoutProgressoInicial = setTimeout(() => {
 async function trackProgress() {
   console.log("📡 trackProgress iniciado!");
 
+if (aulaAtual?.status === '✔ Concluída' && aulaAtual.quizEnviado) {
+  narrar("⛔ Aula já está 100% concluída e com quiz enviado. Rastreamento desnecessário.", "info");
+  return;
+}
+
+	
+
   const progressoEl = document.getElementById("progressoTexto");
   const mensagemEl = document.getElementById("mensagemAluno");
 
@@ -687,6 +712,11 @@ async function trackProgress() {
     async function habilitarQuiz(aulaId) {
       const jaFez = await verificarQuizRespondido(user_id, aulaId);
 
+if (aulaAtual?.status === '✔ Concluída' && jaFez) {
+  narrar("✅ Quiz já enviado e aula concluída. Botão será mantido bloqueado.", "info");
+}
+	    
+
       console.log("📋 Verificando se quiz já foi respondido...");
       console.log("User ID:", user_id, "| Aula ID:", aulaId);
       console.log("Resultado Supabase:", jaFez);
@@ -764,7 +794,14 @@ const observer = new MutationObserver(async () => {
 
 
 
-	    
+if (aulaAtual.status === '✔ Concluída' && aulaAtual.quizEnviado) {
+  btnQuiz.disabled = true;
+  btnQuiz.textContent = "✅ Avaliação enviada";
+  btnQuiz.className = "bg-gray-200 text-gray-600 px-4 py-2 rounded text-sm cursor-not-allowed";
+  btnQuiz.onclick = null;
+  return;
+}
+    
 
 
 	    
