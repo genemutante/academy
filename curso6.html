@@ -351,6 +351,8 @@ function selecionarAulaInicial() {
 
     let pontoRetomada = null;
 
+
+
 async function selecionarAula(aula) {
   narrar(`📥 A aula "${aula.title}" foi selecionada. ID: ${aula.id}`, "info");
 
@@ -365,24 +367,19 @@ async function selecionarAula(aula) {
 
   pontoRetomada = null;
 
-if (progressoEl) progressoEl.innerHTML = "⏳ Carregando progresso...";
-narrar("⏳ Aguardando primeiros segundos de progresso para confirmar rastreamento...", "info");
-
-	
+  progressoEl.innerHTML = "⏳ Carregando progresso...";
+  narrar("⏳ Aguardando primeiros segundos de progresso para confirmar rastreamento...", "info");
 
   btnQuiz.disabled = true;
   btnQuiz.textContent = "Fazer Avaliação da Aula";
   btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
   btnQuiz.onclick = null;
 
-  // 🧼 Encerrar rastreamento anterior (se houver)
   if (interval) {
     clearInterval(interval);
     narrativaCiclosExecutados = 0;
     narrar("🔄 Reiniciei o contador de ciclos narrativos para nova aula.", "info");
     narrar("🛑 Encerrei o ciclo anterior de rastreamento (intervalo setInterval).", "info");
-  } else {
-    narrar("ℹ️ Nenhum ciclo anterior de rastreamento ativo. Nada a encerrar.", "info");
   }
 
   // 🔎 Consultar progresso salvo no Supabase
@@ -392,32 +389,29 @@ narrar("⏳ Aguardando primeiros segundos de progresso para confirmar rastreamen
   });
 
   if (progresso?.length > 0) {
-    const item = progresso[0];
+    const dados = progresso[0];
 
-    // ✅ Restaura progresso ANTES de qualquer verificação de status
-    if (item.segundos_assistidos > 0) {
-      lastTime = item.segundos_assistidos;
-      maiorTempoVisualizado = item.segundos_assistidos;
+    if (dados.segundos_assistidos > 0) {
+      lastTime = dados.segundos_assistidos;
+      maiorTempoVisualizado = dados.segundos_assistidos;
       aula.progressoRestaurado = true;
-      narrar(`📥 Encontrei progresso salvo no Supabase: ${item.segundos_assistidos}s. Atualizei variáveis.`, "success");
-    } else {
-      narrar("📭 Nenhum tempo assistido registrado. Mantendo progresso local zerado.", "info");
+      narrar(`📥 Encontrei progresso salvo no Supabase: ${dados.segundos_assistidos}s.`, "success");
     }
 
-    if (aula.status === '✔ Concluída') {
-      if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
-      if (sugestaoEl) sugestaoEl.innerHTML = "";
+    if (dados.status === '✔ Concluída') {
+      progressoEl.textContent = "✅ Aula concluída";
+      sugestaoEl.innerHTML = "";
       await habilitarQuiz(aula.id);
     } else {
       const exibidoTexto = progressoEl?.textContent || "";
       const match = exibidoTexto.match(/⏱️ (\d+)s/);
       const segundosExibidos = match ? parseInt(match[1]) : 0;
 
-      if (item.segundos_assistidos > segundosExibidos) {
-        atualizarIndicadorLocal(item.segundos_assistidos, item.duracao_total);
+      if (dados.segundos_assistidos > segundosExibidos) {
+        atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
       }
 
-      pontoRetomada = Math.max(0, item.segundos_assistidos - 15);
+      pontoRetomada = Math.max(0, dados.segundos_assistidos - 15);
       const minutos = Math.floor(pontoRetomada / 60);
       const segundos = pontoRetomada % 60;
       const retomadaLabel = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
@@ -432,11 +426,8 @@ narrar("⏳ Aguardando primeiros segundos de progresso para confirmar rastreamen
         try {
           player.seekTo(pontoRetomada, true);
           setTimeout(() => {
-            if (typeof player.playVideo === 'function') {
-              player.playVideo();
-              console.log(`▶️ Pulando e iniciando em ${retomadaLabel}`);
-              if (sugestaoEl) sugestaoEl.textContent = "";
-            }
+            player.playVideo?.();
+            if (sugestaoEl) sugestaoEl.textContent = "";
           }, 500);
         } catch (err) {
           console.error('❌ Erro ao pular para ponto:', err);
@@ -449,28 +440,30 @@ narrar("⏳ Aguardando primeiros segundos de progresso para confirmar rastreamen
         sugestaoEl.appendChild(link);
       }
     }
-
   } else {
     atualizarIndicadorLocal(0, aula.duration);
     pontoRetomada = null;
   }
-const aulaConcluida = item.status === '✔ Concluída';
 
   initPlayer();
 
-progressoIniciado = false;
+  progressoIniciado = false;
 
-timeoutProgressoInicial = setTimeout(() => {
-  if (!progressoIniciado) {
-    narrar("⚠️ Ainda não detectamos nenhum progresso salvo após 10 segundos. Verifique se o vídeo está sendo reproduzido.", "warning");
-  }
-}, 10000);
+  timeoutProgressoInicial = setTimeout(() => {
+    if (!progressoIniciado) {
+      narrar("⚠️ Ainda não detectamos nenhum progresso salvo após 10 segundos. Verifique se o vídeo está sendo reproduzido.", "warning");
+    }
+  }, 10000);
 
-narrar("⏳ Aguardando primeiros dados de progresso...", "info");
-
-
-	
+  narrar("⏳ Aguardando primeiros dados de progresso...", "info");
 }
+
+
+
+
+
+
+	  
 
 
     function loadYouTubeAPI() {
@@ -874,97 +867,125 @@ function exibirMensagemAluno(mensagem, tipo = "info") {
 
 	  
 
-  async function trackProgress() {
-    const progressoEl = document.getElementById("progressoTexto");
+async function trackProgress() {
+  const progressoEl = document.getElementById("progressoTexto");
+  const mensagemEl = document.getElementById("mensagemAluno");
 
-    if (!player || typeof player.getCurrentTime !== 'function') {
-      narrar("⚠️ O player ainda não está pronto ou está inválido. Finalizei o ciclo sem ação.", "warning");
-      return;
+  if (!player || typeof player.getCurrentTime !== 'function') {
+    narrar("⚠️ O player ainda não está pronto ou está inválido. Finalizei o ciclo sem ação.", "warning");
+    return;
+  }
+
+  // ✅ Se a aula já foi concluída, não rastrea mais
+  if (aulaAtual?.status === '✔ Concluída') {
+    narrar("⛔ Aula já está marcada como concluída. Rastreamento encerrado.", "info");
+    if (mensagemEl) {
+      mensagemEl.textContent = "";
+      mensagemEl.className = "text-sm text-blue-700";
     }
+    return;
+  }
 
-    const tempoAtual = Math.floor(player.getCurrentTime());
-    const diff = tempoAtual - lastTime;
+  const tempoAtual = Math.floor(player.getCurrentTime());
+  const diff = tempoAtual - lastTime;
 
-    if (!progressoIniciado && maiorTempoVisualizado === 0) {
+  // ⏳ Esperando início do rastreamento real
+  if (!progressoIniciado && maiorTempoVisualizado === 0) {
+    const tempoAguardando = Date.now() - (window._tempoInicioAguardoProgresso || 0);
+
+    if (!window._tempoInicioAguardoProgresso) {
+      window._tempoInicioAguardoProgresso = Date.now();
       exibirMensagemAluno("⏳ Aguardando início do rastreamento...", "info");
-      if (!window._tempoInicioAguardoProgresso) {
-        window._tempoInicioAguardoProgresso = Date.now();
-      } else if (Date.now() - window._tempoInicioAguardoProgresso > 10000 && !window._erroAtrasoProgressoNarrado) {
-        exibirMensagemAluno("⚠️ Estamos aguardando a confirmação do seu progresso.\n🎥 Verifique se o vídeo está sendo reproduzido.", "warning");
-        window._erroAtrasoProgressoNarrado = true;
-      }
-    }
-
-    if (narrativaCiclosExecutados < narrativaMaxCiclos) {
-      narrativaCiclosExecutados++;
-      narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
-      narrar(`🕒 Obtive o tempo atual com 'getCurrentTime()': ${tempoAtual}s.`);
-      narrar(`📌 Valor anterior salvo em 'lastTime': ${lastTime}s.`);
-      narrar(`🧮 Calculei a diferença: ${diff}s.`);
-    }
-
-    if (diff <= 0 || diff > 30) {
-      if (diff < 0) {
-        exibirMensagemAluno("🔄 Você voltou para rever um trecho. Que bom! O rastreamento será retomado assim que seguir assistindo.\n📌 Reforçar trechos importantes é uma ótima prática!", "info");
-      } else {
-        exibirMensagemAluno("⏭️ Você adiantou o vídeo. O progresso será retomado assim que você assistir normalmente a partir do novo ponto.\n🧠 Dica: evite pular partes importantes, isso pode impactar o seu aproveitamento.", "warning");
-      }
-      return;
-    }
-
-    progressoIniciado = true;
-
-// ⬇️ Apaga mensagem "⏳ Carregando progresso..."
-const mensagemEl = document.getElementById("mensagemAluno");
-if (mensagemEl) {
-  mensagemEl.textContent = "";
-  mensagemEl.className = "text-sm text-blue-700"; // reseta estilo base
-}
-
-
-	  
-    exibirMensagemAluno(`✅ Rastreamento iniciado. Agora seu progresso está sendo salvo normalmente.`, "success");
-
-    const segmento = {
-      user_id,
-      course_id,
-      lesson_id: aulaAtual.id,
-      duration: Math.floor(duration),
-      segment: { start: lastTime, end: tempoAtual }
-    };
-
-    const { error } = await supabase.from('progress_segments').insert(segmento);
-    if (error) {
-      narrar(`❌ Erro ao salvar no Supabase: ${error.message}`, "error");
-      return;
-    }
-
-    lastTime = tempoAtual;
-
-    if (tempoAtual > maiorTempoVisualizado) {
-      maiorTempoVisualizado = tempoAtual;
-      atualizarIndicadorLocal(maiorTempoVisualizado, duration);
-    }
-
-    const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
-
-    if (percentual >= 97) {
-      progressoEl.textContent = "✅ Aula concluída";
-      document.getElementById("recomecarSugestao").innerHTML = "";
-      await habilitarQuiz(aulaAtual.id);
-      listarAulas();
-      carregarProgressoCurso();
-    }
-
-    if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
-      const sugestaoEl = document.getElementById("recomecarSugestao");
-      if (sugestaoEl && sugestaoEl.innerHTML.trim() !== "") {
-        sugestaoEl.innerHTML = "";
-        pontoRetomada = null;
-        narrar("🔄 Ocultando sugestão de retomada: usuário já avançou além do ponto indicado.", "info");
-      }
+      narrar("⏳ Aguardando primeiros dados de progresso...", "info");
+    } else if (tempoAguardando > 30000 && !window._erroAtrasoProgressoNarrado) {
+      exibirMensagemAluno("⚠️ Estamos aguardando a confirmação do seu progresso. Verifique se o vídeo está em reprodução.", "warning");
+      narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
+      window._erroAtrasoProgressoNarrado = true;
     }
   }
+
+  // 🎤 Narração técnica (limite de 5 ciclos)
+  if (narrativaCiclosExecutados < narrativaMaxCiclos) {
+    narrativaCiclosExecutados++;
+    narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
+    narrar(`🕒 Tempo atual: ${tempoAtual}s | Último tempo salvo: ${lastTime}s | Diferença: ${diff}s`);
+  }
+
+  // 🔁 Detecção de pulo manual
+  if (diff <= 0 || diff > 30) {
+    if (diff < 0) {
+      narrar("🔄 Tempo voltou. Provável revisão manual.", "info");
+      exibirMensagemAluno("🔄 Você voltou para rever um trecho. O rastreamento será retomado assim que seguir assistindo.", "info");
+    } else {
+      narrar("⏭️ Salto grande detectado. Rastreamento pausado até fluxo normal.", "info");
+      exibirMensagemAluno("⏭️ Você adiantou o vídeo. O progresso será retomado quando assistir normalmente a partir do novo ponto.", "info");
+    }
+    return;
+  }
+
+  // ✅ Início oficial do rastreamento
+  progressoIniciado = true;
+
+  if (mensagemEl) {
+    mensagemEl.textContent = "";
+    mensagemEl.className = "text-sm text-blue-700"; // limpa aviso
+  }
+
+  if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
+    atualizarIndicadorLocal(maiorTempoVisualizado, duration);
+    exibirMensagemAluno(`✅ Progresso iniciado. Rastreamento em andamento!`, "success");
+    narrar("✅ Rastreamento iniciado com sucesso. Indicador visual atualizado.", "success");
+  }
+
+  // 📤 Registro do segmento
+  const segmento = {
+    user_id,
+    course_id,
+    lesson_id: aulaAtual.id,
+    duration: Math.floor(duration),
+    segment: { start: lastTime, end: tempoAtual }
+  };
+
+  if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
+    narrar(`📦 Enviando segmento: start=${lastTime}s, end=${tempoAtual}s`);
+  }
+
+  const { error } = await supabase.from('progress_segments').insert(segmento);
+  if (error) {
+    narrar(`❌ Erro ao salvar no Supabase: ${error.message}`, "error");
+    return;
+  }
+
+  lastTime = tempoAtual;
+
+  // 📊 Atualiza indicador
+  if (tempoAtual > maiorTempoVisualizado) {
+    maiorTempoVisualizado = tempoAtual;
+    atualizarIndicadorLocal(maiorTempoVisualizado, duration);
+  }
+
+  const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
+
+  // 🏁 Aula concluída
+  if (percentual >= 97) {
+    progressoEl.textContent = "✅ Aula concluída";
+    if (mensagemEl) mensagemEl.textContent = "";
+    document.getElementById("recomecarSugestao").innerHTML = "";
+    await habilitarQuiz(aulaAtual.id);
+    listarAulas();
+    carregarProgressoCurso();
+  }
+
+  // ❌ Oculta sugestão de retomada após superação
+  if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
+    const sugestaoEl = document.getElementById("recomecarSugestao");
+    if (sugestaoEl && sugestaoEl.innerHTML.trim() !== "") {
+      sugestaoEl.innerHTML = "";
+      pontoRetomada = null;
+      narrar("🔄 Ocultando sugestão de retomada: usuário já passou do ponto sugerido.", "info");
+    }
+  }
+}
 
 	  
   </script>
