@@ -694,7 +694,10 @@ async function trackProgress() {
       btnQuiz.className = "bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded text-sm transition";
       btnQuiz.title = "Abrir avaliação desta aula";
 
-btnQuiz.addEventListener("click", () => {
+
+
+
+btnQuiz.addEventListener("click", async () => {
   const quizContainer = document.createElement('div');
   quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
 
@@ -711,7 +714,21 @@ btnQuiz.addEventListener("click", () => {
   
   quizContainer.innerHTML = modalHTML;
   document.body.appendChild(quizContainer);
+
+  // ⚠️ Esta parte aqui é o novo trecho
+  const observer = new MutationObserver(async () => {
+    const aindaExiste = document.body.contains(quizContainer);
+    if (!aindaExiste) {
+      await habilitarQuiz(aulaId); // 🔁 Recarrega o estado do botão após fechamento do modal
+      observer.disconnect();
+    }
+  });
+
+  observer.observe(document.body, { childList: true });
 });
+
+
+	    
 
 
 	    
