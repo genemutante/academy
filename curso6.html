@@ -630,16 +630,18 @@ if (aulaAtual?.status === '✔ Concluída' && aulaAtual.quizEnviado) {
   }
 
   // Se diff é inválido (pulo grande), pause rastreamento temporariamente
-  if (diff <= 0 || diff > 30) {
-    if (diff < 0) {
-      exibirMensagemAluno("🔄 Você voltou para rever um trecho. Rastreamento será retomado logo após.", "info");
-      narrar("🔙 Retrocesso detectado. Rastreamento pausado temporariamente.", "info");
-    } else {
-      exibirMensagemAluno("⏭️ Você adiantou o vídeo. Rastreamento retomará após fluxo normal.", "info");
-      narrar("⏩ Pulo detectado. Pausando rastreamento até normalização.", "info");
-    }
-    return;
+if (diff < 0) {
+  if (aulaAtual?.status !== '✔ Concluída') {
+    exibirMensagemAluno("🔄 Você voltou para rever um trecho. Rastreamento será retomado logo após.", "info");
   }
+  narrar("🔙 Retrocesso detectado. Rastreamento pausado temporariamente.", "info");
+} else {
+  if (aulaAtual?.status !== '✔ Concluída') {
+    exibirMensagemAluno("⏭️ Você adiantou o vídeo. Rastreamento retomará após fluxo normal.", "info");
+  }
+  narrar("⏩ Pulo detectado. Pausando rastreamento até normalização.", "info");
+}
+
 
   // ✅ Início oficial do rastreamento
   progressoIniciado = true;
