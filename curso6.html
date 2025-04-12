@@ -697,7 +697,7 @@ async function trackProgress() {
 
 
 
-btnQuiz.addEventListener("click", async () => {
+btnQuiz.addEventListener("click", () => {
   const quizContainer = document.createElement('div');
   quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
 
@@ -711,21 +711,37 @@ btnQuiz.addEventListener("click", async () => {
       ></iframe>
     </div>
   `;
-  
+
   quizContainer.innerHTML = modalHTML;
   document.body.appendChild(quizContainer);
 
-  // ⚠️ Esta parte aqui é o novo trecho
+  // 👇 Novo trecho que escuta o fechamento do quiz
   const observer = new MutationObserver(async () => {
-    const aindaExiste = document.body.contains(quizContainer);
-    if (!aindaExiste) {
-      await habilitarQuiz(aulaId); // 🔁 Recarrega o estado do botão após fechamento do modal
+    if (!document.body.contains(quizContainer)) {
+      console.log("📤 Quiz fechado, revalidando progresso...");
+
+      const { data: quiz } = await supabase
+        .from('user_quiz_results')
+        .select('id')
+        .eq('user_id', user_id)
+        .eq('lesson_id', aulaId)
+        .limit(1);
+
+      aulaAtual.quizEnviado = !!(quiz && quiz.length > 0);
+
+      if (aulaAtual.quizEnviado) {
+        await habilitarQuiz(aulaId);
+        listarAulas(); // 👈 Atualiza ícones e desbloqueio
+        carregarProgressoCurso(); // (opcional: atualiza barra geral)
+      }
+
       observer.disconnect();
     }
   });
 
   observer.observe(document.body, { childList: true });
 });
+
 
 
 	    
