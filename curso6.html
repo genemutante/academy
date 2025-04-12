@@ -716,28 +716,37 @@ btnQuiz.addEventListener("click", () => {
   document.body.appendChild(quizContainer);
 
   // 👇 Novo trecho que escuta o fechamento do quiz
-  const observer = new MutationObserver(async () => {
-    if (!document.body.contains(quizContainer)) {
-      console.log("📤 Quiz fechado, revalidando progresso...");
+const observer = new MutationObserver(async () => {
+  if (!document.body.contains(quizContainer)) {
+    console.log("📤 Quiz fechado, revalidando progresso...");
 
-      const { data: quiz } = await supabase
-        .from('user_quiz_results')
-        .select('id')
-        .eq('user_id', user_id)
-        .eq('lesson_id', aulaId)
-        .limit(1);
+    const { data: quiz } = await supabase
+      .from('user_quiz_results')
+      .select('id')
+      .eq('user_id', user_id)
+      .eq('lesson_id', aulaId)
+      .limit(1);
 
-      aulaAtual.quizEnviado = !!(quiz && quiz.length > 0);
+    aulaAtual.quizEnviado = !!(quiz && quiz.length > 0);
 
-      if (aulaAtual.quizEnviado) {
-        await habilitarQuiz(aulaId);
-        listarAulas(); // 👈 Atualiza ícones e desbloqueio
-        carregarProgressoCurso(); // (opcional: atualiza barra geral)
+    if (aulaAtual.quizEnviado) {
+      await habilitarQuiz(aulaId);
+      listarAulas();
+      carregarProgressoCurso();
+
+      // 🔎 Buscar próxima aula desbloqueada
+      const atualIndex = aulas.findIndex(a => a.id === aulaId);
+      const proxima = aulas[atualIndex + 1];
+
+      if (proxima) {
+        mostrarTransicaoParaProximaAula(proxima);
       }
-
-      observer.disconnect();
     }
-  });
+
+    observer.disconnect();
+  }
+});
+
 
   observer.observe(document.body, { childList: true });
 });
@@ -1019,6 +1028,37 @@ async function trackProgress() {
     }
   }
 }
+
+
+
+
+function mostrarTransicaoParaProximaAula(proximaAula) {
+  const msg = document.createElement('div');
+  msg.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-[100] animate-fade-in";
+  msg.innerHTML = `
+    <div class="bg-white px-6 py-4 rounded-xl shadow-xl text-center space-y-2 max-w-md w-full">
+      <h2 class="text-lg font-semibold text-gray-800">✅ Avaliação enviada!</h2>
+      <p class="text-sm text-gray-600">Carregando a próxima aula: <strong>${proximaAula.title}</strong></p>
+      <p class="text-sm text-blue-600 font-mono" id="contadorRedirecionamento">Em 5 segundos...</p>
+    </div>
+  `;
+  document.body.appendChild(msg);
+
+  let segundos = 5;
+  const label = msg.querySelector("#contadorRedirecionamento");
+
+  const intervalo = setInterval(() => {
+    segundos--;
+    if (segundos <= 0) {
+      clearInterval(intervalo);
+      msg.remove();
+      selecionarAula(proximaAula);
+    } else {
+      label.textContent = `Em ${segundos} segundo${segundos === 1 ? '' : 's'}...`;
+    }
+  }, 1000);
+}
+
 
 	  
   </script>
