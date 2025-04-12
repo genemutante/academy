@@ -354,6 +354,14 @@ function selecionarAulaInicial() {
 
 
 async function selecionarAula(aula) {
+
+maiorTempoVisualizado = 0;
+lastTime = 0;
+window._tempoInicioAguardoProgresso = null;
+window._erroAtrasoProgressoNarrado = false;
+
+
+	
   narrar(`📥 A aula "${aula.title}" foi selecionada. ID: ${aula.id}`, "info");
 
   aulaAtual = aula;
@@ -558,6 +566,12 @@ timeoutProgressoInicial = setTimeout(() => {
 
 async function trackProgress() {
   console.log("📡 trackProgress iniciado!");
+
+	if (!progressoIniciado && tempoAtual < 10) {
+  // ⚠ Ignora os primeiros segundos após troca de aula
+  return;
+}
+
 	
   // 🔒 Impede rastreamento em aula já concluída
   if (window._aulaConcluida) return;
