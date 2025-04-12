@@ -359,6 +359,8 @@ maiorTempoVisualizado = 0;
 lastTime = 0;
 window._tempoInicioAguardoProgresso = null;
 window._erroAtrasoProgressoNarrado = false;
+progressoIniciado = false;
+
 
 
 	
@@ -567,62 +569,53 @@ timeoutProgressoInicial = setTimeout(() => {
 async function trackProgress() {
   console.log("📡 trackProgress iniciado!");
 
-	if (!progressoIniciado && tempoAtual < 10) {
-  // ⚠ Ignora os primeiros segundos após troca de aula
-  return;
-}
-
-	
-  // 🔒 Impede rastreamento em aula já concluída
-  if (window._aulaConcluida) return;
-
   const progressoEl = document.getElementById("progressoTexto");
   const mensagemEl = document.getElementById("mensagemAluno");
 
   if (!player || typeof player.getCurrentTime !== 'function') {
-    narrar("⚠️ O player ainda não está pronto ou está inválido. Finalizei o ciclo sem ação.", "warning");
+    narrar("⚠️ O player ainda não está pronto ou inválido. Ciclo cancelado.", "warning");
     return;
   }
 
   const tempoAtual = Math.floor(player.getCurrentTime());
   const diff = tempoAtual - lastTime;
 
-  // ⏳ Esperando início do rastreamento real
-  if (!progressoIniciado && maiorTempoVisualizado === 0) {
-    const tempoAguardando = Date.now() - (window._tempoInicioAguardoProgresso || 0);
+  console.log(`⏱️ Tempo atual: ${tempoAtual}s | Último salvo: ${lastTime}s | Diferença: ${diff}s`);
 
-    if (!window._tempoInicioAguardoProgresso) {
-      window._tempoInicioAguardoProgresso = Date.now();
-      exibirMensagemAluno("⏳ Aguardando início do rastreamento...", "info");
-      narrar("⏳ Aguardando primeiros dados de progresso...", "info");
-    } else if (tempoAguardando > 30000 && !window._erroAtrasoProgressoNarrado) {
-      exibirMensagemAluno("⚠️ Estamos aguardando a confirmação do seu progresso. Verifique se o vídeo está em reprodução.", "warning");
-      narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
-      window._erroAtrasoProgressoNarrado = true;
-    }
+  // Ignora o ciclo se ainda está nos primeiros segundos após troca de aula
+  if (!progressoIniciado && tempoAtual < 10) {
+    narrar("🕓 Ignorando rastreamento inicial: tempo ainda muito curto para validação.", "info");
+    return;
   }
 
-  // 🎤 Narração técnica (limite de 5 ciclos)
+  // Evita interpretações erradas de pulos nos primeiros 10s
+  if (diff < 0 && maiorTempoVisualizado === 0) {
+    narrar("↩️ Tempo voltou nos primeiros segundos. Ignorando por segurança.", "info");
+    return;
+  }
+
+  // Narrativa técnica (limitada a 5 ciclos)
   if (narrativaCiclosExecutados < narrativaMaxCiclos) {
     narrativaCiclosExecutados++;
-    narrar("📍 Iniciei um novo ciclo de rastreamento de progresso do vídeo.");
-    narrar(`🕒 Tempo atual: ${tempoAtual}s | Último tempo salvo: ${lastTime}s | Diferença: ${diff}s`);
+    narrar(`📍 Rastreamento válido: ${tempoAtual}s (diff: ${diff})`);
   }
 
-  // 🔁 Detecção de pulo manual
+  // Se diff é inválido (pulo grande), pause rastreamento temporariamente
   if (diff <= 0 || diff > 30) {
     if (diff < 0) {
-      narrar("🔄 Tempo voltou. Provável revisão manual.", "info");
-      exibirMensagemAluno("🔄 Você voltou para rever um trecho. O rastreamento será retomado assim que seguir assistindo.", "info");
+      exibirMensagemAluno("🔄 Você voltou para rever um trecho. Rastreamento será retomado logo após.", "info");
+      narrar("🔙 Retrocesso detectado. Rastreamento pausado temporariamente.", "info");
     } else {
-      narrar("⏭️ Salto grande detectado. Rastreamento pausado até fluxo normal.", "info");
-      exibirMensagemAluno("⏭️ Você adiantou o vídeo. O progresso será retomado quando assistir normalmente a partir do novo ponto.", "info");
+      exibirMensagemAluno("⏭️ Você adiantou o vídeo. Rastreamento retomará após fluxo normal.", "info");
+      narrar("⏩ Pulo detectado. Pausando rastreamento até normalização.", "info");
     }
     return;
   }
 
   // ✅ Início oficial do rastreamento
   progressoIniciado = true;
+  window._tempoInicioAguardoProgresso = null;
+
   if (mensagemEl) {
     mensagemEl.textContent = "";
     mensagemEl.className = "text-sm text-blue-700";
@@ -630,11 +623,11 @@ async function trackProgress() {
 
   if (progressoEl && progressoEl.innerText.includes("Aguardando")) {
     atualizarIndicadorLocal(maiorTempoVisualizado, duration);
-    exibirMensagemAluno(`✅ Progresso iniciado. Rastreamento em andamento!`, "success");
-    narrar("✅ Rastreamento iniciado com sucesso. Indicador visual atualizado.", "success");
+    exibirMensagemAluno(`✅ Rastreamento em andamento!`, "success");
+    narrar("✅ Progresso iniciado com sucesso. Indicador visual atualizado.", "success");
   }
 
-  // 📤 Registro do segmento
+  // Registro do segmento
   const segmento = {
     user_id,
     course_id,
@@ -643,19 +636,14 @@ async function trackProgress() {
     segment: { start: lastTime, end: tempoAtual }
   };
 
-  if (narrativaCiclosExecutados <= narrativaMaxCiclos) {
-    narrar(`📦 Enviando segmento: start=${lastTime}s, end=${tempoAtual}s`);
-  }
-
   const { error } = await supabase.from('progress_segments').insert(segmento);
   if (error) {
-    narrar(`❌ Erro ao salvar no Supabase: ${error.message}`, "error");
+    narrar(`❌ Erro ao salvar segmento: ${error.message}`, "error");
     return;
   }
 
   lastTime = tempoAtual;
 
-  // 📊 Atualiza indicador
   if (tempoAtual > maiorTempoVisualizado) {
     maiorTempoVisualizado = tempoAtual;
     atualizarIndicadorLocal(maiorTempoVisualizado, duration);
@@ -663,27 +651,34 @@ async function trackProgress() {
 
   const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
 
-  // 🏁 Aula concluída
+  // ✅ Aula concluída
   if (percentual >= 97) {
-    exibirMensagemAluno("✅ Aula concluída! Agora você pode responder a avaliação.", "success");
     progressoEl.textContent = "✅ Aula concluída";
-    if (mensagemEl) mensagemEl.textContent = "";
+    exibirMensagemAluno("✅ Aula concluída! A próxima começará em 5 segundos...", "success");
     document.getElementById("recomecarSugestao").innerHTML = "";
+
     await habilitarQuiz(aulaAtual.id);
     listarAulas();
     carregarProgressoCurso();
+
+    // ⏭️ Transição automática
+    const atualIndex = aulas.findIndex(a => a.id === aulaAtual.id);
+    const proximaAula = aulas[atualIndex + 1];
+    if (proximaAula) mostrarTransicaoParaProximaAula(proximaAula);
+    else exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
   }
 
-  // ❌ Oculta sugestão de retomada após superação
+  // 🔕 Oculta sugestão de retomada se ponto foi superado
   if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
     const sugestaoEl = document.getElementById("recomecarSugestao");
     if (sugestaoEl && sugestaoEl.innerHTML.trim() !== "") {
       sugestaoEl.innerHTML = "";
       pontoRetomada = null;
-      narrar("🔄 Ocultando sugestão de retomada: usuário já passou do ponto sugerido.", "info");
+      narrar("🔄 Ocultando sugestão de retomada: ponto já ultrapassado.", "info");
     }
   }
 }
+
 
 
 
