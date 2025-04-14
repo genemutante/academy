@@ -378,6 +378,21 @@ document.getElementById("videoPlayer").innerHTML = ""; // Garante DOM limpo para
 player = null;
 
 
+	// 🔄 Reset de indicadores e mensagens visuais
+document.getElementById("mensagemAluno").textContent = "";
+document.getElementById("mensagemAluno").className = "";
+
+document.getElementById("recomecarSugestao").innerHTML = "";
+document.getElementById("indicadorNumerico").textContent = "";
+
+const progressoEl = document.getElementById("progressoTexto");
+if (progressoEl) progressoEl.textContent = "⏳ Carregando progresso...";
+
+btnQuiz.disabled = true;
+btnQuiz.textContent = "Fazer Avaliação da Aula";
+btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
+btnQuiz.onclick = null;
+
 	
   tituloAula.textContent = aula.title;
 
