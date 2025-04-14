@@ -666,7 +666,12 @@ if (diff < 0) {
   const percentual = ((maiorTempoVisualizado / duration) * 100).toFixed(1);
 
   // ✅ Aula concluída
-  if (percentual >= 97) {
+if (percentual >= 97) {
+  // Verifica se quiz foi enviado
+  const quizRespondido = await verificarQuizRespondido(user_id, aulaAtual.id);
+  aulaAtual.quizEnviado = quizRespondido;
+
+  if (quizRespondido) {
     progressoEl.textContent = "✅ Aula concluída";
     exibirMensagemAluno("✅ Aula concluída! A próxima começará em 5 segundos...", "success");
     document.getElementById("recomecarSugestao").innerHTML = "";
@@ -675,12 +680,19 @@ if (diff < 0) {
     listarAulas();
     carregarProgressoCurso();
 
-    // ⏭️ Transição automática
     const atualIndex = aulas.findIndex(a => a.id === aulaAtual.id);
     const proximaAula = aulas[atualIndex + 1];
-    if (proximaAula) mostrarTransicaoParaProximaAula(proximaAula);
-    else exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
+    if (proximaAula) {
+      mostrarTransicaoParaProximaAula(proximaAula);
+    } else {
+      exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
+    }
+  } else {
+    progressoEl.textContent = "🕒 Aula assistida, mas avaliação pendente";
+    exibirMensagemAluno("📋 Você precisa responder a avaliação para concluir esta aula.", "warning");
   }
+}
+
 
   // 🔕 Oculta sugestão de retomada se ponto foi superado
   if (pontoRetomada !== null && tempoAtual > pontoRetomada + 5) {
