@@ -369,6 +369,16 @@ progressoIniciado = false;
   narrar(`📥 A aula "${aula.title}" foi selecionada. ID: ${aula.id}`, "info");
 
   aulaAtual = aula;
+
+// 🧼 Reinicializar player YouTube para garantir que troque de vídeo corretamente
+if (player && typeof player.destroy === "function") {
+  player.destroy();
+}
+document.getElementById("videoPlayer").innerHTML = ""; // Garante DOM limpo para novo vídeo
+player = null;
+
+
+	
   tituloAula.textContent = aula.title;
 
 // 🧼 Reset visual da aula anterior
