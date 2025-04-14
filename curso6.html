@@ -510,24 +510,45 @@ function initPlayer() {
       },
       events: {
         onReady: onPlayerReady,
-        onStateChange: async (event) => {
-          if (event.data === YT.PlayerState.ENDED) {
-            console.log("🏋️ Vídeo finalizado!");
-            await trackProgress();
-            const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-              p_user_id: user_id,
-              p_lesson_id: aulaAtual.id
-            });
 
-            if (progressoAtualizado?.[0]?.status === '✔ Concluída') {
-              document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
-              document.getElementById("recomecarSugestao").innerHTML = "";
-              await habilitarQuiz(aulaAtual.id);
-              listarAulas();
-              carregarProgressoCurso();
-            }
-          }
-        }
+	      
+        onStateChange: async (event) => {
+
+		
+if (event.data === YT.PlayerState.ENDED) {
+  console.log("🏁 Vídeo finalizado!");
+
+  await trackProgress(); // salvar segmento final
+
+  const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+    p_user_id: user_id,
+    p_lesson_id: aulaAtual.id
+  });
+
+  const quizRespondido = await verificarQuizRespondido(user_id, aulaAtual.id);
+  const aulaFinalizada = progressoAtualizado?.[0]?.status === '✔ Concluída';
+
+  if (aulaFinalizada && quizRespondido) {
+    document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
+    document.getElementById("recomecarSugestao").innerHTML = "";
+
+    await habilitarQuiz(aulaAtual.id);
+    listarAulas();
+    carregarProgressoCurso();
+
+    const atualIndex = aulas.findIndex(a => a.id === aulaAtual.id);
+    const proxima = aulas[atualIndex + 1];
+    if (proxima) mostrarTransicaoParaProximaAula(proxima);
+    else exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
+  } else {
+    exibirMensagemAluno("📋 Aula assistida! Responda a avaliação para avançar.", "warning");
+    narrar("⛔ Aula não pode ser marcada como concluída pois a avaliação ainda não foi respondida.", "warning");
+  }
+}
+
+
+
+	      
       }
     });
   });
