@@ -477,8 +477,22 @@ async function selecionarAula(aula) {
       });
     }
 
+
+
 function initPlayer() {
+  // 🧹 Destroi player anterior se existir
+  if (player && typeof player.destroy === 'function') {
+    player.destroy();
+    player = null;
+    document.getElementById('videoPlayer').innerHTML = ''; // limpa DOM
+    narrar("♻️ Player anterior destruído e DOM limpo.", "info");
+  }
+
   const videoId = getYouTubeId(aulaAtual.youtube_url);
+  if (!videoId) {
+    narrar("❌ Erro: vídeo do YouTube não encontrado para esta aula.", "error");
+    return;
+  }
 
   loadYouTubeAPI().then(() => {
     player = new YT.Player('videoPlayer', {
@@ -486,24 +500,20 @@ function initPlayer() {
       playerVars: {
         origin: location.origin,
         enablejsapi: 1,
-        modestbranding: 1,   // Remove logo
-        rel: 0,              // Não mostrar vídeos relacionados
-        controls: 1,         // Mostra controles
-        disablekb: 1,        // Bloqueia teclado
-        fs: 0,               // Desativa fullscreen
-        iv_load_policy: 3,   // Oculta anotações
-        showinfo: 0          // Oculta info do vídeo no início
+        modestbranding: 1,
+        rel: 0,
+        controls: 1,
+        disablekb: 1,
+        fs: 0,
+        iv_load_policy: 3,
+        showinfo: 0
       },
       events: {
         onReady: onPlayerReady,
         onStateChange: async (event) => {
           if (event.data === YT.PlayerState.ENDED) {
-            console.log("🏁 Vídeo finalizado!");
-            
-            // Força salvar progresso final
+            console.log("🏋️ Vídeo finalizado!");
             await trackProgress();
-
-            // Confere status atualizado
             const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
               p_user_id: user_id,
               p_lesson_id: aulaAtual.id
@@ -522,7 +532,7 @@ function initPlayer() {
     });
   });
 }
-
+	  
 
 
 
@@ -754,7 +764,6 @@ const observer = new MutationObserver(async () => {
       listarAulas();
       carregarProgressoCurso();
 
-      // 🔎 Buscar próxima aula desbloqueada
       const atualIndex = aulas.findIndex(a => a.id === aulaId);
       const proxima = aulas[atualIndex + 1];
 
@@ -766,6 +775,12 @@ const observer = new MutationObserver(async () => {
     observer.disconnect();
   }
 });
+
+if (quizContainer instanceof Node) {
+  observer.observe(document.body, { childList: true, subtree: true });
+} else {
+  console.warn("⚠️ Quiz container não encontrado para observação.");
+}
 
 
   observer.observe(document.body, { childList: true });
