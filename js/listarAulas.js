@@ -1,8 +1,9 @@
-import { narrar } from './narrativa.js';
 import { selecionarAula } from './selecionarAula.js';
 
-export function listarAulas(aulas, listaAulasEl, user_id) {
-  listaAulasEl.innerHTML = '';
+export function listarAulas(aulas, user_id) {
+  const listaAulas = document.getElementById("listaAulas");
+  listaAulas.innerHTML = '';
+
   let liberarProxima = true;
 
   aulas.forEach((aula) => {
@@ -11,7 +12,6 @@ export function listarAulas(aulas, listaAulasEl, user_id) {
 
     const podeAcessar = liberarProxima;
 
-    // Ícones de progresso
     const icones = document.createElement('div');
     icones.className = 'flex gap-1 w-[34px] justify-start text-base';
 
@@ -32,19 +32,14 @@ export function listarAulas(aulas, listaAulasEl, user_id) {
     } else {
       li.classList.add('opacity-50', 'cursor-not-allowed');
       li.title = 'Conclua todas as aulas anteriores e a avaliação para desbloquear esta';
-      li.style.pointerEvents = 'all';
-      li.style.transition = 'none';
     }
 
     li.appendChild(icones);
     li.appendChild(label);
-    listaAulasEl.appendChild(li);
+    listaAulas.appendChild(li);
 
-    // Após a primeira não concluída, bloqueia as próximas
     if (!(aula.status === '✔ Concluída' && aula.quizEnviado)) {
       liberarProxima = false;
     }
   });
-
-  narrar("📚 Lista de aulas atualizada com status e bloqueios.", "info");
 }
