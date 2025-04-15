@@ -1,62 +1,66 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aula</title>
+
+  <!-- Tailwind CSS e Supabase -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
 
-<script>
-  tailwind.config = {
-    darkMode: 'media',
-    theme: {
-      extend: {
-        fontFamily: {
-          sans: ['Outfit', 'sans-serif'],
-          display: ['Nunito', 'sans-serif']
-        },
-        colors: {
-          primary: {
-            50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 400: '#60A5FA',
-            500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 800: '#1E40AF', 900: '#1E3A8A'
+  <script>
+    tailwind.config = {
+      darkMode: 'media',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            display: ['Nunito', 'sans-serif']
           },
-          surface: {
-            50: '#F8FAFC', 100: '#F1F5F9', 800: '#1E293B', 900: '#0F172A'
+          colors: {
+            primary: {
+              50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 400: '#60A5FA',
+              500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 800: '#1E40AF', 900: '#1E3A8A'
+            },
+            surface: {
+              50: '#F8FAFC', 100: '#F1F5F9', 800: '#1E293B', 900: '#0F172A'
+            },
+            accent: {
+              400: '#38BDF8', 500: '#0EA5E9'
+            }
           },
-          accent: {
-            400: '#38BDF8', 500: '#0EA5E9'
+          boxShadow: {
+            glow: '0 0 20px rgba(56, 189, 248, 0.3)',
+            'glow-lg': '0 0 30px rgba(56, 189, 248, 0.2)'
+          },
+          borderRadius: {
+            xl: '1rem', '2xl': '1.5rem', '3xl': '2rem'
           }
-        },
-        boxShadow: {
-          glow: '0 0 20px rgba(56, 189, 248, 0.3)',
-          'glow-lg': '0 0 30px rgba(56, 189, 248, 0.2)'
-        },
-        borderRadius: {
-          xl: '1rem', '2xl': '1.5rem', '3xl': '2rem'
         }
       }
-    }
-  };
-</script>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+    };
+  </script>
 
-  
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
 </head>
+
 <body class="font-sans bg-gradient-to-br from-surface-50 to-surface-100 text-gray-800 min-h-screen transition-colors duration-300">
 
-<header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
-  <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
-    <h1 class="text-xl font-display font-bold tracking-tight">Academy-Tools</h1>
-    <span id="nomeAluno" class="text-sm font-medium text-white/90 truncate"></span>
-  </div>
-</header>
+  <!-- Cabeçalho -->
+  <header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
+    <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
+      <h1 class="text-xl font-display font-bold tracking-tight">Academy-Tools</h1>
+      <span id="nomeAluno" class="text-sm font-medium text-white/90 truncate"></span>
+    </div>
+  </header>
 
-
-
-  <div class="max-w-6xl mx-auto px-4 py-6">
+  <!-- Conteúdo principal -->
+  <main class="max-w-6xl mx-auto px-4 py-6">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Coluna lateral: Curso -->
       <div class="lg:col-span-1">
         <div class="mb-6">
           <p class="text-sm mb-1">
@@ -71,872 +75,51 @@
         <h2 class="font-semibold mb-2 flex items-center gap-2">📚 Aulas</h2>
         <ul id="listaAulas" class="list-none space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
       </div>
+
+      <!-- Coluna principal: Aula -->
       <div class="lg:col-span-2">
         <div class="aspect-video w-full rounded overflow-hidden shadow mb-4">
           <div id="videoPlayer" class="w-full h-full"></div>
         </div>
         <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
           <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
-          <div class="flex items-center gap-2">
-
-           
-            <button id="btnQuiz" disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
-              Fazer Avaliação da Aula
-            </button>
-          </div>
+          <button id="btnQuiz" disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
+            Fazer Avaliação da Aula
+          </button>
         </div>
         <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
-	      
-<div class="mt-3 space-y-1">
-  <!-- Indicador de progresso -->
-  <p id="progressoTexto" class="text-sm text-gray-700 flex items-center gap-2">
-    ⏱ <span id="indicadorNumerico" class="text-blue-700 font-semibold animate-pulse"></span>
-  </p>
 
-  <!-- Mensagem humanizada -->
-  <p id="mensagemAluno" class="text-sm text-blue-700"></p>
-
-  <!-- Link de retomada -->
-  <p id="recomecarSugestao" class="text-sm text-blue-600 underline cursor-pointer hover:text-blue-800 transition"></p>
-</div>
-
-	      
+        <div class="mt-3 space-y-1">
+          <p id="progressoTexto" class="text-sm text-gray-700 flex items-center gap-2">
+            ⏱ <span id="indicadorNumerico" class="text-blue-700 font-semibold animate-pulse"></span>
+          </p>
+          <p id="mensagemAluno" class="text-sm text-blue-700"></p>
+          <p id="recomecarSugestao" class="text-sm text-blue-600 underline cursor-pointer hover:text-blue-800 transition"></p>
+        </div>
       </div>
     </div>
-  </div>
-
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    );
-
-    const url = new URL(location.href);
-    const user_id = url.searchParams.get('user_id');
-    const course_id = url.searchParams.get('course_id');
-
-    const playerFrame = document.getElementById('videoPlayer');
-    const tituloCurso = document.getElementById('tituloCurso');
-    const descricaoCurso = document.getElementById('descricaoCurso');
-    const listaAulas = document.getElementById('listaAulas');
-    const tituloAula = document.getElementById('tituloAula');
-    const barraProgresso = document.getElementById('barraProgresso');
-    const textoProgresso = document.getElementById('textoProgresso');
-    const infoAssistido = document.getElementById('infoAssistido');
-    const btnQuiz = document.getElementById('btnQuiz');
-
-    let primeiraAulaSelecionada = false;
-    let aulas = [], aulaAtual = null, player = null, interval = null;
-    let lastTime = 0, duration = 0;
-    let narrativaMaxCiclos = 5;
-    let narrativaCiclosExecutados = 0;
-    let progressoIniciado = false;
-
-    let modoNarrativoAtivo = true;
-    let timeoutProgressoInicial = null;
-
-
-
-    async function verificarQuizRespondido(userId, lessonId) {
-      const { data, error } = await supabase
-        .from('user_quiz_results')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('lesson_id', lessonId)
-        .limit(1);
-
-      return !!(data && data.length > 0);
-    }
-
-    function getYouTubeId(url) {
-      const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
-      return match ? match[1] : '';
-    }
-
-	  
-
-function atualizarIndicadorLocal(segundos, duracao) {
-  const el = document.getElementById("indicadorNumerico");
-  if (!el) return;
-
-  const pct = Math.min(100, Math.round((segundos / duracao) * 100));
-  el.textContent = `${segundos}s / ${duracao}s • ${pct}%`;
-}
-
-	  
-
-
-    function mostrarNotificacao(texto) {
-      const aviso = document.createElement('div');
-      aviso.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50 text-sm font-medium transition-opacity';
-      aviso.textContent = texto;
-
-      document.body.appendChild(aviso);
-
-      setTimeout(() => {
-        aviso.classList.add('opacity-0');
-        setTimeout(() => aviso.remove(), 500);
-      }, 2500);
-    }
-
-
-
-
-    
-  async function carregarDados() {
-  const { data: curso } = await supabase
-    .from('courses')
-    .select('*')
-    .eq('id', course_id)
-    .single();
-
-if (!curso) {
-  narrar("❌ Falha ao carregar dados do curso no Supabase. Verifique o course_id ou a conexão.", "error");
-  tituloCurso.textContent = "❌ Erro ao carregar curso";
-  return;
-}
-
-
-	  
-  tituloCurso.textContent = curso.title;
-  descricaoCurso.textContent = curso.description;
-
-  const { data: lista } = await supabase
-    .from('lessons')
-    .select('*')
-    .eq('course_id', course_id)
-    .order('order');
-
-if (!lista || lista.length === 0) {
-  narrar("⚠️ Nenhuma aula encontrada para este curso.", "warning");
-  tituloCurso.textContent += " (sem aulas)";
-  return;
-}
-  
-
-  aulas = lista || [];
-
-
-const promises = aulas.map(async (aula) => {
-  narrar(`🔍 Consultando progresso salvo no Supabase para a aula "${aula.title}"...`, "info");
-
-  const { data: progresso, error } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-    p_user_id: user_id,
-    p_lesson_id: aula.id
-  });
-
-  if (error) {
-    narrar(`❌ Erro ao consultar progresso da aula "${aula.title}": ${error.message}`, "error");
-  } else if (progresso?.length > 0) {
-    const item = progresso[0];
-    narrar(`📬 Supabase retornou progresso para aula "${aula.title}": ${item.segundos_assistidos}s assistidos. Status: ${item.status}.`, "info");
-  } else {
-    narrar(`📭 Nenhum progresso registrado para aula "${aula.title}".`, "warning");
-  }
-
-  aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
-
-  const { data: quiz } = await supabase
-    .from('user_quiz_results')
-    .select('id')
-    .eq('user_id', user_id)
-    .eq('lesson_id', aula.id)
-    .limit(1);
-
-  aula.quizEnviado = !!(quiz && quiz.length > 0);
-
-  return aula;
-});
-
-	  
-
-  aulas = await Promise.all(promises);
-  listarAulas();
-	  
-if (aulas.length) {
-  requestAnimationFrame(() => {
-    narrar("🚀 DOM estável e dados carregados. Selecionando aula apropriada...", "info");
-    selecionarAulaInicial();
-  });
-}
-
-
-
-	  
-  carregarProgressoCurso();
-}
-
-
-
-
-
-function listarAulas() {
-  listaAulas.innerHTML = '';
-  let liberarProxima = true;
-
-  aulas.forEach((aula, index) => {
-    const li = document.createElement('li');
-    li.className = 'flex items-center gap-2 text-gray-700 text-sm px-1';
-
-    const podeAcessar = liberarProxima;
-
-    // Ícones de progresso
-    const icones = document.createElement('div');
-    icones.className = 'flex gap-1 w-[34px] justify-start text-base';
-
-    if (aula.status === '✔ Concluída') {
-      icones.innerHTML += `<span title="Aula assistida">✅</span>`;
-    }
-
-    if (aula.quizEnviado) {
-      icones.innerHTML += `<span title="Avaliação enviada">📩</span>`;
-    }
-
-    const label = document.createElement('span');
-    label.textContent = `${aula.order}. ${aula.title}`;
-
-    if (podeAcessar) {
-      li.classList.add('cursor-pointer', 'hover:underline');
-      li.onclick = () => selecionarAula(aula);
-    } else {
-      li.classList.add('opacity-50', 'cursor-not-allowed');
-      li.title = 'Conclua todas as aulas anteriores e a avaliação para desbloquear esta';
-      li.style.pointerEvents = 'all';
-      li.style.transition = 'none';
-    }
-
-    li.appendChild(icones);
-    li.appendChild(label);
-    listaAulas.appendChild(li);
-
-    // ⛔️ Após a primeira aula "não 100% concluída", as próximas ficam bloqueadas
-    if (!(aula.status === '✔ Concluída' && aula.quizEnviado)) {
-      liberarProxima = false;
-    }
-  });
-}
-
-
-function selecionarAulaInicial() {
-  const emAndamento = aulas.find(a => a.status === '🕒 Em andamento');
-  const ultimaConcluida = [...aulas].reverse().find(a => a.status === '✔ Concluída');
-  const proxima = aulas.find(a => !(a.status === '✔ Concluída' && a.quizEnviado));
-
-  if (emAndamento) {
-    selecionarAula(emAndamento);
-    narrar(`📌 Aula em andamento detectada: "${emAndamento.title}". Reabrindo automaticamente.`, "info");
-  } else if (proxima) {
-    selecionarAula(proxima);
-    narrar(`🚀 Iniciando próxima aula desbloqueada: "${proxima.title}"`, "info");
-  } else if (ultimaConcluida) {
-    narrar(`🎉 Todas as aulas e quizzes foram concluídos! Última aula foi: "${ultimaConcluida.title}"`, "success");
-    selecionarAula(ultimaConcluida);
-  } else {
-    narrar("⚠️ Nenhuma aula disponível para seleção.", "warning");
-  }
-}
-
-
-    
-
-    async function carregarProgressoCurso() {
-      const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
-        p_user_id: user_id,
-        p_course_id: course_id
-      });
-      if (data?.length > 0) {
-        const pct = data[0].percentual_conclusao || 0;
-        barraProgresso.style.width = pct + '%';
-        textoProgresso.textContent = pct + '%';
-      }
-    }
-
-    let pontoRetomada = null;
-
-
-
-async function selecionarAula(aula) {
-  maiorTempoVisualizado = 0;
-  lastTime = 0;
-  window._tempoInicioAguardoProgresso = null;
-  window._erroAtrasoProgressoNarrado = false;
-  progressoIniciado = false;
-
-  narrar(`📥 A aula "${aula.title}" foi selecionada. ID: ${aula.id}`, "info");
-  aulaAtual = aula;
-
-  const elTituloAula = document.getElementById("tituloAula");
-  if (elTituloAula) elTituloAula.textContent = aula.title;
-
-  const msgAluno = document.getElementById("mensagemAluno");
-  const msgRecomecar = document.getElementById("recomecarSugestao");
-  const indicador = document.getElementById("indicadorNumerico");
-
-  if (msgAluno) msgAluno.textContent = "";
-  if (msgAluno) msgAluno.className = "";
-  if (msgRecomecar) msgRecomecar.innerHTML = "";
-  if (indicador) indicador.textContent = "";
-
-  const progressoEl = document.getElementById("progressoTexto");
-  if (progressoEl) progressoEl.innerHTML = "⏳ Carregando progresso...";
-
-  pontoRetomada = null;
-
-  const btnQuiz = document.getElementById("btnQuiz");
-  if (btnQuiz) {
-    btnQuiz.disabled = true;
-    btnQuiz.textContent = "Fazer Avaliação da Aula";
-    btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
-    btnQuiz.onclick = null;
-  }
-
-  if (interval) {
-    clearInterval(interval);
-    narrativaCiclosExecutados = 0;
-    narrar("🔄 Reiniciei o contador de ciclos narrativos para nova aula.", "info");
-    narrar("🛑 Encerrei o ciclo anterior de rastreamento (intervalo setInterval).", "info");
-  }
-
-  const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-    p_user_id: user_id,
-    p_lesson_id: aula.id
-  });
-
-  if (progresso?.length > 0) {
-    const dados = progresso[0];
-
-    if (dados.segundos_assistidos > 0) {
-      lastTime = dados.segundos_assistidos;
-      maiorTempoVisualizado = dados.segundos_assistidos;
-      aula.progressoRestaurado = true;
-      narrar(`📥 Encontrei progresso salvo no Supabase: ${dados.segundos_assistidos}s.`, "success");
-    }
-
-    if (dados.status === '✔ Concluída') {
-      if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
-      if (msgRecomecar) msgRecomecar.innerHTML = "";
-      await habilitarQuiz(aula.id);
-    } else {
-      atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
-
-      pontoRetomada = Math.max(0, dados.segundos_assistidos - 15);
-      const minutos = Math.floor(pontoRetomada / 60);
-      const segundos = pontoRetomada % 60;
-      const retomadaLabel = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
-
-      const link = document.createElement('div');
-      link.className = 'mt-2 text-sm text-blue-600 underline cursor-pointer hover:text-blue-800 transition flex items-center gap-1';
-      link.innerHTML = `🔁 Retomar a partir de <strong>${retomadaLabel}</strong>`;
-      link.onclick = async () => {
-        if (!player || typeof player.seekTo !== 'function') return;
-        mostrarNotificacao(`⏩ Pulando para ${retomadaLabel}...`);
-        try {
-          player.seekTo(pontoRetomada, true);
-          setTimeout(() => {
-            player.playVideo?.();
-            if (msgRecomecar) msgRecomecar.textContent = "";
-          }, 500);
-        } catch (err) {
-          console.error('❌ Erro ao pular para ponto:', err);
-          mostrarNotificacao('Erro ao tentar retomar o vídeo');
-        }
-      };
-
-      if (msgRecomecar) {
-        msgRecomecar.innerHTML = "";
-        msgRecomecar.appendChild(link);
-      }
-    }
-  } else {
-    atualizarIndicadorLocal(0, aula.duration);
-    pontoRetomada = null;
-  }
-
-  initPlayer();
-  progressoIniciado = false;
-
-  timeoutProgressoInicial = setTimeout(() => {
-    if (!progressoIniciado) {
-      narrar("⚠️ Ainda não detectamos nenhum progresso salvo após 10 segundos. Verifique se o vídeo está sendo reproduzido.", "warning");
-    }
-  }, 10000);
-
-  narrar("⏳ Aguardando primeiros dados de progresso...", "info");
-}
-
-
-
-
-	  
-
-
-    function loadYouTubeAPI() {
-      return new Promise(resolve => {
-        if (window.YT && window.YT.Player) return resolve();
-        window.onYouTubeIframeAPIReady = resolve;
-      });
-    }
-
-
-
-function initPlayer() {
-  // 🧹 Destroi player anterior se existir
-  if (player && typeof player.destroy === 'function') {
-    player.destroy();
-    player = null;
-    document.getElementById('videoPlayer').innerHTML = '';
-    narrar("♻️ Player anterior destruído e DOM limpo.", "info");
-  }
-
-  const videoId = getYouTubeId(aulaAtual.youtube_url);
-  if (!videoId) {
-    narrar("❌ Erro: vídeo do YouTube não encontrado para esta aula.", "error");
-    return;
-  }
-
-  loadYouTubeAPI().then(() => {
-    player = new YT.Player('videoPlayer', {
-      videoId: videoId,
-      playerVars: {
-        origin: location.origin,
-        enablejsapi: 1,
-        modestbranding: 1,
-        rel: 0,
-        controls: 1,
-        disablekb: 1,
-        fs: 0,
-        iv_load_policy: 3,
-        showinfo: 0
-      },
-      events: {
-        onReady: onPlayerReady,
-        onStateChange: async (event) => {
-          if (event.data === YT.PlayerState.ENDED) {
-            console.log("🏁 Vídeo finalizado!");
-            await trackProgress();
-
-            const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-              p_user_id: user_id,
-              p_lesson_id: aulaAtual.id
-            });
-
-            const aulaFinalizada = progressoAtualizado?.[0]?.status === '✔ Concluída';
-            const quizRespondido = await verificarQuizRespondido(user_id, aulaAtual.id);
-
-            if (aulaFinalizada && quizRespondido) {
-              document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
-              document.getElementById("recomecarSugestao").innerHTML = "";
-
-              await habilitarQuiz(aulaAtual.id);
-              listarAulas();
-              carregarProgressoCurso();
-
-              const atualIndex = aulas.findIndex(a => a.id === aulaAtual.id);
-              const proxima = aulas[atualIndex + 1];
-              if (proxima) {
-                mostrarTransicaoParaProximaAula(proxima);
-              } else {
-                exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
-              }
-            } else {
-              narrar("⛔ Aula finalizada, mas avaliação pendente. Não avançará automaticamente.", "warning");
-              exibirMensagemAluno("📋 Aula assistida! Responda a avaliação para avançar.", "warning");
-            }
-          }
-        }
-      }
-    });
-  });
-}
-
-  
-
-
-
-    async function onPlayerReady() {
-
-timeoutProgressoInicial = setTimeout(() => {
-  if (!progressoIniciado) {
-    narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
-    mostrarNotificacao("❗ Progresso não está sendo salvo. Verifique sua conexão ou recarregue a página.");
-  }
-}, 30000); // 30s
-
-
-	    
-      console.log('🎬 Player pronto, iniciando monitoramento...');
-
-      if (!player || typeof player.getDuration !== 'function') {
-        console.warn('⚠️ Player inválido, tentando novamente...');
-        setTimeout(onPlayerReady, 300);
-        return;
-      }
-
-      duration = player.getDuration();
-      console.log('⏱️ Duração total do vídeo:', duration);
-
-      if (pontoRetomada !== null) {
-        console.log('⏩ Retomando do ponto:', pontoRetomada);
-        player.seekTo(pontoRetomada, true);
-        player.playVideo?.();
-      }
-
-      interval = setInterval(trackProgress, 5000);
-    }
-    let maiorTempoVisualizado = 0;
-
-    
-
-    async function habilitarQuiz(aulaId) {
-      const jaFez = await verificarQuizRespondido(user_id, aulaId);
-
-if (aulaAtual?.status === '✔ Concluída' && jaFez) {
-  narrar("✅ Quiz já enviado e aula concluída. Botão será mantido bloqueado.", "info");
-}
-	    
-
-      console.log("📋 Verificando se quiz já foi respondido...");
-      console.log("User ID:", user_id, "| Aula ID:", aulaId);
-      console.log("Resultado Supabase:", jaFez);
-
-      if (jaFez) {
-        btnQuiz.disabled = true;
-        btnQuiz.textContent = "✅ Avaliação enviada";
-        btnQuiz.className = "bg-gray-200 text-gray-600 px-4 py-2 rounded text-sm cursor-not-allowed";
-        btnQuiz.title = "Você já respondeu esta avaliação";
-        btnQuiz.onclick = null;
-        return;
-      }
-
-      btnQuiz.disabled = false;
-      btnQuiz.textContent = "📝 Fazer Avaliação da Aula";
-      btnQuiz.className = "bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded text-sm transition";
-      btnQuiz.title = "Abrir avaliação desta aula";
-
-
-
-
-btnQuiz.addEventListener("click", () => {
-  const quizContainer = document.createElement('div');
-  quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
-
-  const modalHTML = `
-    <div class="bg-white w-full max-w-2xl h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
-      <button onclick="this.closest('div').parentElement.remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
-      <iframe
-        src="quiz.html?user_id=${user_id}&lesson_id=${aulaId}"
-        class="w-full h-full rounded-lg border border-slate-200"
-        frameborder="0"
-      ></iframe>
+  </main>
+
+  <!-- Painel de Narrativa -->
+  <div id="painelNarrativo" class="hidden fixed top-16 right-4 w-[420px] max-h-[88vh] overflow-y-auto bg-gray-900 text-green-200 text-sm font-mono shadow-xl rounded-xl p-4 z-50 space-y-1">
+    <div class="flex justify-between items-center mb-3">
+      <div class="text-green-400 font-bold">📜 Narrativa da Execução</div>
+      <button onclick="document.getElementById('painelNarrativo').classList.add('hidden')" class="text-xs text-gray-400 hover:text-red-400 transition">✖ Fechar</button>
     </div>
-  `;
-
-  quizContainer.innerHTML = modalHTML;
-  document.body.appendChild(quizContainer);
-
-  // 👇 Novo trecho que escuta o fechamento do quiz
-const observer = new MutationObserver(async () => {
-  if (!document.body.contains(quizContainer)) {
-    console.log("📤 Quiz fechado, revalidando progresso...");
-
-    const { data: quiz } = await supabase
-      .from('user_quiz_results')
-      .select('id')
-      .eq('user_id', user_id)
-      .eq('lesson_id', aulaId)
-      .limit(1);
-
-    aulaAtual.quizEnviado = !!(quiz && quiz.length > 0);
-
-    if (aulaAtual.quizEnviado) {
-      await habilitarQuiz(aulaId);
-      listarAulas();
-      carregarProgressoCurso();
-
-      const atualIndex = aulas.findIndex(a => a.id === aulaId);
-      const proxima = aulas[atualIndex + 1];
-
-      if (proxima) {
-        mostrarTransicaoParaProximaAula(proxima);
-      }
-    }
-
-    observer.disconnect();
-  }
-});
-
-if (quizContainer instanceof Node) {
-  observer.observe(document.body, { childList: true, subtree: true });
-} else {
-  console.warn("⚠️ Quiz container não encontrado para observação.");
-}
-
-
-  observer.observe(document.body, { childList: true });
-});
-
-
-
-if (aulaAtual.status === '✔ Concluída' && aulaAtual.quizEnviado) {
-  btnQuiz.disabled = true;
-  btnQuiz.textContent = "✅ Avaliação enviada";
-  btnQuiz.className = "bg-gray-200 text-gray-600 px-4 py-2 rounded text-sm cursor-not-allowed";
-  btnQuiz.onclick = null;
-  return;
-}
-    
-
-
-	    
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-     
-      
-// Buscar nome do aluno
-async function carregarNomeAluno() {
-  const { data: user } = await supabase.from('users').select('name').eq('id', user_id).single();
-  if (user) {
-    document.getElementById('nomeAluno').textContent = user.name;
-  }
-}
-
-      carregarDados();
-carregarNomeAluno();
-
-    });
-	
-	
-	
-	
-	
-//NARRATIVA INTELIGENTE
-const narrativaGravada = [];
-
-function narrar(texto, tipo = "info") {
-  if (!modoNarrativoAtivo) return;
-
-  const ul = document.getElementById("narrativaLog");
-  if (!ul) return;
-
-  const cores = {
-    info: "text-blue-300",
-    success: "text-green-400",
-    warning: "text-yellow-400",
-    error: "text-red-400"
-  };
-
-  const agora = new Date();
-  const timestamp = agora.toLocaleTimeString('pt-BR', { hour12: false });
-
-  narrativaGravada.push({ texto, tipo, timestamp });
-
-  const li = document.createElement("li");
-  const cor = cores[tipo] || cores.info;
-  li.className = `${cor} leading-snug whitespace-pre-wrap`;
-  li.innerText = `[${timestamp}] ${texto}`;
-  ul.appendChild(li);
-
-  ul.parentElement.scrollTop = ul.parentElement.scrollHeight;
-}
-
-
-	  
-
-async function replayNarrativa(velocidade = 1) {
-  const ul = document.getElementById("narrativaLog");
-  if (!ul) return;
-  ul.innerHTML = '';
-
-  for (const { texto, tipo } of narrativaGravada) {
-    narrar(texto, tipo);
-    await new Promise(r => setTimeout(r, 600 / velocidade));
-  }
-}
-
-	  
-function exportarNarrativa() {
-  if (!narrativaGravada.length) {
-    alert("Nenhuma narrativa registrada ainda.");
-    return;
-  }
-
-  let conteudo = `📜 LOG DE EXECUÇÃO NARRADA - ${new Date().toLocaleString()}\n\n`;
-  narrativaGravada.forEach(({ timestamp, texto, tipo }) => {
-    conteudo += `[${timestamp}] (${tipo.toUpperCase()}) ${texto}\n`;
-  });
-
-  const blob = new Blob([conteudo], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `narrativa_execucao_${Date.now()}.txt`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-	
-	
-// Reiniciar narrativa do zero
-function novaAnaliseNarrativa() {
-  narrativaGravada.length = 0;
-  const ul = document.getElementById("narrativaLog");
-  if (ul) ul.innerHTML = '';
-  narrar("🧹 Iniciei uma nova análise. A narrativa anterior foi limpa.", "info");
-}
-
-// Mostrar botão flutuante quando painel estiver fechado
-const painel = document.getElementById('painelNarrativo');
-const btnAbrir = document.getElementById('abrirPainelBtn');
-
-const observer = new MutationObserver(() => {
-  if (painel.classList.contains('hidden')) {
-    btnAbrir.classList.remove('hidden');
-  } else {
-    btnAbrir.classList.add('hidden');
-  }
-});
-
-if (painel && btnAbrir) {
-  observer.observe(painel, { attributes: true });
-}
-
-	
-
-function ativarNarracao() {
-  modoNarrativoAtivo = true;
-  document.getElementById("btnAtivarNarra").classList.add("hidden");
-  document.getElementById("btnPausarNarra").classList.remove("hidden");
-  narrar("🔔 Narração reativada manualmente a partir deste ponto.", "info");
-}
-
-function pausarNarracao() {
-  modoNarrativoAtivo = false;
-  document.getElementById("btnPausarNarra").classList.add("hidden");
-  document.getElementById("btnAtivarNarra").classList.remove("hidden");
-}
-
-
-
-function exibirMensagemAluno(mensagem, tipo = "info") {
-  const msgEl = document.getElementById("mensagemAluno");
-  if (!msgEl) return;
-
-  const cores = {
-    info: "text-blue-600",
-    warning: "text-yellow-600",
-    error: "text-red-600",
-    success: "text-green-600"
-  };
-
-  msgEl.className = `text-sm animate-pulse font-medium ${cores[tipo] || cores.info}`;
-  msgEl.textContent = mensagem;
-
-}
-
-
-
-
-
-
-
-function mostrarTransicaoParaProximaAula(proximaAula) {
-  const msg = document.createElement('div');
-  msg.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-[100] animate-fade-in";
-  msg.innerHTML = `
-    <div class="bg-white px-6 py-4 rounded-xl shadow-xl text-center space-y-2 max-w-md w-full">
-      <h2 class="text-lg font-semibold text-gray-800">✅ Avaliação enviada!</h2>
-      <p class="text-sm text-gray-600">Carregando a próxima aula: <strong>${proximaAula.title}</strong></p>
-      <p class="text-sm text-blue-600 font-mono" id="contadorRedirecionamento">Em 5 segundos...</p>
+    <div class="mb-2 flex gap-2 flex-wrap">
+      <button id="btnAtivarNarra" onclick="ativarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3">▶️ Reativar Narração</button>
+      <button id="btnPausarNarra" onclick="pausarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3 hidden">⏹️ Pausar Narração</button>
+      <button onclick="exportarNarrativa()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3">📄 Exportar Narrativa</button>
     </div>
-  `;
-  document.body.appendChild(msg);
-
-  let segundos = 5;
-  const label = msg.querySelector("#contadorRedirecionamento");
-
-  const intervalo = setInterval(() => {
-    segundos--;
-    if (segundos <= 0) {
-      clearInterval(intervalo);
-      msg.remove();
-      selecionarAula(proximaAula);
-    } else {
-      label.textContent = `Em ${segundos} segundo${segundos === 1 ? '' : 's'}...`;
-    }
-  }, 1000);
-}
-
-
-
-async function verificarConclusaoAula() {
-  const progressoEl = document.getElementById("progressoTexto");
-  const sugestaoEl = document.getElementById("recomecarSugestao");
-
-  const tempoTotal = duration;
-  const percentual = ((maiorTempoVisualizado / tempoTotal) * 100).toFixed(1);
-
-  if (percentual >= 97) {
-    const quizRespondido = await verificarQuizRespondido(user_id, aulaAtual.id);
-    aulaAtual.quizEnviado = quizRespondido;
-
-    if (quizRespondido) {
-      progressoEl.textContent = "✅ Aula concluída";
-      sugestaoEl.innerHTML = "";
-      exibirMensagemAluno("✅ Aula concluída! A próxima começará em 5 segundos...", "success");
-
-      await habilitarQuiz(aulaAtual.id);
-      listarAulas();
-      carregarProgressoCurso();
-
-      const atualIndex = aulas.findIndex(a => a.id === aulaAtual.id);
-      const proxima = aulas[atualIndex + 1];
-      if (proxima) {
-        mostrarTransicaoParaProximaAula(proxima);
-      } else {
-        exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
-      }
-    } else {
-      progressoEl.textContent = "🕒 Aula assistida, avaliação pendente";
-      exibirMensagemAluno("📋 Você precisa responder a avaliação para concluir esta aula.", "warning");
-
-      // ⚠️ Impede avanço automático até que a avaliação seja feita
-      const alerta = document.createElement("div");
-      alerta.className = "text-sm text-red-500 mt-2 font-medium animate-pulse";
-      alerta.textContent = "🚫 A avaliação ainda não foi enviada. Aula não será marcada como concluída.";
-      progressoEl.appendChild(alerta);
-    }
-  }
-}
-
-	  
-	  
-  </script>
-  
-  
-  
-<!-- ✅ PAINEL DE NARRATIVA INTELIGENTE -->
-<div id="painelNarrativo" class="hidden fixed top-16 right-4 w-[420px] max-h-[88vh] overflow-y-auto bg-gray-900 text-green-200 text-sm font-mono shadow-xl rounded-xl p-4 z-50 space-y-1">
-  <div class="flex justify-between items-center mb-3">
-    <div class="text-green-400 font-bold">📜 Narrativa da Execução</div>
-    <button onclick="document.getElementById('painelNarrativo').classList.add('hidden')" class="text-xs text-gray-400 hover:text-red-400 transition">✖ Fechar</button>
+    <ul id="narrativaLog" class="space-y-2"></ul>
   </div>
-  <div class="mb-2 flex gap-2 flex-wrap">
-<button id="btnAtivarNarra" onclick="ativarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3">▶️ Reativar Narração</button>
-<button id="btnPausarNarra" onclick="pausarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3 hidden">⏹️ Pausar Narração</button>
-<button onclick="exportarNarrativa()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3">📄 Exportar Narrativa</button>
 
-  </div>
-  <ul id="narrativaLog" class="space-y-2"></ul>
-</div>
+  <!-- Botão flutuante para reabrir o painel -->
+  <button id="abrirPainelBtn" onclick="document.getElementById('painelNarrativo').classList.remove('hidden')" class="hidden fixed bottom-6 right-6 z-50 bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm font-medium rounded-full shadow-lg transition">
+    📜 Ver Execução
+  </button>
 
-<!-- BOTÃO FLUTUANTE PARA REABRIR -->
-<button onclick="document.getElementById('painelNarrativo').classList.remove('hidden')" class="hidden fixed bottom-6 right-6 z-50 bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm font-medium rounded-full shadow-lg transition hidden" id="abrirPainelBtn">
-  📜 Ver Execução
-</button>
-
-  
-<script src="trackProgress.js"></script>
+  <!-- Bootstrap principal com todos os módulos JS importados -->
+  <script type="module" src="./js/bootstrap.js"></script>
 </body>
 </html>
