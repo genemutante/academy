@@ -1,4 +1,4 @@
-import { getYouTubeId } from './utils.js';
+import { getYouTubeId } from './utils.js'; 
 import { onPlayerReady } from './onPlayerReady.js';
 import { verificarQuizRespondido } from './verificarQuizRespondido.js';
 import { habilitarQuiz } from './habilitarQuiz.js';
