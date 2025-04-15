@@ -5,7 +5,7 @@ import { carregarProgressoCurso } from './carregarProgressoCurso.js';
 import { supabase } from './supabaseClient.js';
 
 
-export async function carregarDados(supabase, user_id, course_id, aulasRef) {
+export async function carregarDados(user_id, course_id, aulasRef) {
   const { data: curso } = await supabase
     .from('courses')
     .select('*')
