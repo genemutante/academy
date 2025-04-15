@@ -1,6 +1,5 @@
-import { narrar, exibirMensagemAluno, mostrarNotificacao } from './narrativa.js';
+import { mostrarNotificacao } from './utils.js';
 import { atualizarIndicadorLocal } from './utils.js';
-
 import { habilitarQuiz } from './habilitarQuiz.js';
 import { initPlayer } from './initPlayer.js';
 
