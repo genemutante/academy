@@ -76,3 +76,20 @@ export function pausarNarracao() {
   document.getElementById("btnPausarNarra")?.classList.add("hidden");
   document.getElementById("btnAtivarNarra")?.classList.remove("hidden");
 }
+
+
+export function exibirMensagemAluno(mensagem, tipo = "info") {
+  const msgEl = document.getElementById("mensagemAluno");
+  if (!msgEl) return;
+
+  const cores = {
+    info: "text-blue-600",
+    warning: "text-yellow-600",
+    error: "text-red-600",
+    success: "text-green-600"
+  };
+
+  msgEl.className = `text-sm animate-pulse font-medium ${cores[tipo] || cores.info}`;
+  msgEl.textContent = mensagem;
+}
+
