@@ -1113,7 +1113,6 @@ async function verificarConclusaoAula() {
   const tempoTotal = duration;
   const percentual = ((maiorTempoVisualizado / tempoTotal) * 100).toFixed(1);
 
-  // ✅ Atingiu o tempo mínimo assistido?
   if (percentual >= 97) {
     const quizRespondido = await verificarQuizRespondido(user_id, aulaAtual.id);
     aulaAtual.quizEnviado = quizRespondido;
@@ -1128,9 +1127,9 @@ async function verificarConclusaoAula() {
       carregarProgressoCurso();
 
       const atualIndex = aulas.findIndex(a => a.id === aulaAtual.id);
-      const proximaAula = aulas[atualIndex + 1];
-      if (proximaAula) {
-        mostrarTransicaoParaProximaAula(proximaAula);
+      const proxima = aulas[atualIndex + 1];
+      if (proxima) {
+        mostrarTransicaoParaProximaAula(proxima);
       } else {
         exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
       }
@@ -1138,7 +1137,7 @@ async function verificarConclusaoAula() {
       progressoEl.textContent = "🕒 Aula assistida, avaliação pendente";
       exibirMensagemAluno("📋 Você precisa responder a avaliação para concluir esta aula.", "warning");
 
-      // (Opcional) Marcar visualmente
+      // ⚠️ Impede avanço automático até que a avaliação seja feita
       const alerta = document.createElement("div");
       alerta.className = "text-sm text-red-500 mt-2 font-medium animate-pulse";
       alerta.textContent = "🚫 A avaliação ainda não foi enviada. Aula não será marcada como concluída.";
