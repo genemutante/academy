@@ -1,35 +1,11 @@
 import { supabase } from './supabaseClient.js';
 import { atualizarIndicadorLocal } from './utils.js';
 import { habilitarQuiz } from './habilitarQuiz.js';
-import { exibirMensagemAluno } from './narrativa.js';
-import { narrar } from './narrativa.js';
-import { listarAulas, carregarProgressoCurso } from './curso.js';
-import { mostrarTransicaoParaProximaAula } from './transicoes.js';
+import { exibirMensagemAluno, narrar } from './narrativa.js';
+import { listarAulas, carregarProgressoCurso } from './carregarDados.js';
+import { mostrarTransicaoParaProximaAula } from './selecionarAula.js';
 
-// Variáveis externas que devem ser setadas no escopo global antes de usar
-let player, aulaAtual, user_id, course_id;
-let duration = 0, lastTime = 0, maiorTempoVisualizado = 0;
-let progressoIniciado = false;
-let narrativaCiclosExecutados = 0, narrativaMaxCiclos = 5;
-let pontoRetomada = null;
-
-export function configurarTrackProgress(contexto) {
-  ({
-    player,
-    aulaAtual,
-    user_id,
-    course_id,
-    duration,
-    lastTime,
-    maiorTempoVisualizado,
-    progressoIniciado,
-    narrativaCiclosExecutados,
-    narrativaMaxCiclos,
-    pontoRetomada
-  } = contexto);
-}
-
-export async function trackProgress() {
+export async function trackProgress({ player, aulaAtual, user_id, course_id, duration, lastTime, maiorTempoVisualizado, progressoIniciado, narrativaCiclosExecutados, narrativaMaxCiclos, pontoRetomada }) {
   console.log("📡 trackProgress iniciado!");
 
   const progressoEl = document.getElementById("progressoTexto");
@@ -37,7 +13,7 @@ export async function trackProgress() {
 
   if (!player || typeof player.getCurrentTime !== 'function') {
     narrar("⚠️ O player ainda não está pronto ou inválido. Ciclo cancelado.", "warning");
-    return;
+    return { lastTime, maiorTempoVisualizado };
   }
 
   const tempoAtual = Math.floor(player.getCurrentTime());
@@ -47,12 +23,12 @@ export async function trackProgress() {
 
   if (!progressoIniciado && tempoAtual < 10) {
     narrar("🕓 Ignorando rastreamento inicial: tempo ainda muito curto para validação.", "info");
-    return;
+    return { lastTime, maiorTempoVisualizado };
   }
 
   if (diff < 0 && maiorTempoVisualizado === 0) {
     narrar("↩️ Tempo voltou nos primeiros segundos. Ignorando por segurança.", "info");
-    return;
+    return { lastTime, maiorTempoVisualizado };
   }
 
   if (narrativaCiclosExecutados < narrativaMaxCiclos) {
@@ -67,7 +43,7 @@ export async function trackProgress() {
       : "⏭️ Você adiantou o vídeo. Rastreamento retomará após fluxo normal.";
     exibirMensagemAluno(msg, "info");
     narrar(`⏸️ Rastreamento pausado porque o aluno ${tipo} o vídeo.`, "info");
-    return;
+    return { lastTime, maiorTempoVisualizado };
   }
 
   progressoIniciado = true;
@@ -96,7 +72,7 @@ export async function trackProgress() {
   const { error } = await supabase.from('progress_segments').insert(segmento);
   if (error) {
     narrar(`❌ Erro ao salvar segmento: ${error.message}`, "error");
-    return;
+    return { lastTime, maiorTempoVisualizado };
   }
 
   lastTime = tempoAtual;
@@ -119,18 +95,4 @@ export async function trackProgress() {
 
   if (percentual >= 97) {
     progressoEl.textContent = "✅ Aula concluída";
-    document.getElementById("recomecarSugestao").innerHTML = "";
-    await habilitarQuiz(aulaAtual.id);
-    listarAulas();
-    carregarProgressoCurso();
-    exibirMensagemAluno("✅ Aula concluída! A próxima começará em 5 segundos...", "success");
-
-    const atualIndex = aulas.findIndex(a => a.id === aulaAtual.id);
-    const proximaAula = aulas[atualIndex + 1];
-    if (proximaAula) {
-      mostrarTransicaoParaProximaAula(proximaAula);
-    } else {
-      exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
-    }
-  }
-}
+    document.getElementById("recom
