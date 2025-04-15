@@ -2,6 +2,8 @@ import { narrar } from './narrativa.js';
 import { selecionarAulaInicial } from './selecionarAulaInicial.js';
 import { listarAulas } from './listarAulas.js';
 import { carregarProgressoCurso } from './carregarProgressoCurso.js';
+import { supabase } from './supabaseClient.js';
+
 
 export async function carregarDados(supabase, user_id, course_id, aulasRef) {
   const { data: curso } = await supabase
