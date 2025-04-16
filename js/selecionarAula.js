@@ -50,15 +50,21 @@ export async function selecionarAula(aula, user_id) {
 
 
   
-  if (progresso?.length > 0) {
-    const dados = progresso[0];
+if (dados.status === '✔ Concluída') {
+  aula.status = '✔ Concluída';
+  window.aulaAtual.status = '✔ Concluída';
 
-    if (dados.segundos_assistidos > 0) {
-      window.lastTime = dados.segundos_assistidos;
-      window.maiorTempoVisualizado = dados.segundos_assistidos;
-      aula.progressoRestaurado = true;
-      narrar(`📥 Progresso recuperado: ${dados.segundos_assistidos}s`, "success");
-    }
+  // Substitui qualquer informação de progresso por uma mensagem final clara
+  if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
+  document.getElementById("recomecarSugestao").innerHTML = "";
+
+  // 🔁 Opcional: zera visualmente o indicador numérico para não causar ruído
+  document.getElementById("indicadorNumerico").textContent = "";
+
+  await habilitarQuiz(aula.id, user_id);
+  return;
+}
+
 
     if (dados.status === '✔ Concluída') {
       if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
