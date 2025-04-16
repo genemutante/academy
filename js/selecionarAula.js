@@ -5,6 +5,8 @@ import { narrar } from './narrativa.js';
 import { supabase } from './supabaseClient.js';
 
 export async function selecionarAula(aula, user_id) {
+  console.groupCollapsed(`🧭 [selecionarAula] Início - Aula: "${aula.title}" | ID: ${aula.id}`);
+
   // Reset globais
   window.aulaAtual = aula;
   window.maiorTempoVisualizado = 0;
@@ -35,34 +37,45 @@ export async function selecionarAula(aula, user_id) {
     btnQuiz.onclick = null;
   }
 
+  // Limpa rastreamento anterior
   if (window.interval) {
     clearInterval(window.interval);
     window.narrativaCiclosExecutados = 0;
     narrar("🛑 Limpando ciclo anterior de rastreamento.", "info");
   }
 
-  // Consulta Supabase
-  const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+  // 🔍 Consulta progresso
+  console.log("🔍 Chamando RPC: fn_progresso_por_usuario_e_aula");
+  const { data: progresso, error } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
     p_user_id: user_id,
     p_lesson_id: aula.id
   });
 
+  if (error) {
+    console.error("❌ Erro na consulta Supabase:", error);
+  }
+
   const dados = progresso?.[0];
+  console.log("📦 Dados de progresso recebidos:", dados);
+
   if (dados) {
     aula.status = dados.status;
     window.aulaAtual.status = dados.status;
+    console.log(`📌 Status atual da aula: ${dados.status}`);
 
     if (dados.status === '✔ Concluída') {
+      console.log("✅ Aula já marcada como concluída. Atualizando UI e habilitando quiz...");
       atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
       if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
       document.getElementById("recomecarSugestao").innerHTML = "";
       document.getElementById("indicadorNumerico").textContent = "";
       await habilitarQuiz(aula.id, user_id);
+      console.groupEnd();
       return;
     }
 
-    // Restaura ponto de retomada
     if (dados.segundos_assistidos > 0) {
+      console.log(`⏪ Aula com progresso. Restaurando ponto: ${dados.segundos_assistidos}s`);
       window.lastTime = dados.segundos_assistidos;
       window.maiorTempoVisualizado = dados.segundos_assistidos;
       window.pontoRetomada = Math.max(0, dados.segundos_assistidos - 15);
@@ -83,18 +96,25 @@ export async function selecionarAula(aula, user_id) {
       };
 
       document.getElementById("recomecarSugestao").appendChild(link);
+    } else {
+      console.log("🆕 Nenhum segundo assistido anteriormente.");
     }
 
   } else {
+    console.warn("🚫 Nenhum dado de progresso encontrado. Iniciando do zero.");
     atualizarIndicadorLocal(0, aula.duration);
   }
 
-  // Player
+  // 🎬 Player
+  console.log("🎬 Iniciando player...");
   initPlayer();
   window.progressoIniciado = false;
+
   window.timeoutProgressoInicial = setTimeout(() => {
     if (!window.progressoIniciado) {
       narrar("⚠️ Nenhum progresso detectado após 10s. Reproduza o vídeo para iniciar rastreamento.", "warning");
     }
   }, 10000);
+
+  console.groupEnd();
 }
