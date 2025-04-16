@@ -60,7 +60,8 @@ export async function habilitarQuiz(aulaId) {
 
         if (window.aulaAtual.quizEnviado) {
           await habilitarQuiz(aulaId);
-          listarAulas();
+          listarAulas(window.aulas, window.user_id);
+
           carregarProgressoCurso();
 
           const atualIndex = window.aulas.findIndex(a => a.id === aulaId);
