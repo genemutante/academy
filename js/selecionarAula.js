@@ -59,6 +59,10 @@ console.log("📌 [selecionarAula] Chamando Supabase RPC com:", {
     p_lesson_id: aula.id
   });
 
+  console.log("🧪 Progresso RPC (data):", progresso);
+console.log("🧪 Progresso RPC (erro):", error);
+
+
   if (error) {
     console.error("❌ Erro na consulta Supabase:", error);
   }
