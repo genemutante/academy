@@ -47,9 +47,6 @@ export async function carregarDados(user_id, course_id) {
       });
 
 
-console.log("User ID:", window.user_id);
-console.log("Lesson ID:", aula.id);
-
 
       aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
 
