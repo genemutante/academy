@@ -51,6 +51,7 @@ console.log("📌 [selecionarAula] Chamando Supabase RPC com:", {
   lesson_id: aula.id
 });
 
+console.log("✔ Verificando valores:", { user_id, aula_id: aula.id });
 
   
   console.log("🔍 Chamando RPC: fn_progresso_por_usuario_e_aula");
