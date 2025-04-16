@@ -1,4 +1,7 @@
-export async function carregarProgressoCurso(supabase, user_id, course_id) {
+// js/carregarProgressoCurso.js
+import { supabase } from './supabaseClient.js';
+
+export async function carregarProgressoCurso(user_id, course_id) {
   const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
     p_user_id: user_id,
     p_course_id: course_id
