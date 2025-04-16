@@ -45,6 +45,14 @@ export async function selecionarAula(aula, user_id) {
   }
 
   // 🔍 Consulta progresso
+
+console.log("📌 [selecionarAula] Chamando Supabase RPC com:", {
+  user_id,
+  lesson_id: aula.id
+});
+
+
+  
   console.log("🔍 Chamando RPC: fn_progresso_por_usuario_e_aula");
   const { data: progresso, error } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
     p_user_id: user_id,
