@@ -46,6 +46,11 @@ export async function carregarDados(user_id, course_id) {
         p_lesson_id: aula.id
       });
 
+
+console.log("User ID:", window.user_id);
+console.log("Lesson ID:", window.aulaAtual?.id);
+
+
       aula.status = progresso?.[0]?.status || '🚫 Não Iniciada';
 
       const { data: quiz } = await supabase
