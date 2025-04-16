@@ -1,3 +1,5 @@
+// js/verificarConclusaoAula.js
+
 export async function verificarConclusaoAula({
   duration,
   maiorTempoVisualizado,
@@ -20,8 +22,9 @@ export async function verificarConclusaoAula({
     aulaAtual.quizEnviado = quizRespondido;
 
     if (quizRespondido) {
-      progressoEl.textContent = "✅ Aula concluída";
-      sugestaoEl.innerHTML = "";
+      if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
+      if (sugestaoEl) sugestaoEl.innerHTML = "";
+
       exibirMensagemAluno("✅ Aula concluída! A próxima começará em 5 segundos...", "success");
 
       await habilitarQuiz(aulaAtual.id);
@@ -30,19 +33,22 @@ export async function verificarConclusaoAula({
 
       const atualIndex = window.aulas.findIndex(a => a.id === aulaAtual.id);
       const proxima = window.aulas[atualIndex + 1];
+
       if (proxima) {
         mostrarTransicaoParaProximaAula(proxima, window.selecionarAula);
       } else {
         exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
       }
+
     } else {
-      progressoEl.textContent = "🕒 Aula assistida, avaliação pendente";
+      if (progressoEl) progressoEl.textContent = "🕒 Aula assistida, avaliação pendente";
       exibirMensagemAluno("📋 Você precisa responder a avaliação para concluir esta aula.", "warning");
 
       const alerta = document.createElement("div");
       alerta.className = "text-sm text-red-500 mt-2 font-medium animate-pulse";
       alerta.textContent = "🚫 A avaliação ainda não foi enviada. Aula não será marcada como concluída.";
-      progressoEl.appendChild(alerta);
+
+      if (progressoEl) progressoEl.appendChild(alerta);
     }
   }
 }
