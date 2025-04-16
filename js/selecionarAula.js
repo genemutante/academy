@@ -48,6 +48,8 @@ export async function selecionarAula(aula, user_id) {
     p_lesson_id: aula.id
   });
 
+
+  
   if (progresso?.length > 0) {
     const dados = progresso[0];
 
@@ -62,6 +64,9 @@ export async function selecionarAula(aula, user_id) {
       if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
       document.getElementById("recomecarSugestao").innerHTML = "";
       await habilitarQuiz(aula.id, user_id);
+
+     atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
+      
     } else {
       atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
       window.pontoRetomada = Math.max(0, dados.segundos_assistidos - 15);
