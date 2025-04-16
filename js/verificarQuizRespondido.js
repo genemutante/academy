@@ -1,10 +1,10 @@
 import { supabase } from './supabaseClient.js';
 
 /**
- * Verifica se o usuário já respondeu o quiz de uma aula específica.
+ * 🔍 Verifica se o usuário já respondeu o quiz da aula.
  * @param {string} userId - ID do usuário.
  * @param {string} lessonId - ID da aula.
- * @returns {Promise<boolean>} Retorna true se já respondeu, false caso contrário.
+ * @returns {Promise<boolean>} true se respondeu, false caso contrário.
  */
 export async function verificarQuizRespondido(userId, lessonId) {
   const { data, error } = await supabase
@@ -15,9 +15,9 @@ export async function verificarQuizRespondido(userId, lessonId) {
     .limit(1);
 
   if (error) {
-    console.error('❌ Erro ao verificar quiz respondido:', error.message);
+    console.error(`❌ Erro ao verificar avaliação da aula ${lessonId}:`, error.message);
     return false;
   }
 
-  return !!(data && data.length > 0);
+  return !!(data?.length);
 }
