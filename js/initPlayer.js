@@ -17,6 +17,7 @@ export function loadYouTubeAPI() {
 }
 
 export async function initPlayer() {
+  // 🧹 Destroi player anterior
   if (window.player && typeof window.player.destroy === 'function') {
     window.player.destroy();
     window.player = null;
@@ -61,8 +62,10 @@ export async function initPlayer() {
           const quizRespondido = await verificarQuizRespondido(window.user_id, window.aulaAtual.id);
 
           if (aulaFinalizada && quizRespondido) {
-            document.getElementById("progressoTexto").textContent = "✅ Aula concluída";
-            document.getElementById("recomecarSugestao").innerHTML = "";
+            const progressoEl = document.getElementById("progressoTexto");
+            const sugestaoEl = document.getElementById("recomecarSugestao");
+            if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
+            if (sugestaoEl) sugestaoEl.innerHTML = "";
 
             await habilitarQuiz(window.aulaAtual.id);
             listarAulas();
@@ -71,7 +74,7 @@ export async function initPlayer() {
             const atualIndex = window.aulas.findIndex(a => a.id === window.aulaAtual.id);
             const proxima = window.aulas[atualIndex + 1];
             if (proxima) {
-              mostrarTransicaoParaProximaAula(proxima);
+              mostrarTransicaoParaProximaAula(proxima, window.selecionarAula);
             } else {
               exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
             }
