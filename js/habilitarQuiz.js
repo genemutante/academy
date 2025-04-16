@@ -1,4 +1,3 @@
-// habilitarQuiz.js
 import { supabase } from './supabaseClient.js';
 import { listarAulas } from './listarAulas.js';
 import { carregarProgressoCurso } from './carregarProgressoCurso.js';
@@ -11,9 +10,13 @@ export async function habilitarQuiz(aulaId) {
   if (!btnQuiz) return;
 
   const userId = window.user_id;
-  const jaFez = await verificarQuizRespondido(userId, aulaId);
+  const quizRespondido = await verificarQuizRespondido(userId, aulaId);
 
-  if (jaFez && window.aulaAtual?.status === '✔ Concluída') {
+  window.aulaAtual.quizEnviado = quizRespondido;
+
+  const aulaConcluida = window.aulaAtual?.status === '✔ Concluída';
+
+  if (quizRespondido && aulaConcluida) {
     btnQuiz.disabled = true;
     btnQuiz.textContent = "✅ Avaliação enviada";
     btnQuiz.className = "bg-gray-200 text-gray-600 px-4 py-2 rounded text-sm cursor-not-allowed";
@@ -23,7 +26,7 @@ export async function habilitarQuiz(aulaId) {
     return;
   }
 
-  // Ativa o botão de quiz
+  // Quiz ainda não feito – botão ativo
   btnQuiz.disabled = false;
   btnQuiz.textContent = "📝 Fazer Avaliação da Aula";
   btnQuiz.className = "bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded text-sm transition";
