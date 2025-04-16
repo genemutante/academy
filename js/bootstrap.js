@@ -21,7 +21,7 @@ const url = new URL(location.href);
 window.user_id = url.searchParams.get('user_id');
 window.course_id = url.searchParams.get('course_id');
 
-// 📦 Exporta funções para o escopo global
+// 📦 Exporta funções globais
 window.trackProgress = trackProgress;
 window.verificarQuizRespondido = verificarQuizRespondido;
 window.carregarDados = carregarDados;
@@ -46,7 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById('nomeAluno').textContent = user.name;
     }
 
-    // ✅ Referência de aulas para uso compartilhado
     const aulasRef = { value: [] };
     await window.carregarDados(window.user_id, window.course_id, aulasRef);
   } catch (err) {
