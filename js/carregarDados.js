@@ -63,5 +63,5 @@ export async function carregarDados(user_id, course_id) {
   window.aulas = aulas;
   listarAulas(aulas);
   selecionarAulaInicial(aulas);
-  carregarProgressoCurso(); // esta função deve também usar `supabaseClient.js`
+  carregarProgressoCurso(supabase, user_id, course_id); // ✅ AJUSTE AQUI
 }
