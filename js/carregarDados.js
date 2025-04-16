@@ -64,6 +64,7 @@ export async function carregarDados(user_id, course_id) {
 
   window.aulas = aulas;
   listarAulas(aulas);
-  selecionarAulaInicial(aulas);
+ selecionarAulaInicial(aulas, user_id); // ✅ user_id agora será passado corretamente
+
   carregarProgressoCurso(supabase, user_id, course_id); // ✅ AJUSTE AQUI
 }
