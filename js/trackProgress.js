@@ -108,7 +108,8 @@ export async function trackProgress() {
     progressoEl.textContent = "✅ Aula concluída";
     document.getElementById("recomecarSugestao").innerHTML = "";
     await habilitarQuiz(window.aulaAtual.id);
-    listarAulas();
+    listarAulas(window.aulas, window.user_id);
+
     carregarProgressoCurso();
     exibirMensagemAluno("✅ Aula concluída! A próxima começará em 5 segundos...", "success");
 
@@ -119,5 +120,11 @@ export async function trackProgress() {
     } else {
       exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
     }
+
+    if (window.interval) {
+  clearInterval(window.interval);
+  narrar("🛑 Rastreamento encerrado após conclusão da aula.", "info");
+}
+
   }
 }
