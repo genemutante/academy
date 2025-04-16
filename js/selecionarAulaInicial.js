@@ -1,12 +1,9 @@
-// selecionarAulaInicial.js
-import { selecionarAula } from './selecionarAula.js';
-import { narrar } from './narrativa.js';
-
 export function selecionarAulaInicial(aulas, user_id) {
   console.groupCollapsed("🧭 [selecionarAulaInicial] Iniciando seleção da aula inicial");
 
-  console.log("🧾 Total de aulas carregadas:", aulas.length);
-  console.table(aulas.map(a => ({
+  console.log("📋 Aulas recebidas:", aulas.length);
+  console.table(aulas.map((a, i) => ({
+    Ordem: i + 1,
     ID: a.id,
     Título: a.title,
     Status: a.status,
@@ -20,6 +17,8 @@ export function selecionarAulaInicial(aulas, user_id) {
     narrar(`📌 Aula em andamento detectada: "${emAndamento.title}". Reabrindo automaticamente.`, "info");
     console.groupEnd();
     return;
+  } else {
+    console.log("❌ Nenhuma aula em andamento");
   }
 
   const proxima = aulas.find(a => !(a.status === '✔ Concluída' && a.quizEnviado));
@@ -29,6 +28,8 @@ export function selecionarAulaInicial(aulas, user_id) {
     narrar(`🚀 Iniciando próxima aula desbloqueada: "${proxima.title}"`, "info");
     console.groupEnd();
     return;
+  } else {
+    console.log("❌ Nenhuma próxima aula desbloqueada disponível");
   }
 
   const ultimaConcluida = [...aulas].reverse().find(a => a.status === '✔ Concluída');
@@ -38,6 +39,8 @@ export function selecionarAulaInicial(aulas, user_id) {
     narrar(`🎉 Todas as aulas e quizzes foram concluídos! Última aula foi: "${ultimaConcluida.title}"`, "success");
     console.groupEnd();
     return;
+  } else {
+    console.log("❌ Nenhuma aula concluída detectada");
   }
 
   console.warn("⚠️ Nenhuma aula disponível para seleção.");
