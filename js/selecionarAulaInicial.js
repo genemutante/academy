@@ -1,4 +1,8 @@
 export function selecionarAulaInicial(aulas, user_id) {
+
+console.log("🚨 Função selecionarAulaInicial foi chamada");
+
+  
   console.groupCollapsed("🧭 [selecionarAulaInicial] Iniciando seleção da aula inicial");
 
   if (!Array.isArray(aulas) || aulas.length === 0) {
