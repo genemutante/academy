@@ -68,8 +68,6 @@ console.log("📌 aula.id:", aula?.id, typeof aula?.id);
 const dados = progresso?.[0] || null;
 console.log("📦 Dados de progresso recebidos:", dados);
 
-
-  const dados = progresso?.[0];
   console.log("📦 Dados de progresso recebidos:", dados);
 
   if (dados) {
