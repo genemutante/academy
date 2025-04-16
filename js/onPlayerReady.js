@@ -4,8 +4,8 @@ import { mostrarNotificacao } from './utils.js';
 import { trackProgress } from './trackProgress.js';
 
 export function onPlayerReady(event) {
-  timeoutProgressoInicial = setTimeout(() => {
-    if (!progressoIniciado) {
+  window.timeoutProgressoInicial = setTimeout(() => {
+    if (!window.progressoIniciado) {
       narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
       mostrarNotificacao("❗ Progresso não está sendo salvo. Verifique sua conexão ou recarregue a página.");
     }
@@ -13,20 +13,26 @@ export function onPlayerReady(event) {
 
   console.log('🎬 Player pronto, iniciando monitoramento...');
 
-  if (!player || typeof player.getDuration !== 'function') {
+  if (!window.player || typeof window.player.getDuration !== 'function') {
     console.warn('⚠️ Player inválido, tentando novamente...');
     setTimeout(() => onPlayerReady(event), 300);
     return;
   }
 
-  duration = player.getDuration();
-  console.log('⏱️ Duração total do vídeo:', duration);
+  // ✅ Corrigido: define a duração corretamente
+  window.duration = window.player.getDuration();
+  console.log('⏱️ Duração total do vídeo:', window.duration);
 
-  if (pontoRetomada !== null) {
-    console.log('⏩ Retomando do ponto:', pontoRetomada);
-    player.seekTo(pontoRetomada, true);
-    player.playVideo?.();
+  // ⏩ Pula para ponto salvo, se houver
+  if (window.pontoRetomada !== null) {
+    console.log('⏩ Retomando do ponto:', window.pontoRetomada);
+    window.player.seekTo(window.pontoRetomada, true);
+    window.player.playVideo?.();
   }
 
-  interval = setInterval(trackProgress, 5000);
+  // 🧹 Limpa intervalos anteriores
+  if (window.interval) clearInterval(window.interval);
+
+  // ⏱️ Inicia rastreamento do progresso
+  window.interval = setInterval(trackProgress, 5000);
 }
