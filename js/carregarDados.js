@@ -1,5 +1,3 @@
-// js/carregarDados.js
-
 import { narrar } from './narrativa.js';
 import { selecionarAulaInicial } from './selecionarAulaInicial.js';
 import { listarAulas } from './listarAulas.js';
@@ -9,7 +7,6 @@ import { supabase } from './supabaseClient.js';
 export async function carregarDados(user_id, course_id) {
   const tituloCurso = document.getElementById("tituloCurso");
   const descricaoCurso = document.getElementById("descricaoCurso");
-  const listaAulasEl = document.getElementById("listaAulas");
 
   if (!user_id || !course_id) {
     narrar("❌ Parâmetros ausentes na URL.", "error");
@@ -63,8 +60,8 @@ export async function carregarDados(user_id, course_id) {
     })
   );
 
-  window.aulas = aulas; // torna global para uso externo
+  window.aulas = aulas;
   listarAulas(aulas);
   selecionarAulaInicial(aulas);
-  carregarProgressoCurso();
+  carregarProgressoCurso(); // esta função deve também usar `supabaseClient.js`
 }
