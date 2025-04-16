@@ -1,9 +1,12 @@
-import { mostrarNotificacao } from './utils.js';
-import { atualizarIndicadorLocal } from './utils.js';
+import { mostrarNotificacao, atualizarIndicadorLocal } from './utils.js';
 import { habilitarQuiz } from './habilitarQuiz.js';
 import { initPlayer } from './initPlayer.js';
+import { narrar } from './narrativa.js';
+import { supabase } from './supabaseClient.js';
 
 export async function selecionarAula(aula, user_id) {
+  // Reset globals
+  window.aulaAtual = aula;
   window.maiorTempoVisualizado = 0;
   window.lastTime = 0;
   window._tempoInicioAguardoProgresso = null;
@@ -11,19 +14,19 @@ export async function selecionarAula(aula, user_id) {
   window.progressoIniciado = false;
 
   narrar(`📥 Aula selecionada: "${aula.title}" (ID: ${aula.id})`, "info");
-  window.aulaAtual = aula;
 
+  // Atualiza UI
   document.getElementById("tituloAula").textContent = aula.title;
   document.getElementById("mensagemAluno").textContent = "";
   document.getElementById("mensagemAluno").className = "";
   document.getElementById("recomecarSugestao").innerHTML = "";
   document.getElementById("indicadorNumerico").textContent = "";
-
   const progressoEl = document.getElementById("progressoTexto");
   if (progressoEl) progressoEl.innerHTML = "⏳ Carregando progresso...";
 
   window.pontoRetomada = null;
 
+  // Reset botão de quiz
   const btnQuiz = document.getElementById("btnQuiz");
   if (btnQuiz) {
     btnQuiz.disabled = true;
@@ -32,12 +35,14 @@ export async function selecionarAula(aula, user_id) {
     btnQuiz.onclick = null;
   }
 
+  // Limpa rastreamento anterior
   if (window.interval) {
     clearInterval(window.interval);
     window.narrativaCiclosExecutados = 0;
     narrar("🛑 Limpando ciclo anterior de rastreamento.", "info");
   }
 
+  // 🔍 Consulta progresso no Supabase
   const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
     p_user_id: user_id,
     p_lesson_id: aula.id
@@ -47,32 +52,32 @@ export async function selecionarAula(aula, user_id) {
     const dados = progresso[0];
 
     if (dados.segundos_assistidos > 0) {
-      lastTime = dados.segundos_assistidos;
-      maiorTempoVisualizado = dados.segundos_assistidos;
+      window.lastTime = dados.segundos_assistidos;
+      window.maiorTempoVisualizado = dados.segundos_assistidos;
       aula.progressoRestaurado = true;
       narrar(`📥 Progresso recuperado: ${dados.segundos_assistidos}s`, "success");
     }
 
     if (dados.status === '✔ Concluída') {
-      progressoEl.textContent = "✅ Aula concluída";
+      if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
       document.getElementById("recomecarSugestao").innerHTML = "";
       await habilitarQuiz(aula.id, user_id);
     } else {
       atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
+      window.pontoRetomada = Math.max(0, dados.segundos_assistidos - 15);
 
-      pontoRetomada = Math.max(0, dados.segundos_assistidos - 15);
-      const minutos = Math.floor(pontoRetomada / 60);
-      const segundos = pontoRetomada % 60;
+      const minutos = Math.floor(window.pontoRetomada / 60);
+      const segundos = window.pontoRetomada % 60;
       const retomadaLabel = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
 
       const link = document.createElement('div');
       link.className = 'mt-2 text-sm text-blue-600 underline cursor-pointer hover:text-blue-800 transition flex items-center gap-1';
       link.innerHTML = `🔁 Retomar de <strong>${retomadaLabel}</strong>`;
       link.onclick = () => {
-        if (!window.player || typeof player.seekTo !== 'function') return;
+        if (!window.player || typeof window.player.seekTo !== 'function') return;
         mostrarNotificacao(`⏩ Pulando para ${retomadaLabel}...`);
-        player.seekTo(pontoRetomada, true);
-        setTimeout(() => player.playVideo?.(), 500);
+        window.player.seekTo(window.pontoRetomada, true);
+        setTimeout(() => window.player.playVideo?.(), 500);
       };
 
       document.getElementById("recomecarSugestao").appendChild(link);
@@ -81,11 +86,12 @@ export async function selecionarAula(aula, user_id) {
     atualizarIndicadorLocal(0, aula.duration);
   }
 
+  // Inicializa player e começa rastreamento
   initPlayer();
-  progressoIniciado = false;
+  window.progressoIniciado = false;
 
   window.timeoutProgressoInicial = setTimeout(() => {
-    if (!progressoIniciado) {
+    if (!window.progressoIniciado) {
       narrar("⚠️ Nenhum progresso detectado após 10s. Reproduza o vídeo para iniciar rastreamento.", "warning");
     }
   }, 10000);
