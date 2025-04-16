@@ -1,9 +1,9 @@
-// onPlayerReady.js
 import { narrar } from './narrativa.js';
 import { mostrarNotificacao } from './utils.js';
 import { trackProgress } from './trackProgress.js';
 
 export function onPlayerReady(event) {
+  // 🔐 Timeout de segurança
   window.timeoutProgressoInicial = setTimeout(() => {
     if (!window.progressoIniciado) {
       narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
@@ -19,20 +19,27 @@ export function onPlayerReady(event) {
     return;
   }
 
-  // ✅ Corrigido: define a duração corretamente
   window.duration = window.player.getDuration();
   console.log('⏱️ Duração total do vídeo:', window.duration);
 
-  // ⏩ Pula para ponto salvo, se houver
+  // ⏩ Se houver ponto salvo, pula para lá
   if (window.pontoRetomada !== null) {
-    console.log('⏩ Retomando do ponto:', window.pontoRetomada);
+    console.log('⏩ Retomando do ponto salvo:', window.pontoRetomada);
     window.player.seekTo(window.pontoRetomada, true);
-    window.player.playVideo?.();
   }
 
-  // 🧹 Limpa intervalos anteriores
+  // ▶️ Sempre tenta iniciar o vídeo, independentemente do ponto
+  try {
+    window.player.playVideo?.();
+    narrar("▶️ Reproduzindo vídeo automaticamente...", "info");
+  } catch (e) {
+    console.warn("⚠️ Erro ao tentar reproduzir o vídeo:", e);
+    mostrarNotificacao("⚠️ Falha ao iniciar o vídeo automaticamente. Reproduza manualmente.");
+  }
+
+  // ♻️ Limpa rastreamento anterior
   if (window.interval) clearInterval(window.interval);
 
-  // ⏱️ Inicia rastreamento do progresso
+  // ⏱️ Inicia novo ciclo de rastreamento
   window.interval = setInterval(trackProgress, 5000);
 }
