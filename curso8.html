@@ -52,7 +52,24 @@
   <header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
     <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
       <h1 class="text-xl font-display font-bold tracking-tight">Academy-Tools</h1>
-      <span id="nomeAluno" class="text-sm font-medium text-white/90 truncate"></span>
+
+
+      
+<div class="flex items-center gap-4">
+  <span id="nomeAluno" class="text-sm font-bold bg-white/10 px-3 py-1 rounded-full text-white shadow-sm hover:bg-white/20 transition">
+    Nome do Aluno
+  </span>
+  <button id="btnVoltarCursos"
+          class="text-xs bg-white text-primary-700 font-semibold px-3 py-1 rounded-full hover:bg-primary-100 transition shadow-sm">
+    🔙 Meus Cursos
+  </button>
+</div>
+
+
+
+
+
+      
     </div>
   </header>
 
@@ -220,6 +237,31 @@
   }, 300);
 </script>
 
+<script>
+  // Espera até o DOM estar pronto
+  window.addEventListener('DOMContentLoaded', () => {
+    const nomeSpan = document.getElementById("nomeAluno");
+    const btnVoltar = document.getElementById("btnVoltarCursos");
+
+    // Assume que a página atual foi carregada com ?user_id=...
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get("user_id");
+
+    if (userId) {
+      window.user_id = userId;
+
+      // Aqui você pode preencher o nome real do aluno se tiver acesso à API
+      nomeSpan.textContent = "👤 " + (window.nomeAluno || "Aluno(a)");
+
+      btnVoltar.addEventListener("click", () => {
+        window.location.href = `https://academy-tools.netlify.app/aluno.html?user_id=${userId}`;
+      });
+    } else {
+      btnVoltar.disabled = true;
+      nomeSpan.textContent = "⚠️ Usuário não identificado";
+    }
+  });
+</script>
 
   
 </body>
