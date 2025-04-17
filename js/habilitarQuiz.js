@@ -40,16 +40,17 @@ function abrirModalQuiz(userId, aulaId) {
   const quizContainer = document.createElement('div');
   quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
 
-  quizContainer.innerHTML = `
-    <div class="bg-white w-full max-w-2xl h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
-      <button onclick="this.closest('div').parentElement.remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
-      <iframe
-        src="quiz.html?user_id=${userId}&lesson_id=${aulaId}"
-        class="w-full h-full rounded-lg border border-slate-200"
-        frameborder="0"
-      ></iframe>
-    </div>
-  `;
+quizContainer.innerHTML = `
+  <div class="bg-white w-full max-w-[1240px] h-[94vh] p-4 rounded-2xl shadow-2xl relative border border-slate-200 overflow-hidden">
+    <button onclick="this.closest('.fixed').remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
+    <iframe
+      src="quiz.html?user_id=${userId}&lesson_id=${aulaId}"
+      class="w-full h-full rounded-lg border border-slate-200"
+      frameborder="0"
+    ></iframe>
+  </div>
+`;
+
 
   document.body.appendChild(quizContainer);
 
