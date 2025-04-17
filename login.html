@@ -132,6 +132,12 @@ main.sucesso {
         return;
       }
 
+import { salvarSessao } from './auth.js';
+
+// ... dentro do sucesso do login:
+salvarSessao({ id: data.id, name: data.name });
+      
+
 msg.textContent = 'Acesso liberado! Redirecionando...';
 msg.style.color = 'green';
 
