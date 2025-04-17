@@ -1,17 +1,26 @@
-// js/carregarProgressoCurso.js
-import { supabase } from './supabaseClient.js';
+export function carregarProgressoCurso() {
+  const barra = document.getElementById("barraProgresso");
+  const texto = document.getElementById("textoProgresso");
 
-export async function carregarProgressoCurso(user_id, course_id) {
-  const { data } = await supabase.rpc('fn_progresso_curso_por_usuario', {
-    p_user_id: user_id,
-    p_course_id: course_id
+  const aulas = window.aulas || [];
+
+  if (!Array.isArray(aulas) || aulas.length === 0) {
+    console.warn("⚠️ Nenhuma aula disponível para cálculo de progresso.");
+    return;
+  }
+
+  let pontos = 0;
+  const totalPontos = aulas.length * 2; // 1 ponto por aula assistida + 1 ponto por quiz
+
+  aulas.forEach(aula => {
+    if (aula.status === '✔ Concluída') pontos++;       // 1 ponto por assistir tudo
+    if (aula.quizEnviado === true) pontos++;           // 1 ponto por enviar quiz
   });
 
-  if (data?.length > 0) {
-    const pct = data[0].percentual_conclusao || 0;
-    const barraProgresso = document.getElementById('barraProgresso');
-    const textoProgresso = document.getElementById('textoProgresso');
-    if (barraProgresso) barraProgresso.style.width = pct + '%';
-    if (textoProgresso) textoProgresso.textContent = pct + '%';
-  }
+  const percentual = Math.floor((pontos / totalPontos) * 100);
+
+  if (barra) barra.style.width = `${percentual}%`;
+  if (texto) texto.textContent = `${percentual}%`;
+
+  console.log(`📊 Progresso do curso: ${pontos}/${totalPontos} pontos = ${percentual}%`);
 }
