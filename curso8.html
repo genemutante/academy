@@ -90,17 +90,28 @@
     </div>
   </div>
 
+
+
+
+
+
+  
+
   <!-- Controles customizados -->
 <div id="controlesCustomizados" class="w-full bg-red-600 text-white text-sm flex justify-between items-center px-4 py-2 rounded-b-md mb-4">
   <div class="flex items-center gap-3">
-    <span class="text-white">🎛️ Controles:</span>
+
+    <button onclick="retrocederVideo()" class="hover:scale-110 transition" title="Voltar 10s">⏪</button>
 
     <button onclick="togglePlayPause()" id="playPauseBtn"
-            class="bg-white text-red-600 font-bold text-xs px-2 py-1 rounded hover:bg-gray-200 transition">
-      ▶️
+            class="bg-white text-red-600 font-bold text-xs px-2 py-1 rounded hover:bg-gray-200 transition"
+            title="Reproduzir / Pausar">
+      ⏸️
     </button>
 
-    <span>|</span>
+    <button onclick="avancarVideo()" class="hover:scale-110 transition" title="Avançar 10s">⏩</button>
+
+    <span class="ml-3">Velocidade:</span>
 
     <button onclick="definirVelocidade(1)" class="hover:underline">1x</button>
     <button onclick="definirVelocidade(1.5)" class="hover:underline">1.5x</button>
@@ -164,17 +175,15 @@
 
 
 <script>
-  window.definirVelocidade = function (fator) {
+  function definirVelocidade(fator) {
     if (window.player && typeof window.player.setPlaybackRate === 'function') {
       window.player.setPlaybackRate(fator);
       const span = document.getElementById("infoControle");
       if (span) span.textContent = `🔁 Velocidade ajustada para ${fator}x`;
-    } else {
-      alert("⚠️ Player não está pronto.");
     }
-  };
+  }
 
-  window.togglePlayPause = function () {
+  function togglePlayPause() {
     if (!window.player || typeof window.player.getPlayerState !== 'function') return;
 
     const estado = window.player.getPlayerState(); // 1 = playing, 2 = paused
@@ -189,8 +198,45 @@
       botao.textContent = "⏸️";
       document.getElementById("infoControle").textContent = "▶️ Vídeo em reprodução.";
     }
-  };
+  }
+
+  function retrocederVideo() {
+    if (window.player && typeof window.player.getCurrentTime === 'function') {
+      const atual = window.player.getCurrentTime();
+      window.player.seekTo(Math.max(0, atual - 10), true);
+      document.getElementById("infoControle").textContent = "⏪ Voltou 10 segundos";
+    }
+  }
+
+  function avancarVideo() {
+    if (window.player && typeof window.player.getCurrentTime === 'function') {
+      const atual = window.player.getCurrentTime();
+      window.player.seekTo(atual + 10, true);
+      document.getElementById("infoControle").textContent = "⏩ Avançou 10 segundos";
+    }
+  }
+
+  // 🔁 Detectar quando o player estiver pronto
+  function atualizarEstadoBotaoPlay() {
+    if (!window.player || typeof window.player.getPlayerState !== 'function') return;
+
+    const botao = document.getElementById("playPauseBtn");
+    const estado = window.player.getPlayerState();
+
+    if (botao) {
+      botao.textContent = estado === 1 ? "⏸️" : "▶️";
+    }
+  }
+
+  // ⏱️ Executar após player inicializar
+  const checarPlayer = setInterval(() => {
+    if (window.player && typeof window.player.getPlayerState === 'function') {
+      atualizarEstadoBotaoPlay();
+      clearInterval(checarPlayer);
+    }
+  }, 500);
 </script>
+
 
 
   
