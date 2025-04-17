@@ -1,24 +1,9 @@
-import { supabase } from './supabaseClient.js';
-import { atualizarIndicadorLocal } from './utils.js';
-import { habilitarQuiz } from './habilitarQuiz.js';
-import { exibirMensagemAluno, narrar } from './narrativa.js';
-import { listarAulas } from './listarAulas.js';
-import { carregarProgressoCurso } from './carregarProgressoCurso.js';
-import { mostrarTransicaoParaProximaAula } from './mostrarTransicaoParaProximaAula.js';
-
-export function configurarTrackProgress(controle) {
-  window.aulaAtual = controle.aulaAtual;
-  window.duration = controle.duration;
-  window.player = controle.player;
-  window.maiorTempoVisualizado = controle.maiorTempoVisualizado;
-  window.lastTime = controle.lastTime;
-  window.pontoRetomada = controle.pontoRetomada;
-  window.user_id = controle.user_id;
-  window.course_id = controle.course_id;
-  window.aulas = controle.aulas;
-}
-
 export async function trackProgress() {
+  if (window.aulaFinalizada) {
+    narrar("⏹️ Aula finalizada — rastreamento ignorado.", "info");
+    return;
+  }
+
   const progressoEl = document.getElementById("progressoTexto");
   const mensagemEl = document.getElementById("mensagemAluno");
 
@@ -107,10 +92,13 @@ export async function trackProgress() {
   if (percentual >= 97) {
     progressoEl.textContent = "✅ Aula concluída";
     document.getElementById("recomecarSugestao").innerHTML = "";
+
+    window.aulaFinalizada = true; // ✅ Travar rastreamento a partir daqui
+
     await habilitarQuiz(window.aulaAtual.id);
     listarAulas(window.aulas, window.user_id);
-
     carregarProgressoCurso();
+
     exibirMensagemAluno("✅ Aula concluída! A próxima começará em 5 segundos...", "success");
 
     const atualIndex = window.aulas.findIndex(a => a.id === window.aulaAtual.id);
@@ -122,9 +110,8 @@ export async function trackProgress() {
     }
 
     if (window.interval) {
-  clearInterval(window.interval);
-  narrar("🛑 Rastreamento encerrado após conclusão da aula.", "info");
-}
-
+      clearInterval(window.interval);
+      narrar("🛑 Rastreamento encerrado após conclusão da aula.", "info");
+    }
   }
 }
