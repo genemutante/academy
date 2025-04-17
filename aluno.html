@@ -66,6 +66,21 @@
   </main>
 
   <script>
+import { verificarLoginObrigatorio, logout } from './auth.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const sessao = await verificarLoginObrigatorio();
+
+  if (!sessao) return;
+
+  // Exibe nome do usuário se quiser
+  document.getElementById('nomeAluno').textContent = sessao.userName;
+  
+  // Exemplo: botão logout
+  document.getElementById('logoutBtn')?.addEventListener('click', logout);
+});
+
+    
     const supabase = window.supabase.createClient(
       'https://bkueljjvhijojzcyodvk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
