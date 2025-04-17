@@ -82,8 +82,7 @@
     <!-- 56.25% padding-top = 16:9 aspect ratio -->
     
     <!-- Iframe do YouTube ocupará toda a área -->
-    <div id="videoPlayer" class="w-full h-full" style="position: relative;">
-
+    <div id="videoPlayer" class="absolute inset-0 w-full h-full z-0"></div>
 
     <!-- Overlay de bloqueio -->
     <div id="videoOverlay"
@@ -91,11 +90,11 @@
          title="Interação desabilitada durante o rastreamento">
     </div>
 
-<!-- Controles personalizados -->
+
+<!-- Controles personalizados sobre o vídeo -->
 <div id="controlesCustomizados"
      class="absolute bottom-0 left-0 right-0 z-20 bg-black/80 text-white text-sm flex justify-between items-center px-4 py-2">
   <div class="flex items-center gap-3">
-
     <button onclick="retrocederVideo()" class="hover:scale-110 transition" title="Voltar 10s">⏪</button>
 
     <button onclick="togglePlayPause()" id="playPauseBtn"
@@ -107,7 +106,6 @@
     <button onclick="avancarVideo()" class="hover:scale-110 transition" title="Avançar 10s">⏩</button>
 
     <span class="ml-3">Velocidade:</span>
-
     <button onclick="definirVelocidade(1)" class="hover:underline">1x</button>
     <button onclick="definirVelocidade(1.5)" class="hover:underline">1.5x</button>
     <button onclick="definirVelocidade(2)" class="hover:underline">2x</button>
@@ -121,7 +119,7 @@
 
 
 
-      
+    
   </div>
 
 
@@ -177,7 +175,7 @@
   function definirVelocidade(fator) {
     if (window.player?.setPlaybackRate) {
       window.player.setPlaybackRate(fator);
-      document.getElementById("infoControle").textContent = `🔁 Velocidade ajustada para ${fator}x`;
+      document.getElementById("infoControle").textContent = `🔁 Velocidade: ${fator}x`;
     }
   }
 
@@ -192,7 +190,7 @@
     } else {
       window.player.playVideo();
       btn.textContent = "⏸️";
-      document.getElementById("infoControle").textContent = "▶️ Tocando";
+      document.getElementById("infoControle").textContent = "▶️ Reproduzindo";
     }
   }
 
@@ -212,7 +210,7 @@
     }
   }
 
-  // Sincroniza ícone inicial
+  // Sincroniza o ícone de play/pause ao iniciar
   const checarEstadoInicial = setInterval(() => {
     if (window.player?.getPlayerState) {
       const estado = window.player.getPlayerState();
