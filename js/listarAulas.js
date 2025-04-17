@@ -27,7 +27,7 @@ icones.className = 'flex w-[32px] shrink-0 justify-start text-base space-x-[2px]
     }
 
 const label = document.createElement('span');
-label.textContent = `\u00A0\u00A0${aula.order}.${aula.title}`;
+label.textContent = `\u00A0\u00A0\u00A0\u00A0${aula.order}.${aula.title}`;
 
 
     if (podeAcessar) {
