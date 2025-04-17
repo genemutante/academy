@@ -12,6 +12,7 @@ import { verificarConclusaoAula } from './verificarConclusaoAula.js';
 import { carregarProgressoCurso } from './carregarProgressoCurso.js'; // ✅ novo
 
 import { supabase } from './supabaseClient.js';
+import { verificarLoginObrigatorio, logout } from './auth.js';
 
 window.supabase = supabase;
 
@@ -47,6 +48,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // 🚀 Execução principal
 document.addEventListener("DOMContentLoaded", async () => {
+  const sessao = await verificarLoginObrigatorio();
+  if (!sessao) return;
+
+  // Atualiza nome global
+  window.user_id = sessao.userId;
+  window.nomeAluno = sessao.userName;
+
+  // Atualiza nome no cabeçalho, se o elemento existir
+  const nomeSpan = document.getElementById('nomeAluno');
+  if (nomeSpan) {
+    nomeSpan.textContent = `👤 ${sessao.userName}`;
+  }
+
+  // Ativa botão de logout, se presente
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', logout);
+  }
+
   try {
     const { data: user } = await window.supabase
       .from('users')
