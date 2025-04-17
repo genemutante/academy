@@ -3,113 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel do Aluno</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <title>Meus Cursos</title>
+
+  <!-- Tailwind + Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        fontFamily: {
+          sans: ['Outfit', 'sans-serif']
+        },
+        extend: {
+          colors: {
+            primary: {
+              500: "#3B82F6",
+              600: "#2563EB",
+              700: "#1D4ED8"
+            }
+          }
+        }
+      }
+    }
+  </script>
 
   <style>
     body {
-      font-family: 'Carlito', sans-serif;
-      background-color: #f9fafb;
-      margin: 0;
-    }
-
-    header.topo {
-      background-color: #0ea5e9;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    header.topo h1 {
-      font-size: 1.25rem;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .painel {
-      max-width: 880px;
-      margin: 2rem auto;
-      padding: 0 1.25rem;
-    }
-
-    .saudacao {
-      margin-bottom: 1.5rem;
-    }
-
-    .saudacao h2 {
-      font-size: 1.5rem;
-      margin: 0;
-    }
-
-    .saudacao p {
-      margin: 0.4rem 0 0;
-      color: #4b5563;
-    }
-
-    .card-curso {
-      background-color: white;
-      border-radius: 10px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      transition: transform 0.2s;
-    }
-
-    .card-curso:hover {
-      transform: translateY(-3px);
-    }
-
-    .card-curso h3 {
-      font-size: 1.15rem;
-      margin-bottom: 0.4rem;
-    }
-
-    .card-curso p {
-      font-size: 0.95rem;
-      margin-bottom: 0.6rem;
-      line-height: 1.4;
-    }
-
-    .card-curso a {
-      font-weight: 500;
-    }
-
-    @media (max-width: 600px) {
-      header.topo h1 {
-        font-size: 1.1rem;
-      }
-
-      .saudacao h2 {
-        font-size: 1.3rem;
-      }
+      font-family: 'Outfit', sans-serif;
     }
   </style>
 </head>
-<body>
+
+<body class="bg-surface-100 text-gray-800 min-h-screen">
 
   <!-- Cabeçalho -->
-  <header class="topo">
-    <h1>🎓 Academy Tools</h1>
-    <span id="user-role">Aluno</span>
+  <header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
+    <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
+      <h1 class="text-lg font-bold tracking-tight">🎓 Academy-Tools</h1>
+      <div class="flex items-center gap-3">
+        <span id="aluno-nome" class="text-sm bg-primary-700 px-3 py-1 rounded-full font-medium">Carregando...</span>
+        <a id="logoutLink" href="/" class="bg-white text-primary-700 hover:bg-gray-100 px-3 py-1 text-sm rounded-full font-medium transition flex items-center gap-1">
+          <span>⏪</span> Sair
+        </a>
+      </div>
+    </div>
   </header>
 
-  <!-- Conteúdo -->
-  <div class="painel">
-    <div class="saudacao">
-      <h2>Olá, <span id="aluno-nome">Estudante</span>!</h2>
-      <p>Veja abaixo os cursos disponíveis:</p>
-    </div>
+  <!-- Painel principal -->
+  <main class="max-w-4xl mx-auto px-4 py-6">
+    <h2 class="text-2xl font-semibold mb-1">👋 Olá, <span id="aluno-nome-saudacao">Estudante</span>!</h2>
+    <p class="text-gray-600 mb-6">Veja abaixo os cursos disponíveis para você:</p>
 
-    <main id="cursos">
-      <p>Carregando cursos...</p>
-    </main>
-  </div>
+    <div id="cursos" class="grid gap-4">
+      <p class="text-sm text-gray-500">⏳ Carregando cursos...</p>
+    </div>
+  </main>
 
   <script>
     const supabase = window.supabase.createClient(
@@ -121,7 +71,7 @@
     const userId = params.get('user_id');
 
     if (!userId) {
-      document.getElementById('cursos').innerHTML = `<strong>Erro:</strong> ID do aluno não encontrado na URL.`;
+      document.getElementById('cursos').innerHTML = `<p class="text-red-600 font-semibold">❌ Erro: ID do aluno não encontrado na URL.</p>`;
       throw new Error('ID do aluno ausente na URL');
     }
 
@@ -134,6 +84,7 @@
 
       if (data?.name) {
         document.getElementById('aluno-nome').textContent = data.name;
+        document.getElementById('aluno-nome-saudacao').textContent = data.name;
       }
     }
 
@@ -146,7 +97,7 @@
       const container = document.getElementById('cursos');
 
       if (error || !data || data.length === 0) {
-        container.innerHTML = `<p>Nenhum curso disponível no momento.</p>`;
+        container.innerHTML = `<p class="text-gray-500">Nenhum curso disponível no momento.</p>`;
         return;
       }
 
@@ -157,11 +108,14 @@
         if (!curso) return;
 
         const card = document.createElement('div');
-        card.className = 'card-curso';
+        card.className = 'bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition';
+
         card.innerHTML = `
-          <h3>${curso.title}</h3>
-          <p>${curso.description || 'Sem descrição disponível.'}</p>
-          <a href="curso.html?user_id=${userId}&course_id=${curso.id}">Acessar curso</a>
+          <h3 class="text-lg font-semibold text-primary-700 mb-1">${curso.title}</h3>
+          <p class="text-sm text-gray-600 mb-3">${curso.description || 'Sem descrição disponível.'}</p>
+          <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded text-sm font-medium transition">
+            Acessar curso
+          </a>
         `;
         container.appendChild(card);
       });
@@ -170,5 +124,6 @@
     carregarAluno();
     carregarCursos();
   </script>
+
 </body>
 </html>
