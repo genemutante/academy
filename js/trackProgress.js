@@ -82,14 +82,6 @@ if (
 
 const { error } = await supabase.from('progress_segments').insert(segmento);
 
-if (error) {
-  console.error("❌ Falha no Supabase:", error.message, "📦 Payload:", segmento);
-  narrar(`❌ Erro ao salvar segmento: ${error.message}`, "error");
-  return;
-}
-
-
-  const { error } = await supabase.from('progress_segments').insert(segmento);
   if (error) {
     narrar(`❌ Erro ao salvar segmento: ${error.message}`, "error");
     return;
