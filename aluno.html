@@ -65,104 +65,50 @@
     </div>
   </main>
 
-  <script>
-import { verificarLoginObrigatorio, logout } from './auth.js';
+ <script type="module">
+  import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+  const supabase = window.supabase.createClient(
+    'https://bkueljjvhijojzcyodvk.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+  );
+
   const sessao = await verificarLoginObrigatorio();
+  const userId = sessao?.userId;
 
-  if (!sessao) return;
+  if (!userId) return;
 
-  // Exibe nome do usuário se quiser
-  document.getElementById('nomeAluno').textContent = sessao.userName;
-  
-  // Exemplo: botão logout
-  document.getElementById('logoutBtn')?.addEventListener('click', logout);
-});
+  document.getElementById('logoutBtn').addEventListener('click', logout);
 
-    
-    const supabase = window.supabase.createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    );
-
-    const params = new URLSearchParams(window.location.search);
-    const userId = params.get('user_id');
-
-    if (!userId) {
-      document.getElementById('cursos').innerHTML = `<p class="text-red-600 font-semibold">❌ Erro: ID do aluno não encontrado na URL.</p>`;
-      throw new Error('ID do aluno ausente na URL');
+  async function carregarAluno() {
+    const { data } = await supabase.from('users').select('name').eq('id', userId).single();
+    if (data?.name) {
+      document.getElementById('aluno-nome').textContent = data.name;
+      document.getElementById('aluno-nome-saudacao').textContent = data.name;
     }
-
-    async function carregarAluno() {
-      const { data, error } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', userId)
-        .single();
-
-      if (data?.name) {
-        document.getElementById('aluno-nome').textContent = data.name;
-        document.getElementById('aluno-nome-saudacao').textContent = data.name;
-      }
-    }
-
-    async function carregarCursos() {
-      const { data, error } = await supabase
-        .from('user_courses')
-        .select('course_id, courses (id, title, description)')
-        .eq('user_id', userId);
-
-      const container = document.getElementById('cursos');
-
-      if (error || !data || data.length === 0) {
-        container.innerHTML = `<p class="text-gray-500">Nenhum curso disponível no momento.</p>`;
-        return;
-      }
-
-      container.innerHTML = '';
-
-      data.forEach(entry => {
-        const curso = entry.courses;
-        if (!curso) return;
-
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition';
-
-        card.innerHTML = `
-          <h3 class="text-lg font-semibold text-primary-700 mb-1">${curso.title}</h3>
-          <p class="text-sm text-gray-600 mb-3">${curso.description || 'Sem descrição disponível.'}</p>
-          <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded text-sm font-medium transition">
-            Acessar curso
-          </a>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    carregarAluno();
-    carregarCursos();
-
-
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-  // 1. Se estiver usando autenticação do Supabase
-  try {
-    await supabase.auth.signOut(); // encerra sessão
-  } catch (err) {
-    console.warn("⚠️ Supabase não autenticado ou já deslogado.");
   }
 
-  // 2. Limpa qualquer dado armazenado localmente
-  localStorage.clear();
-  sessionStorage.clear();
+  async function carregarCursos() {
+    const { data } = await supabase
+      .from('user_courses')
+      .select('course_id, courses (id, title, description)')
+      .eq('user_id', userId);
 
-  // 3. Redireciona para a página inicial pública
-  window.location.href = "/";
-});
+    const container = document.getElementById('cursos');
+    if (!data?.length) {
+      container.innerHTML = `<p class="text-gray-500">Nenhum curso disponível no momento.</p>`;
+      return;
+    }
 
-
-    
-  </script>
+    container.innerHTML = '';
+    data.forEach(entry => {
+      const curso = entry.courses;
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition';
+      card.innerHTML = `
+        <h3 class="text-lg font-semibold text-primary-700 mb-1">${curso.title}</h3>
+        <p class="text-sm text-gray-600 mb-3">${curso.description || 'Sem descrição disponível.'}</p>
+        <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded text
 
 
 
