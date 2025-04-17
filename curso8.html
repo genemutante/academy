@@ -82,13 +82,46 @@
     <!-- 56.25% padding-top = 16:9 aspect ratio -->
     
     <!-- Iframe do YouTube ocupará toda a área -->
-    <div id="videoPlayer" class="absolute inset-0 w-full h-full z-0"></div>
+    <div id="videoPlayer" class="w-full h-full" style="position: relative;">
+
 
     <!-- Overlay de bloqueio -->
     <div id="videoOverlay"
          class="absolute inset-0 z-10 bg-transparent pointer-events-auto cursor-not-allowed"
          title="Interação desabilitada durante o rastreamento">
     </div>
+
+<!-- Controles personalizados -->
+<div id="controlesCustomizados"
+     class="absolute bottom-0 left-0 right-0 z-20 bg-black/80 text-white text-sm flex justify-between items-center px-4 py-2">
+  <div class="flex items-center gap-3">
+
+    <button onclick="retrocederVideo()" class="hover:scale-110 transition" title="Voltar 10s">⏪</button>
+
+    <button onclick="togglePlayPause()" id="playPauseBtn"
+            class="bg-white text-black font-bold text-xs px-2 py-1 rounded hover:bg-gray-200 transition"
+            title="Reproduzir / Pausar">
+      ⏸️
+    </button>
+
+    <button onclick="avancarVideo()" class="hover:scale-110 transition" title="Avançar 10s">⏩</button>
+
+    <span class="ml-3">Velocidade:</span>
+
+    <button onclick="definirVelocidade(1)" class="hover:underline">1x</button>
+    <button onclick="definirVelocidade(1.5)" class="hover:underline">1.5x</button>
+    <button onclick="definirVelocidade(2)" class="hover:underline">2x</button>
+  </div>
+
+  <div id="infoControle" class="text-xs text-white/80 italic">
+    Interação desabilitada durante o rastreamento
+  </div>
+</div>
+
+
+
+
+      
   </div>
 
 
@@ -138,5 +171,58 @@
 
   <!-- Bootstrap principal com todos os módulos JS importados -->
   <script type="module" src="./js/bootstrap.js"></script>
+
+
+<script>
+  function definirVelocidade(fator) {
+    if (window.player?.setPlaybackRate) {
+      window.player.setPlaybackRate(fator);
+      document.getElementById("infoControle").textContent = `🔁 Velocidade ajustada para ${fator}x`;
+    }
+  }
+
+  function togglePlayPause() {
+    const estado = window.player?.getPlayerState?.();
+    const btn = document.getElementById("playPauseBtn");
+
+    if (estado === 1) {
+      window.player.pauseVideo();
+      btn.textContent = "▶️";
+      document.getElementById("infoControle").textContent = "⏸️ Pausado";
+    } else {
+      window.player.playVideo();
+      btn.textContent = "⏸️";
+      document.getElementById("infoControle").textContent = "▶️ Tocando";
+    }
+  }
+
+  function retrocederVideo() {
+    const atual = window.player?.getCurrentTime?.();
+    if (typeof atual === "number") {
+      window.player.seekTo(Math.max(0, atual - 10), true);
+      document.getElementById("infoControle").textContent = "⏪ Voltou 10s";
+    }
+  }
+
+  function avancarVideo() {
+    const atual = window.player?.getCurrentTime?.();
+    if (typeof atual === "number") {
+      window.player.seekTo(atual + 10, true);
+      document.getElementById("infoControle").textContent = "⏩ Avançou 10s";
+    }
+  }
+
+  // Sincroniza ícone inicial
+  const checarEstadoInicial = setInterval(() => {
+    if (window.player?.getPlayerState) {
+      const estado = window.player.getPlayerState();
+      document.getElementById("playPauseBtn").textContent = estado === 1 ? "⏸️" : "▶️";
+      clearInterval(checarEstadoInicial);
+    }
+  }, 300);
+</script>
+
+
+  
 </body>
 </html>
