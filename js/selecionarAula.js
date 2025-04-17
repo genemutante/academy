@@ -132,6 +132,9 @@ export async function selecionarAula(aula, user_id) {
 
   console.groupEnd();
 
-  window.selecionarAula = selecionarAula;
+
 
 }
+
+
+  window.selecionarAula = selecionarAula;
