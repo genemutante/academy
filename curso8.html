@@ -148,5 +148,20 @@
 
   <!-- Bootstrap principal com todos os módulos JS importados -->
   <script type="module" src="./js/bootstrap.js"></script>
+
+
+<script>
+  window.definirVelocidade = function (fator) {
+    if (window.player && typeof window.player.setPlaybackRate === 'function') {
+      window.player.setPlaybackRate(fator);
+      const span = document.getElementById("infoControle");
+      if (span) span.textContent = `🔁 Velocidade ajustada para ${fator}x`;
+    } else {
+      alert("⚠️ Player não está pronto para alterar a velocidade.");
+    }
+  };
+</script>
+
+  
 </body>
 </html>
