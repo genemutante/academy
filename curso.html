@@ -241,31 +241,18 @@
   }, 300);
 </script>
 
-<script type="module">
-  import { verificarLoginObrigatorio, logout } from './js/auth.js';
-
-  const sessao = verificarLoginObrigatorio();
-  if (!sessao) return;
-
-  const userId = sessao.userId;
-  const userName = sessao.userName;
-  window.user_id = userId;
-
-  const nomeEl = document.getElementById("nomeAluno");
-  if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
-
-  const btnVoltar = document.getElementById("btnVoltarCursos");
-  if (btnVoltar) {
-    btnVoltar.addEventListener("click", () => {
-      window.location.href = `aluno.html?user_id=${userId}`;
-    });
-  }
-
-  const btnLogout = document.getElementById("logoutBtn");
-  if (btnLogout) {
-    btnLogout.addEventListener("click", logout);
-  }
+<script>
+  // Configura o botão "Meus Cursos" após a autenticação ser garantida no bootstrap
+  document.addEventListener('DOMContentLoaded', () => {
+    const btnVoltar = document.getElementById("btnVoltarCursos");
+    if (btnVoltar && window.user_id) {
+      btnVoltar.addEventListener("click", () => {
+        window.location.href = `aluno.html?user_id=${window.user_id}`;
+      });
+    }
+  });
 </script>
+
 
 
   
