@@ -1,55 +1,45 @@
 // js/auth.js
-const supabase = window.supabase.createClient(
-  'https://bkueljjvhijojzcyodvk.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-);
 
-/**
- * Verifica se há login válido baseado na URL e armazena os dados localmente.
- */
+import { supabase } from './supabaseClient.js';
+
 export async function verificarLoginObrigatorio() {
-  const params = new URLSearchParams(window.location.search);
-  const userId = params.get('user_id');
+  const session = await supabase.auth.getSession();
+  const sessao = session?.data?.session;
 
-  if (!userId) {
-    alert('⚠️ Acesso negado. Faça login primeiro.');
-    window.location.href = '/';
+  if (!sessao) {
+    // Redireciona se não estiver logado
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '/'; // ou '/index.html'
     return null;
   }
 
-  // Já está salvo localmente?
-  const cached = JSON.parse(localStorage.getItem('sessao'));
-  if (cached && cached.userId === userId) return cached;
-
-  // Consulta nome do usuário
-  const { data, error } = await supabase
+  const { user } = sessao;
+  const { data } = await supabase
     .from('users')
-    .select('name')
-    .eq('id', userId)
+    .select('id, name')
+    .eq('id', user.id)
     .single();
 
-  if (error || !data?.name) {
-    alert('⚠️ Usuário inválido ou não encontrado.');
+  if (!data) {
     window.location.href = '/';
     return null;
   }
 
-  const sessao = { userId, userName: data.name };
-  localStorage.setItem('sessao', JSON.stringify(sessao));
-  return sessao;
+  return {
+    userId: data.id,
+    userName: data.name,
+  };
 }
 
-/**
- * Faz logout forçado limpando cache e redirecionando.
- */
 export async function logout() {
   try {
     await supabase.auth.signOut();
-  } catch (err) {
-    console.warn("⚠️ Erro ao deslogar ou não logado no Supabase.");
+  } catch (e) {
+    console.warn("Erro no logout:", e);
   }
 
   localStorage.clear();
   sessionStorage.clear();
-  window.location.href = "/";
+  window.location.href = '/';
 }
