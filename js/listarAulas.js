@@ -13,7 +13,8 @@ export function listarAulas(aulas, user_id) {
     const podeAcessar = liberarProxima;
 
 const icones = document.createElement('div');
-icones.className = 'flex gap-3 w-[44px] justify-start text-base';
+icones.className = 'flex w-[32px] shrink-0 justify-start text-base space-x-[2px]';
+
 
 
 
