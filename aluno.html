@@ -63,8 +63,8 @@
 
   <!-- Script principal -->
   <script type="module">
-    import { verificarLoginObrigatorio, logout } from './js/auth.js';
-    import { supabase } from './js/supabaseClient.js';
+import { verificarLoginObrigatorio, logout, supabase } from './js/bootstrap.js';
+
 
     (async () => {
       const sessao = await verificarLoginObrigatorio();
