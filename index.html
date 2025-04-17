@@ -105,7 +105,10 @@ main.sucesso {
 <script type="module">
 
 
-import { supabase, salvarSessao } from './js/bootstrap.js';
+import { salvarSessao } from './js/bootstrap.js';
+
+const supabase = window.supabase;
+
 
 document.getElementById('btnEntrar').addEventListener('click', async () => {
   const codigo = document.getElementById('codigo').value.trim().toUpperCase();
