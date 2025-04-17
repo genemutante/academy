@@ -244,32 +244,35 @@
 <script type="module">
   import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
-  const sessao = await verificarLoginObrigatorio();
-  if (!sessao) return;
+  (async () => {
+    const sessao = await verificarLoginObrigatorio();
+    if (!sessao) return;
 
-  const userId = sessao.userId;
-  const userName = sessao.userName;
-  window.user_id = userId;
-  window.nomeAluno = userName;
+    const userId = sessao.userId;
+    const userName = sessao.userName;
+    window.user_id = userId;
+    window.nomeAluno = userName;
 
-  // Atualiza nome no cabeçalho
-  const nomeEl = document.getElementById("nomeAluno");
-  if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
+    // Atualiza nome no cabeçalho
+    const nomeEl = document.getElementById("nomeAluno");
+    if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
 
-  // Voltar para lista de cursos
-  const btnVoltar = document.getElementById("btnVoltarCursos");
-  if (btnVoltar) {
-    btnVoltar.addEventListener("click", () => {
-      window.location.href = `aluno.html`; // ⚠️ sem user_id na URL
-    });
-  }
+    // Voltar para lista de cursos
+    const btnVoltar = document.getElementById("btnVoltarCursos");
+    if (btnVoltar) {
+      btnVoltar.addEventListener("click", () => {
+        window.location.href = `aluno.html`; // ⚠️ sem user_id na URL
+      });
+    }
 
-  // Botão logout
-  const btnLogout = document.getElementById("logoutBtn");
-  if (btnLogout) {
-    btnLogout.addEventListener("click", logout);
-  }
+    // Botão logout
+    const btnLogout = document.getElementById("logoutBtn");
+    if (btnLogout) {
+      btnLogout.addEventListener("click", logout);
+    }
+  })();
 </script>
+
 
 
 
