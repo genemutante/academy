@@ -5,7 +5,7 @@ import { trackProgress } from './trackProgress.js';
 export function onPlayerReady(event) {
   // 🔐 Timeout de segurança
   window.timeoutProgressoInicial = setTimeout(() => {
-    if (!window.progressoIniciado) {
+    if (!window.progressoIniciado && !window.aulaFinalizada) {
       narrar("⛔ O progresso do vídeo ainda **não começou a ser registrado** após 30 segundos. Isso pode indicar um erro no player ou no Supabase.", "error");
       mostrarNotificacao("❗ Progresso não está sendo salvo. Verifique sua conexão ou recarregue a página.");
     }
