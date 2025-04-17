@@ -43,7 +43,7 @@ function abrirQuiz(aulaId, user_id) {
   quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
 
   quizContainer.innerHTML = `
-   <div class="bg-white w-full max-w-[960px] h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
+   <div class="bg-white w-[96vw] max-w-[1200px] h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
       <button onclick="this.parentElement.parentElement.remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
       <iframe src="quiz.html?user_id=${user_id}&lesson_id=${aulaId}" class="w-full h-full rounded-lg border border-slate-200" frameborder="0"></iframe>
     </div>
