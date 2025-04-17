@@ -9,11 +9,11 @@ import { narrar, exibirMensagemAluno } from './narrativa.js';
 import { initPlayer } from './initPlayer.js';
 import { onPlayerReady } from './onPlayerReady.js';
 import { verificarConclusaoAula } from './verificarConclusaoAula.js';
+import { carregarProgressoCurso } from './carregarProgressoCurso.js'; // ✅ novo
+
 import { supabase } from './supabaseClient.js';
 
-
 window.supabase = supabase;
-
 
 // 🌐 Params da URL
 const url = new URL(location.href);
@@ -31,22 +31,19 @@ window.exibirMensagemAluno = exibirMensagemAluno;
 window.initPlayer = initPlayer;
 window.onPlayerReady = onPlayerReady;
 window.verificarConclusaoAula = verificarConclusaoAula;
+window.carregarProgressoCurso = carregarProgressoCurso; // ✅ novo
 
+// 🔁 Mostra botão flutuante da narrativa brevemente ao carregar
+window.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('abrirPainelBtn');
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('abrirPainelBtn');
-
-    if (btn) {
-      // Exibe o botão logo que a página carrega
-      btn.classList.remove('hidden');
-
-      // Oculta o botão após 10 segundos (10000 ms)
-      setTimeout(() => {
-        btn.classList.add('hidden');
-      }, 10000);
-    }
-  });
-
+  if (btn) {
+    btn.classList.remove('hidden');
+    setTimeout(() => {
+      btn.classList.add('hidden');
+    }, 10000);
+  }
+});
 
 // 🚀 Execução principal
 document.addEventListener("DOMContentLoaded", async () => {
@@ -63,7 +60,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const aulasRef = { value: [] };
     await window.carregarDados(window.user_id, window.course_id, aulasRef);
-    window.carregarProgressoCurso?.(); // segurança com optional chaining
+
+    // ✅ Atualiza progresso do curso após carregar aulas
+    window.carregarProgressoCurso?.();
 
   } catch (err) {
     console.error("❌ Erro ao inicializar aplicativo:", err);
