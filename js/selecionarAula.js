@@ -131,4 +131,7 @@ export async function selecionarAula(aula, user_id) {
   }, 10000);
 
   console.groupEnd();
+
+  window.selecionarAula = selecionarAula;
+
 }
