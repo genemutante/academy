@@ -1,6 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meus Cursos</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        fontFamily: {
+          sans: ['Outfit', 'sans-serif']
+        },
+        extend: {
+          colors: {
+            primary: {
+              500: "#3B82F6",
+              600: "#2563EB",
+              700: "#1D4ED8"
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+    }
+  </style>
+</head>
+
+<body class="bg-surface-100 text-gray-800 min-h-screen">
+
+  <!-- Cabeçalho -->
+  <header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
+    <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
+      <h1 class="text-lg font-bold tracking-tight">🎓 Academy-Tools</h1>
+      <div class="flex items-center gap-3">
+        <span id="aluno-nome" class="text-sm bg-primary-700 px-3 py-1 rounded-full font-medium">Carregando...</span>
+        <button id="logoutBtn"
+                class="bg-white text-primary-700 hover:bg-gray-100 px-3 py-1 text-sm rounded-full font-medium transition flex items-center gap-1">
+          <span>⏪</span> Sair
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Painel principal -->
+  <main class="max-w-4xl mx-auto px-4 py-6">
+    <h2 class="text-2xl font-semibold mb-1">👋 Olá, <span id="aluno-nome-saudacao">Estudante</span>!</h2>
+    <p class="text-gray-600 mb-6">Veja abaixo os cursos disponíveis para você:</p>
+
+    <div id="cursos" class="grid gap-4">
+      <p class="text-sm text-gray-500">⏳ Carregando cursos...</p>
+    </div>
+  </main>
+
+  <!-- Script principal -->
+
 <script type="module">
   import { verificarLoginObrigatorio, logout } from './js/bootstrap.js';
-  import { supabase } from './js/supabaseClient.js'; // 🔁 Corrigido: importar Supabase diretamente
+  import { supabase } from './js/supabaseClient.js'; // ✅ Agora fixo, direto daqui
 
   (async () => {
     const sessao = await verificarLoginObrigatorio();
@@ -12,10 +77,7 @@
     document.getElementById('aluno-nome').textContent = userName;
     document.getElementById('aluno-nome-saudacao').textContent = userName;
 
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', logout);
-    }
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
 
     const { data, error } = await supabase
       .from('user_courses')
@@ -50,7 +112,6 @@
       container.appendChild(card);
     });
 
-    // 🔍 Evento de clique no container (delegação)
     container.addEventListener('click', (e) => {
       const botao = e.target.closest('.abrir-curso');
       if (!botao) return;
@@ -65,3 +126,11 @@
     });
   })();
 </script>
+
+
+
+
+
+  
+</body>
+</html>
