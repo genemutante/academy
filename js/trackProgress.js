@@ -1,4 +1,7 @@
 export async function trackProgress() {
+
+  import { atualizarIndicadorLocal } from './utils.js';
+
   if (window.aulaFinalizada) {
     narrar("⏹️ Aula finalizada — rastreamento ignorado.", "info");
     return;
