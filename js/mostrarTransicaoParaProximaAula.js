@@ -25,7 +25,8 @@ export function mostrarTransicaoParaProximaAula(proximaAula, selecionarAula) {
       msg.remove();
 
       if (typeof selecionarAula === "function") {
-        selecionarAula(proximaAula);
+        window.location.href = `/curso/${window.course_id}/aula/${proximaAula.id}`;
+
       } else {
         console.warn("⚠️ selecionarAula não é uma função válida.");
       }
