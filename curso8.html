@@ -98,30 +98,30 @@
   
 
   <!-- Controles customizados -->
-<div id="controlesCustomizados" class="w-full bg-red-600 text-white text-sm flex justify-between items-center px-4 py-2 rounded-b-md mb-4">
+<!-- Controles personalizados (inicialmente ocultos) -->
+<div id="controlesCustomizados" class="hidden absolute bottom-0 left-0 w-full bg-black bg-opacity-80 text-white text-sm flex justify-between items-center px-4 py-2 rounded-b-md z-20 transition-opacity duration-500">
   <div class="flex items-center gap-3">
-
     <button onclick="retrocederVideo()" class="hover:scale-110 transition" title="Voltar 10s">⏪</button>
 
     <button onclick="togglePlayPause()" id="playPauseBtn"
-            class="bg-white text-red-600 font-bold text-xs px-2 py-1 rounded hover:bg-gray-200 transition"
+            class="bg-white text-black font-bold text-xs px-2 py-1 rounded hover:bg-gray-300 transition"
             title="Reproduzir / Pausar">
       ⏸️
     </button>
 
     <button onclick="avancarVideo()" class="hover:scale-110 transition" title="Avançar 10s">⏩</button>
 
-    <span class="ml-3">Velocidade:</span>
-
+    <span class="ml-3 text-white/80">Velocidade:</span>
     <button onclick="definirVelocidade(1)" class="hover:underline">1x</button>
     <button onclick="definirVelocidade(1.5)" class="hover:underline">1.5x</button>
     <button onclick="definirVelocidade(2)" class="hover:underline">2x</button>
   </div>
 
-  <div id="infoControle" class="text-xs text-white/80 italic">
+  <div id="infoControle" class="text-xs text-white/70 italic">
     Interação desabilitada durante o rastreamento
   </div>
 </div>
+
 
 
 
@@ -174,68 +174,73 @@
   <script type="module" src="./js/bootstrap.js"></script>
 
 
-<script>
+
+
+  <script>
   function definirVelocidade(fator) {
     if (window.player && typeof window.player.setPlaybackRate === 'function') {
       window.player.setPlaybackRate(fator);
-      const span = document.getElementById("infoControle");
-      if (span) span.textContent = `🔁 Velocidade ajustada para ${fator}x`;
+      document.getElementById("infoControle").textContent = `🔁 Velocidade ajustada para ${fator}x`;
     }
   }
 
   function togglePlayPause() {
-    if (!window.player || typeof window.player.getPlayerState !== 'function') return;
-
-    const estado = window.player.getPlayerState(); // 1 = playing, 2 = paused
-    const botao = document.getElementById("playPauseBtn");
-
+    const btn = document.getElementById("playPauseBtn");
+    const estado = window.player.getPlayerState();
     if (estado === 1) {
       window.player.pauseVideo();
-      botao.textContent = "▶️";
-      document.getElementById("infoControle").textContent = "⏸️ Vídeo pausado manualmente.";
+      btn.textContent = "▶️";
+      document.getElementById("infoControle").textContent = "⏸️ Vídeo pausado.";
     } else {
       window.player.playVideo();
-      botao.textContent = "⏸️";
+      btn.textContent = "⏸️";
       document.getElementById("infoControle").textContent = "▶️ Vídeo em reprodução.";
     }
   }
 
   function retrocederVideo() {
-    if (window.player && typeof window.player.getCurrentTime === 'function') {
-      const atual = window.player.getCurrentTime();
-      window.player.seekTo(Math.max(0, atual - 10), true);
-      document.getElementById("infoControle").textContent = "⏪ Voltou 10 segundos";
-    }
+    const atual = window.player.getCurrentTime();
+    window.player.seekTo(Math.max(0, atual - 10), true);
+    document.getElementById("infoControle").textContent = "⏪ Voltou 10 segundos";
   }
 
   function avancarVideo() {
+    const atual = window.player.getCurrentTime();
+    window.player.seekTo(atual + 10, true);
+    document.getElementById("infoControle").textContent = "⏩ Avançou 10 segundos";
+  }
+
+  function atualizarEstadoPlayPause() {
+    const btn = document.getElementById("playPauseBtn");
+    if (window.player.getPlayerState() === 1) {
+      btn.textContent = "⏸️";
+    } else {
+      btn.textContent = "▶️";
+    }
+  }
+
+  // ⏱️ Exibir controles após 5 segundos de vídeo assistido
+  function ativarControlesSeApto() {
+    if (!window.player || typeof window.player.getCurrentTime !== 'function') return;
+    const tempo = window.player.getCurrentTime();
+    if (tempo >= 5) {
+      const controles = document.getElementById("controlesCustomizados");
+      if (controles && controles.classList.contains("hidden")) {
+        controles.classList.remove("hidden");
+        document.getElementById("infoControle").textContent = "🎮 Controles ativados";
+      }
+    }
+  }
+
+  // 🔁 Checagem contínua a cada segundo
+  setInterval(() => {
     if (window.player && typeof window.player.getCurrentTime === 'function') {
-      const atual = window.player.getCurrentTime();
-      window.player.seekTo(atual + 10, true);
-      document.getElementById("infoControle").textContent = "⏩ Avançou 10 segundos";
+      atualizarEstadoPlayPause();
+      ativarControlesSeApto();
     }
-  }
-
-  // 🔁 Detectar quando o player estiver pronto
-  function atualizarEstadoBotaoPlay() {
-    if (!window.player || typeof window.player.getPlayerState !== 'function') return;
-
-    const botao = document.getElementById("playPauseBtn");
-    const estado = window.player.getPlayerState();
-
-    if (botao) {
-      botao.textContent = estado === 1 ? "⏸️" : "▶️";
-    }
-  }
-
-  // ⏱️ Executar após player inicializar
-  const checarPlayer = setInterval(() => {
-    if (window.player && typeof window.player.getPlayerState === 'function') {
-      atualizarEstadoBotaoPlay();
-      clearInterval(checarPlayer);
-    }
-  }, 500);
+  }, 1000);
 </script>
+
 
 
 
