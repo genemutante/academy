@@ -57,8 +57,8 @@
 </div>
 
 
-    <div class="mb-6">
-    <h1 class="font-display text-2xl md:text-3xl font-bold tracking-tight leading-tight text-slate-900 dark:text-white mb-2 bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent">
+    <div class="mb-2">
+    <h1 class="font-display text-2xl md:text-3xl font-bold tracking-tight leading-tight text-slate-900 dark:text-white mb-1 bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent">
   Avaliação da Jornada do Aluno xxx
     </h1>
 
@@ -307,19 +307,7 @@ function renderQuestionNavigator() {
 
 // Dentro da função renderStep(), depois do headerContainer:
 
-const tempoBarContainer = document.createElement('div');
-tempoBarContainer.className = 'w-full h-2 rounded bg-slate-200 dark:bg-slate-700 overflow-hidden mb-4';
-
-const tempoBar = document.createElement('div');
-tempoBar.id = 'progressBarGlobal';
-tempoBar.className = 'h-full bg-primary-500 transition-all';
-tempoBar.style.width = '100%';
-
-tempoBarContainer.appendChild(tempoBar);
-stepContent.appendChild(tempoBarContainer);
-
-
-      
+     
 
       // Container para as opções
       const optionsContainer = document.createElement('div');
