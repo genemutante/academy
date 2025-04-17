@@ -80,11 +80,16 @@ export async function selecionarAula(aula, user_id) {
 
     if (dados.status === '✔ Concluída') {
       console.log("✅ Aula já marcada como concluída. Atualizando UI e habilitando quiz...");
+      
       atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
       esperarElemento("progressoTexto", el => el.textContent = "✅ Aula concluída");
       esperarElemento("recomecarSugestao", el => el.innerHTML = "");
       esperarElemento("indicadorNumerico", el => el.textContent = "");
+      
       await habilitarQuiz(aula.id, user_id);
+      console.log("🎬 Recarregando player mesmo com aula concluída");
+      initPlayer(); // ✅ chama player normalmente
+      
       console.groupEnd();
       return;
     }
