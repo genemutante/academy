@@ -32,7 +32,7 @@ window.initPlayer = initPlayer;
 window.onPlayerReady = onPlayerReady;
 window.verificarConclusaoAula = verificarConclusaoAula;
 
-<script>
+
   window.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('abrirPainelBtn');
 
@@ -46,7 +46,6 @@ window.verificarConclusaoAula = verificarConclusaoAula;
       }, 10000);
     }
   });
-</script>
 
 
 // 🚀 Execução principal
