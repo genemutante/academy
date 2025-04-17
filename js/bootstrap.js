@@ -63,6 +63,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const aulasRef = { value: [] };
     await window.carregarDados(window.user_id, window.course_id, aulasRef);
+    window.carregarProgressoCurso?.(); // segurança com optional chaining
+
   } catch (err) {
     console.error("❌ Erro ao inicializar aplicativo:", err);
     alert("Erro ao carregar dados iniciais. Tente recarregar a página.");
