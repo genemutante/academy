@@ -5,11 +5,13 @@ import { mostrarTransicaoParaProximaAula } from './mostrarTransicaoParaProximaAu
 import { narrar } from './narrativa.js';
 import { verificarQuizRespondido } from './verificarQuizRespondido.js';
 
-export async function habilitarQuiz(aulaId) {
+export async function habilitarQuiz(aulaId, userId = window.user_id) {
   const btnQuiz = document.getElementById("btnQuiz");
-  if (!btnQuiz) return;
+  if (!btnQuiz || !userId) {
+    console.error("❌ [habilitarQuiz] Botão ou userId inválido", { userId });
+    return;
+  }
 
-  const userId = window.user_id;
   const quizRespondido = await verificarQuizRespondido(userId, aulaId);
 
   window.aulaAtual.quizEnviado = quizRespondido;
