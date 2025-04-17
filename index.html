@@ -81,6 +81,13 @@
       font-size: 13px;
       margin-top: 1rem;
     }
+
+main.sucesso {
+  border: 2px solid #22c55e; /* verde-500 */
+  box-shadow: 0 0 0 3px #bbf7d0; /* sombra verde clara */
+}
+
+    
   </style>
 </head>
 <body>
@@ -94,49 +101,63 @@
     <p id="msg"></p>
   </main>
 
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://bkueljjvhijojzcyodvk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-    );
+  
+<script type="module">
+  import { salvarSessao } from './js/auth.js';
 
-    document.getElementById('btnEntrar').addEventListener('click', async () => {
-      const codigo = document.getElementById('codigo').value.trim().toUpperCase();
-      const msg = document.getElementById('msg');
-      msg.textContent = '';
-      msg.style.color = '#4b5563';
+  const supabase = window.supabase.createClient(
+    'https://bkueljjvhijojzcyodvk.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+  );
 
-      if (!codigo || codigo.length < 4) {
-        msg.textContent = 'Por favor, informe um código válido.';
-        msg.style.color = 'red';
-        return;
-      }
+  const btn = document.getElementById('btnEntrar');
+  const input = document.getElementById('codigo');
+  const msg = document.getElementById('msg');
+  const main = document.querySelector('main');
 
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, role')
-        .eq('codigo_acesso', codigo)
-        .maybeSingle();
+  btn.addEventListener('click', async () => {
+    const codigo = input.value.trim().toUpperCase();
+    msg.textContent = '';
+    msg.style.color = '#4b5563';
+    main.classList.remove('sucesso');
 
-      if (error || !data) {
-        msg.textContent = 'Código não encontrado. Verifique com seu professor.';
-        msg.style.color = 'red';
-        return;
-      }
+    if (!codigo || codigo.length < 4) {
+      msg.textContent = 'Por favor, informe um código válido.';
+      msg.style.color = 'red';
+      return;
+    }
 
-      msg.textContent = 'Acesso liberado! Redirecionando...';
-      msg.style.color = 'green';
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, name, role')
+      .eq('codigo_acesso', codigo)
+      .maybeSingle();
 
-      const destino =
-        data.role === 'admin' ? 'admin.html' :
-        data.role === 'teacher' ? 'professor.html' :
-        'aluno.html';
+    if (error || !data) {
+      msg.textContent = 'Código não encontrado. Verifique com seu professor.';
+      msg.style.color = 'red';
+      return;
+    }
 
-      setTimeout(() => {
-        window.location.href = `${destino}?user_id=${data.id}`;
-      }, 1000);
-    });
-  </script>
+    // ✅ Salva a sessão no localStorage
+    salvarSessao({ id: data.id, name: data.name });
+
+    // ✅ Feedback visual de sucesso
+    msg.textContent = 'Acesso liberado! Redirecionando...';
+    msg.style.color = 'green';
+    main.classList.add('sucesso');
+
+    // ✅ Redireciona conforme o papel
+    const destino =
+      data.role === 'admin' ? 'admin.html' :
+      data.role === 'teacher' ? 'professor.html' :
+      'aluno.html';
+
+    setTimeout(() => {
+      window.location.href = `${destino}?user_id=${data.id}`;
+    }, 1000);
+  });
+</script>
+
 </body>
 </html>
