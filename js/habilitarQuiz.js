@@ -42,14 +42,21 @@ function abrirModalQuiz(userId, aulaId) {
 
 quizContainer.innerHTML = `
   <div class="bg-white w-full max-w-[1240px] h-[94vh] p-4 rounded-2xl shadow-2xl relative border border-slate-200 overflow-hidden">
-    <button onclick="this.closest('.fixed').remove()" class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-xl">&times;</button>
+    <button
+      onclick="this.closest('.fixed').remove(); if (window.player?.pauseVideo) window.player.pauseVideo();"
+      class="absolute top-4 right-4 bg-white border border-gray-300 shadow-md rounded-full w-9 h-9 flex items-center justify-center text-gray-600 hover:text-red-600 hover:border-red-500 hover:scale-105 transition-all text-lg z-50"
+      title="Fechar avaliação"
+    >
+      &times;
+    </button>
     <iframe
-      src="quiz.html?user_id=${userId}&lesson_id=${aulaId}"
+      src="quiz.html?user_id=${user_id}&lesson_id=${aulaId}"
       class="w-full h-full rounded-lg border border-slate-200"
       frameborder="0"
     ></iframe>
   </div>
 `;
+
 
 
   document.body.appendChild(quizContainer);
