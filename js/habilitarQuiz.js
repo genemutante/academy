@@ -37,18 +37,25 @@ export async function habilitarQuiz(aulaId, userId = window.user_id) {
 }
 
 function abrirModalQuiz(userId, aulaId) {
+
+    if (window.player?.pauseVideo) {
+    window.player.pauseVideo();
+  }
   const quizContainer = document.createElement('div');
   quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
 
 quizContainer.innerHTML = `
   <div class="bg-white w-full max-w-[1240px] h-[94vh] p-4 rounded-2xl shadow-2xl relative border border-slate-200 overflow-hidden">
+    
+    <!-- Botão de fechar DESTACADO e reposicionado -->
     <button
       onclick="this.closest('.fixed').remove(); if (window.player?.pauseVideo) window.player.pauseVideo();"
-      class="absolute top-4 right-4 bg-white border border-gray-300 shadow-md rounded-full w-9 h-9 flex items-center justify-center text-gray-600 hover:text-red-600 hover:border-red-500 hover:scale-105 transition-all text-lg z-50"
+      class="absolute top-4 left-4 bg-red-600 text-white font-bold w-9 h-9 rounded-full shadow-lg flex items-center justify-center text-xl hover:bg-red-700 transition-all z-50"
       title="Fechar avaliação"
     >
       &times;
     </button>
+
     <iframe
       src="quiz.html?user_id=${user_id}&lesson_id=${aulaId}"
       class="w-full h-full rounded-lg border border-slate-200"
@@ -56,6 +63,7 @@ quizContainer.innerHTML = `
     ></iframe>
   </div>
 `;
+
 
 
 
