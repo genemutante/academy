@@ -32,6 +32,23 @@ window.initPlayer = initPlayer;
 window.onPlayerReady = onPlayerReady;
 window.verificarConclusaoAula = verificarConclusaoAula;
 
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('abrirPainelBtn');
+
+    if (btn) {
+      // Exibe o botão logo que a página carrega
+      btn.classList.remove('hidden');
+
+      // Oculta o botão após 10 segundos (10000 ms)
+      setTimeout(() => {
+        btn.classList.add('hidden');
+      }, 10000);
+    }
+  });
+</script>
+
+
 // 🚀 Execução principal
 document.addEventListener("DOMContentLoaded", async () => {
   try {
