@@ -616,6 +616,29 @@ async function enviarRespostas() {
   
   localStorage.removeItem(storageKey);
 
+  //
+  // 🔄 Tentar simular clique na próxima aula após 6s
+setTimeout(() => {
+  const listaAulas = document.querySelectorAll('#listaAulas li');
+  let encontrouAtual = false;
+
+  for (const li of listaAulas) {
+    const id = li.dataset.id || li.textContent;
+    if (!encontrouAtual) {
+      if (id.includes(lessonId)) {
+        encontrouAtual = true;
+      }
+      continue;
+    }
+
+    // Próxima aula clicável
+    if (li.classList.contains('cursor-pointer')) {
+      li.click();
+      break;
+    }
+  }
+}, 6000);
+
   
 }
 
