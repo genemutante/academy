@@ -44,9 +44,13 @@
       <h1 class="text-lg font-bold tracking-tight">🎓 Academy-Tools</h1>
       <div class="flex items-center gap-3">
         <span id="aluno-nome" class="text-sm bg-primary-700 px-3 py-1 rounded-full font-medium">Carregando...</span>
-        <a id="logoutLink" href="/" class="bg-white text-primary-700 hover:bg-gray-100 px-3 py-1 text-sm rounded-full font-medium transition flex items-center gap-1">
-          <span>⏪</span> Sair
-        </a>
+
+<button id="logoutBtn"
+        class="bg-white text-primary-700 hover:bg-gray-100 px-3 py-1 text-sm rounded-full font-medium transition flex items-center gap-1">
+  <span>⏪</span> Sair
+</button>
+
+        
       </div>
     </div>
   </header>
@@ -124,6 +128,24 @@
     carregarAluno();
     carregarCursos();
   </script>
+
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  // 1. Se estiver usando autenticação do Supabase
+  try {
+    await supabase.auth.signOut(); // encerra sessão
+  } catch (err) {
+    console.warn("⚠️ Supabase não autenticado ou já deslogado.");
+  }
+
+  // 2. Limpa qualquer dado armazenado localmente
+  localStorage.clear();
+  sessionStorage.clear();
+
+  // 3. Redireciona para a página inicial pública
+  window.location.href = "/";
+});
+
 
 </body>
 </html>
