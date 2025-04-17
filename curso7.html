@@ -76,19 +76,23 @@
         <ul id="listaAulas" class="list-none space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
       </div>
 
-      <!-- Coluna principal: Aula -->
 <!-- Coluna principal: Aula -->
 <div class="lg:col-span-2">
-  <div class="aspect-video w-full rounded overflow-hidden shadow mb-4 relative" id="videoContainer">
-    <!-- Container relativo para o player -->
-    <div id="videoPlayer" class="absolute inset-0 z-0"></div>
+  <div class="relative w-full pt-[56.25%] rounded overflow-hidden shadow mb-4" id="videoContainer">
+    <!-- 56.25% padding-top = 16:9 aspect ratio -->
+    
+    <!-- Iframe do YouTube ocupará toda a área -->
+    <div id="videoPlayer" class="absolute inset-0 w-full h-full z-0"></div>
 
-    <!-- Overlay transparente para bloquear interações -->
+    <!-- Overlay de bloqueio -->
     <div id="videoOverlay"
          class="absolute inset-0 z-10 bg-transparent pointer-events-auto cursor-not-allowed"
          title="Interação desabilitada durante o rastreamento">
     </div>
   </div>
+
+
+  
 
   <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
     <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
