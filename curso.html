@@ -242,6 +242,13 @@
 </script>
 
 <script type="module">
+
+const logAnterior = sessionStorage.getItem('log_debug');
+if (logAnterior) {
+  console.log("📦 Log anterior de navegação:", logAnterior);
+}
+
+  
   import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
   (async () => {
