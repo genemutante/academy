@@ -1,112 +1,67 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meus Cursos</title>
+<script type="module">
+  import { verificarLoginObrigatorio, logout } from './js/bootstrap.js';
+  import { supabase } from './js/supabaseClient.js'; // 🔁 Corrigido: importar Supabase diretamente
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  (async () => {
+    const sessao = await verificarLoginObrigatorio();
+    if (!sessao) return;
 
-  <script>
-    tailwind.config = {
-      theme: {
-        fontFamily: {
-          sans: ['Outfit', 'sans-serif']
-        },
-        extend: {
-          colors: {
-            primary: {
-              500: "#3B82F6",
-              600: "#2563EB",
-              700: "#1D4ED8"
-            }
-          }
-        }
-      }
-    };
-  </script>
+    const userId = sessao.userId;
+    const userName = sessao.userName;
 
-  <style>
-    body {
-      font-family: 'Outfit', sans-serif;
+    document.getElementById('aluno-nome').textContent = userName;
+    document.getElementById('aluno-nome-saudacao').textContent = userName;
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', logout);
     }
-  </style>
-</head>
 
-<body class="bg-surface-100 text-gray-800 min-h-screen">
+    const { data, error } = await supabase
+      .from('user_courses')
+      .select('course_id, courses (id, title, description)')
+      .eq('user_id', userId);
 
-  <!-- Cabeçalho -->
-  <header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
-    <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
-      <h1 class="text-lg font-bold tracking-tight">🎓 Academy-Tools</h1>
-      <div class="flex items-center gap-3">
-        <span id="aluno-nome" class="text-sm bg-primary-700 px-3 py-1 rounded-full font-medium">Carregando...</span>
-        <button id="logoutBtn"
-                class="bg-white text-primary-700 hover:bg-gray-100 px-3 py-1 text-sm rounded-full font-medium transition flex items-center gap-1">
-          <span>⏪</span> Sair
+    const container = document.getElementById('cursos');
+
+    if (error || !data?.length) {
+      container.innerHTML = `<p class="text-gray-500">Nenhum curso disponível no momento.</p>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    data.forEach(entry => {
+      const curso = entry.courses;
+      if (!curso) return;
+
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition';
+      card.innerHTML = `
+        <h3 class="text-lg font-semibold text-primary-700 mb-1">${curso.title}</h3>
+        <p class="text-sm text-gray-600 mb-3">${curso.description || 'Sem descrição disponível.'}</p>
+        <button
+          class="abrir-curso inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded text-sm font-medium transition"
+          data-id="${curso.id}"
+          data-nome="${curso.title}"
+        >
+          Acessar curso
         </button>
-      </div>
-    </div>
-  </header>
+      `;
+      container.appendChild(card);
+    });
 
-  <!-- Painel principal -->
-  <main class="max-w-4xl mx-auto px-4 py-6">
-    <h2 class="text-2xl font-semibold mb-1">👋 Olá, <span id="aluno-nome-saudacao">Estudante</span>!</h2>
-    <p class="text-gray-600 mb-6">Veja abaixo os cursos disponíveis para você:</p>
+    // 🔍 Evento de clique no container (delegação)
+    container.addEventListener('click', (e) => {
+      const botao = e.target.closest('.abrir-curso');
+      if (!botao) return;
 
-    <div id="cursos" class="grid gap-4">
-      <p class="text-sm text-gray-500">⏳ Carregando cursos...</p>
-    </div>
-  </main>
+      const id = botao.dataset.id;
+      const nome = botao.dataset.nome;
 
-  <!-- Script principal -->
-  <script type="module">
-import { verificarLoginObrigatorio, logout, supabase } from './js/bootstrap.js';
+      console.log(`🧭 Curso selecionado: ${nome} (ID ${id})`);
+      sessionStorage.setItem('log_debug', `Acessando curso "${nome}" (ID: ${id}) às ${new Date().toISOString()}`);
 
-
-    (async () => {
-      const sessao = await verificarLoginObrigatorio();
-      if (!sessao) return;
-
-      const userId = sessao.userId;
-      const userName = sessao.userName;
-
-      document.getElementById('aluno-nome').textContent = userName;
-      document.getElementById('aluno-nome-saudacao').textContent = userName;
-
-      document.getElementById('logoutBtn')?.addEventListener('click', logout);
-
-      const { data, error } = await supabase
-        .from('user_courses')
-        .select('course_id, courses (id, title, description)')
-        .eq('user_id', userId);
-
-      const container = document.getElementById('cursos');
-
-      if (error || !data?.length) {
-        container.innerHTML = `<p class="text-gray-500">Nenhum curso disponível no momento.</p>`;
-        return;
-      }
-
-      container.innerHTML = '';
-      data.forEach(entry => {
-        const curso = entry.courses;
-        if (!curso) return;
-
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition';
-        card.innerHTML = `
-          <h3 class="text-lg font-semibold text-primary-700 mb-1">${curso.title}</h3>
-          <p class="text-sm text-gray-600 mb-3">${curso.description || 'Sem descrição disponível.'}</p>
-          <a href="curso.html?course_id=${curso.id}" class="inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded text-sm font-medium transition">
-            Acessar curso
-          </a>
-        `;
-        container.appendChild(card);
-      });
-    })();
-  </script>
-</body>
-</html>
+      window.location.href = `curso.html?course_id=${id}`;
+    });
+  })();
+</script>
