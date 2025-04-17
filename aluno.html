@@ -44,13 +44,10 @@
       <h1 class="text-lg font-bold tracking-tight">🎓 Academy-Tools</h1>
       <div class="flex items-center gap-3">
         <span id="aluno-nome" class="text-sm bg-primary-700 px-3 py-1 rounded-full font-medium">Carregando...</span>
-
-<button id="logoutBtn"
-        class="bg-white text-primary-700 hover:bg-gray-100 px-3 py-1 text-sm rounded-full font-medium transition flex items-center gap-1">
-  <span>⏪</span> Sair
-</button>
-
-        
+        <button id="logoutBtn"
+                class="bg-white text-primary-700 hover:bg-gray-100 px-3 py-1 text-sm rounded-full font-medium transition flex items-center gap-1">
+          <span>⏪</span> Sair
+        </button>
       </div>
     </div>
   </header>
@@ -64,57 +61,58 @@
       <p class="text-sm text-gray-500">⏳ Carregando cursos...</p>
     </div>
   </main>
-<script type="module">
-  import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
-  const supabase = window.supabase.createClient(
-    'https://bkueljjvhijojzcyodvk.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-  );
+  <script type="module">
+    import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
-  const sessao = await verificarLoginObrigatorio();
-  if (!sessao) return;
+    const supabase = window.supabase.createClient(
+      'https://bkueljjvhijojzcyodvk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
+    );
 
-  const userId = sessao.userId;
-  const userName = sessao.userName;
+    (async () => {
+      const sessao = await verificarLoginObrigatorio();
+      if (!sessao) return;
 
-  document.getElementById('aluno-nome').textContent = userName;
-  document.getElementById('aluno-nome-saudacao').textContent = userName;
+      const userId = sessao.userId;
+      const userName = sessao.userName;
 
-  document.getElementById('logoutBtn')?.addEventListener('click', logout);
+      document.getElementById('aluno-nome').textContent = userName;
+      document.getElementById('aluno-nome-saudacao').textContent = userName;
 
-  async function carregarCursos() {
-    const { data, error } = await supabase
-      .from('user_courses')
-      .select('course_id, courses (id, title, description)')
-      .eq('user_id', userId);
+      document.getElementById('logoutBtn')?.addEventListener('click', logout);
 
-    const container = document.getElementById('cursos');
+      async function carregarCursos() {
+        const { data, error } = await supabase
+          .from('user_courses')
+          .select('course_id, courses (id, title, description)')
+          .eq('user_id', userId);
 
-    if (error || !data?.length) {
-      container.innerHTML = `<p class="text-gray-500">Nenhum curso disponível no momento.</p>`;
-      return;
-    }
+        const container = document.getElementById('cursos');
 
-    container.innerHTML = '';
-    data.forEach(entry => {
-      const curso = entry.courses;
-      const card = document.createElement('div');
-      card.className = 'bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition';
-      card.innerHTML = `
-        <h3 class="text-lg font-semibold text-primary-700 mb-1">${curso.title}</h3>
-        <p class="text-sm text-gray-600 mb-3">${curso.description || 'Sem descrição disponível.'}</p>
-        <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded text-sm font-medium transition">
-          Acessar curso
-        </a>
-      `;
-      container.appendChild(card);
-    });
-  }
+        if (error || !data?.length) {
+          container.innerHTML = `<p class="text-gray-500">Nenhum curso disponível no momento.</p>`;
+          return;
+        }
 
-  carregarCursos();
-</script>
+        container.innerHTML = '';
+        data.forEach(entry => {
+          const curso = entry.courses;
+          const card = document.createElement('div');
+          card.className = 'bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition';
+          card.innerHTML = `
+            <h3 class="text-lg font-semibold text-primary-700 mb-1">${curso.title}</h3>
+            <p class="text-sm text-gray-600 mb-3">${curso.description || 'Sem descrição disponível.'}</p>
+            <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded text-sm font-medium transition">
+              Acessar curso
+            </a>
+          `;
+          container.appendChild(card);
+        });
+      }
 
-
+      carregarCursos();
+    })();
+  </script>
 </body>
 </html>
