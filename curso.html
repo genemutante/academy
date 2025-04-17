@@ -245,33 +245,60 @@
   import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
   (async () => {
+    console.log("📦 Iniciando verificação de sessão...");
+
     const sessao = await verificarLoginObrigatorio();
-    if (!sessao) return;
+    if (!sessao) {
+      console.warn("⛔ Sessão inválida ou não encontrada. Redirecionando...");
+      return;
+    }
 
     const userId = sessao.userId;
     const userName = sessao.userName;
+    const courseId = new URL(location.href).searchParams.get("course_id");
+
+    // Logs de contexto
+    console.log("✅ Sessão ativa:", { userId, userName });
+    console.log("📚 course_id da URL:", courseId);
+
     window.user_id = userId;
     window.nomeAluno = userName;
+    window.course_id = courseId;
 
     // Atualiza nome no cabeçalho
     const nomeEl = document.getElementById("nomeAluno");
-    if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
+    if (nomeEl) {
+      nomeEl.textContent = `👤 ${userName}`;
+    } else {
+      console.warn("⚠️ Elemento #nomeAluno não encontrado na página.");
+    }
 
     // Voltar para lista de cursos
     const btnVoltar = document.getElementById("btnVoltarCursos");
     if (btnVoltar) {
       btnVoltar.addEventListener("click", () => {
-        window.location.href = `aluno.html`; // ⚠️ sem user_id na URL
+        console.log("↩️ Redirecionando para lista de cursos...");
+        window.location.href = "aluno.html";
       });
+    } else {
+      console.warn("⚠️ Botão #btnVoltarCursos não encontrado.");
     }
 
     // Botão logout
     const btnLogout = document.getElementById("logoutBtn");
     if (btnLogout) {
-      btnLogout.addEventListener("click", logout);
+      btnLogout.addEventListener("click", () => {
+        console.log("🚪 Logout solicitado.");
+        logout();
+      });
+    } else {
+      console.warn("⚠️ Botão #logoutBtn não encontrado.");
     }
+
+    console.log("✅ Autenticação finalizada. Aplicação pronta para carregar dados.");
   })();
 </script>
+
 
 
 
