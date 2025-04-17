@@ -64,8 +64,7 @@
       <p class="text-sm text-gray-500">⏳ Carregando cursos...</p>
     </div>
   </main>
-
- <script type="module">
+<script type="module">
   import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
   const supabase = window.supabase.createClient(
@@ -74,28 +73,25 @@
   );
 
   const sessao = await verificarLoginObrigatorio();
-  const userId = sessao?.userId;
+  if (!sessao) return;
 
-  if (!userId) return;
+  const userId = sessao.userId;
+  const userName = sessao.userName;
 
-  document.getElementById('logoutBtn').addEventListener('click', logout);
+  document.getElementById('aluno-nome').textContent = userName;
+  document.getElementById('aluno-nome-saudacao').textContent = userName;
 
-  async function carregarAluno() {
-    const { data } = await supabase.from('users').select('name').eq('id', userId).single();
-    if (data?.name) {
-      document.getElementById('aluno-nome').textContent = data.name;
-      document.getElementById('aluno-nome-saudacao').textContent = data.name;
-    }
-  }
+  document.getElementById('logoutBtn')?.addEventListener('click', logout);
 
   async function carregarCursos() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_courses')
       .select('course_id, courses (id, title, description)')
       .eq('user_id', userId);
 
     const container = document.getElementById('cursos');
-    if (!data?.length) {
+
+    if (error || !data?.length) {
       container.innerHTML = `<p class="text-gray-500">Nenhum curso disponível no momento.</p>`;
       return;
     }
@@ -108,9 +104,16 @@
       card.innerHTML = `
         <h3 class="text-lg font-semibold text-primary-700 mb-1">${curso.title}</h3>
         <p class="text-sm text-gray-600 mb-3">${curso.description || 'Sem descrição disponível.'}</p>
-        <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded text
+        <a href="curso.html?user_id=${userId}&course_id=${curso.id}" class="inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded text-sm font-medium transition">
+          Acessar curso
+        </a>
+      `;
+      container.appendChild(card);
+    });
+  }
 
-
+  carregarCursos();
+</script>
 
 
 </body>
