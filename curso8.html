@@ -91,17 +91,30 @@
   </div>
 
   <!-- Controles customizados -->
-  <div id="controlesCustomizados" class="w-full bg-red-600 text-white text-sm flex justify-between items-center px-4 py-2 rounded-b-md mb-4">
-    <div class="flex items-center gap-3">
-      <span class="text-white">⏩ Velocidade:</span>
-      <button onclick="definirVelocidade(1)" class="hover:underline">1x</button>
-      <button onclick="definirVelocidade(1.5)" class="hover:underline">1.5x</button>
-      <button onclick="definirVelocidade(2)" class="hover:underline">2x</button>
-    </div>
-    <div id="infoControle" class="text-xs text-white/80 italic">
-      Interação desabilitada durante o rastreamento
-    </div>
+<div id="controlesCustomizados" class="w-full bg-red-600 text-white text-sm flex justify-between items-center px-4 py-2 rounded-b-md mb-4">
+  <div class="flex items-center gap-3">
+    <span class="text-white">🎛️ Controles:</span>
+
+    <button onclick="togglePlayPause()" id="playPauseBtn"
+            class="bg-white text-red-600 font-bold text-xs px-2 py-1 rounded hover:bg-gray-200 transition">
+      ▶️
+    </button>
+
+    <span>|</span>
+
+    <button onclick="definirVelocidade(1)" class="hover:underline">1x</button>
+    <button onclick="definirVelocidade(1.5)" class="hover:underline">1.5x</button>
+    <button onclick="definirVelocidade(2)" class="hover:underline">2x</button>
   </div>
+
+  <div id="infoControle" class="text-xs text-white/80 italic">
+    Interação desabilitada durante o rastreamento
+  </div>
+</div>
+
+
+
+  
 
   <!-- Detalhes da aula -->
   <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
@@ -157,10 +170,28 @@
       const span = document.getElementById("infoControle");
       if (span) span.textContent = `🔁 Velocidade ajustada para ${fator}x`;
     } else {
-      alert("⚠️ Player não está pronto para alterar a velocidade.");
+      alert("⚠️ Player não está pronto.");
+    }
+  };
+
+  window.togglePlayPause = function () {
+    if (!window.player || typeof window.player.getPlayerState !== 'function') return;
+
+    const estado = window.player.getPlayerState(); // 1 = playing, 2 = paused
+    const botao = document.getElementById("playPauseBtn");
+
+    if (estado === 1) {
+      window.player.pauseVideo();
+      botao.textContent = "▶️";
+      document.getElementById("infoControle").textContent = "⏸️ Vídeo pausado manualmente.";
+    } else {
+      window.player.playVideo();
+      botao.textContent = "⏸️";
+      document.getElementById("infoControle").textContent = "▶️ Vídeo em reprodução.";
     }
   };
 </script>
+
 
   
 </body>
