@@ -53,6 +53,10 @@
     <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
       <h1 class="text-xl font-display font-bold tracking-tight">Academy-Tools</h1>
 
+<button id="logoutBtn"
+        class="text-xs bg-white text-primary-700 font-semibold px-3 py-1 rounded-full hover:bg-primary-100 transition shadow-sm">
+  🚪 Sair
+</button>
 
       
 <div class="flex items-center gap-4">
@@ -237,31 +241,32 @@
   }, 300);
 </script>
 
-<script>
-  // Espera até o DOM estar pronto
-  window.addEventListener('DOMContentLoaded', () => {
-    const nomeSpan = document.getElementById("nomeAluno");
-    const btnVoltar = document.getElementById("btnVoltarCursos");
+<script type="module">
+  import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
-    // Assume que a página atual foi carregada com ?user_id=...
-    const params = new URLSearchParams(window.location.search);
-    const userId = params.get("user_id");
+  const sessao = verificarLoginObrigatorio();
+  if (!sessao) return;
 
-    if (userId) {
-      window.user_id = userId;
+  const userId = sessao.userId;
+  const userName = sessao.userName;
+  window.user_id = userId;
 
-      // Aqui você pode preencher o nome real do aluno se tiver acesso à API
-      nomeSpan.textContent = "👤 " + (window.nomeAluno || "Aluno(a)");
+  const nomeEl = document.getElementById("nomeAluno");
+  if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
 
-      btnVoltar.addEventListener("click", () => {
-        window.location.href = `https://academy-tools.netlify.app/aluno.html?user_id=${userId}`;
-      });
-    } else {
-      btnVoltar.disabled = true;
-      nomeSpan.textContent = "⚠️ Usuário não identificado";
-    }
-  });
+  const btnVoltar = document.getElementById("btnVoltarCursos");
+  if (btnVoltar) {
+    btnVoltar.addEventListener("click", () => {
+      window.location.href = `aluno.html?user_id=${userId}`;
+    });
+  }
+
+  const btnLogout = document.getElementById("logoutBtn");
+  if (btnLogout) {
+    btnLogout.addEventListener("click", logout);
+  }
 </script>
+
 
   
 </body>
