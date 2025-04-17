@@ -99,3 +99,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     alert("Erro ao carregar dados iniciais. Tente recarregar a página.");
   }
 });
+
+export { supabase };
+
