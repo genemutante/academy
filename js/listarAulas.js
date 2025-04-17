@@ -26,8 +26,8 @@ icones.className = 'flex w-[32px] shrink-0 justify-start text-base space-x-[2px]
       icones.innerHTML += `<span title="Avaliação enviada">📩</span>`;
     }
 
-    const label = document.createElement('span');
-    label.textContent = `${aula.order}.` + '\u00A0\u00A0' + aula.title;
+label.textContent = `${aula.order}.  ${aula.title}`; // com dois espaços não quebráveis
+label.classList.add("font-mono");
 
 
     if (podeAcessar) {
