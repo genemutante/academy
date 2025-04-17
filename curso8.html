@@ -98,10 +98,12 @@
   
 
   <!-- Controles customizados -->
-<!-- Controles personalizados (inicialmente ocultos) -->
-<div id="controlesCustomizados" class="hidden absolute bottom-0 left-0 w-full bg-black bg-opacity-80 text-white text-sm flex justify-between items-center px-4 py-2 rounded-b-md z-20 transition-opacity duration-500">
-  <div class="flex items-center gap-3">
-    <button onclick="retrocederVideo()" class="hover:scale-110 transition" title="Voltar 10s">⏪</button>
+<!-- Controles personalizados (ajustado para dentro do vídeo) -->
+<div id="controlesCustomizados"
+     class="hidden absolute bottom-0 left-0 w-full bg-black bg-opacity-80 text-white text-sm flex justify-between items-center px-4 py-2 z-30 transition-opacity duration-500 rounded-b-md">
+
+  <div class="flex items-center gap-3 ml-2">
+    <button onclick="retrocederVideo()" title="Voltar 10s" class="hover:scale-110 transition">⏪</button>
 
     <button onclick="togglePlayPause()" id="playPauseBtn"
             class="bg-white text-black font-bold text-xs px-2 py-1 rounded hover:bg-gray-300 transition"
@@ -109,7 +111,7 @@
       ⏸️
     </button>
 
-    <button onclick="avancarVideo()" class="hover:scale-110 transition" title="Avançar 10s">⏩</button>
+    <button onclick="avancarVideo()" title="Avançar 10s" class="hover:scale-110 transition">⏩</button>
 
     <span class="ml-3 text-white/80">Velocidade:</span>
     <button onclick="definirVelocidade(1)" class="hover:underline">1x</button>
@@ -117,8 +119,8 @@
     <button onclick="definirVelocidade(2)" class="hover:underline">2x</button>
   </div>
 
-  <div id="infoControle" class="text-xs text-white/70 italic">
-    Interação desabilitada durante o rastreamento
+  <div id="infoControle" class="mr-2 text-xs text-white/70 italic">
+    Controles ativados
   </div>
 </div>
 
