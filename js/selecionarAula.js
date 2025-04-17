@@ -4,7 +4,6 @@ import { initPlayer } from './initPlayer.js';
 import { narrar } from './narrativa.js';
 import { supabase } from './supabaseClient.js';
 
-// 🔁 Aguarda o elemento existir no DOM antes de executar a ação
 function esperarElemento(id, callback) {
   const el = document.getElementById(id);
   if (el) return callback(el);
@@ -23,17 +22,17 @@ function esperarElemento(id, callback) {
 export async function selecionarAula(aula, user_id) {
   console.groupCollapsed(`🧭 [selecionarAula] Início - Aula: "${aula.title}" | ID: ${aula.id}`);
 
-  window.user_id = user_id; // 🔐 Garante compatibilidade com outras funções
+  window.user_id = user_id;
   window.aulaAtual = aula;
   window.maiorTempoVisualizado = 0;
   window.lastTime = 0;
   window._tempoInicioAguardoProgresso = null;
   window._erroAtrasoProgressoNarrado = false;
   window.progressoIniciado = false;
+  window.aulaFinalizada = false; // 🔒 Reset trava de aula concluída
 
   narrar(`📥 Aula selecionada: "${aula.title}" (ID: ${aula.id})`, "info");
 
-  // UI: espera elementos e atualiza
   esperarElemento("tituloAula", el => el.textContent = aula.title);
   esperarElemento("mensagemAluno", el => {
     el.textContent = "";
@@ -53,17 +52,11 @@ export async function selecionarAula(aula, user_id) {
     btnQuiz.onclick = null;
   }
 
-  // Limpa rastreamento anterior
   if (window.interval) {
     clearInterval(window.interval);
     window.narrativaCiclosExecutados = 0;
     narrar("🛑 Limpando ciclo anterior de rastreamento.", "info");
   }
-
-  console.log("📌 [selecionarAula] Chamando Supabase RPC com:", {
-    user_id,
-    lesson_id: aula.id
-  });
 
   const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
     p_user_id: user_id,
@@ -80,16 +73,18 @@ export async function selecionarAula(aula, user_id) {
 
     if (dados.status === '✔ Concluída') {
       console.log("✅ Aula já marcada como concluída. Atualizando UI e habilitando quiz...");
-      
+      window.aulaFinalizada = true; // 🔒 Ativa trava para impedir rastreamento
+
       atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
       esperarElemento("progressoTexto", el => el.textContent = "✅ Aula concluída");
       esperarElemento("recomecarSugestao", el => el.innerHTML = "");
       esperarElemento("indicadorNumerico", el => el.textContent = "");
-      
+
       await habilitarQuiz(aula.id, user_id);
+
       console.log("🎬 Recarregando player mesmo com aula concluída");
-      initPlayer(); // ✅ chama player normalmente
-      
+      initPlayer();
+
       console.groupEnd();
       return;
     }
@@ -119,7 +114,6 @@ export async function selecionarAula(aula, user_id) {
     } else {
       console.log("🆕 Nenhum segundo assistido anteriormente.");
     }
-
   } else {
     console.warn("🚫 Nenhum dado de progresso encontrado. Iniciando do zero.");
     atualizarIndicadorLocal(0, aula.duration);
@@ -131,7 +125,7 @@ export async function selecionarAula(aula, user_id) {
   window.progressoIniciado = false;
 
   window.timeoutProgressoInicial = setTimeout(() => {
-    if (!window.progressoIniciado) {
+    if (!window.progressoIniciado && !window.aulaFinalizada) { // 🔒 Bloqueia notificações se aula finalizada
       narrar("⚠️ Nenhum progresso detectado após 10s. Reproduza o vídeo para iniciar rastreamento.", "warning");
     }
   }, 10000);
