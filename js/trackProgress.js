@@ -57,13 +57,37 @@ export async function trackProgress() {
     narrar("✅ Progresso iniciado com sucesso. Indicador visual atualizado.", "success");
   }
 
-  const segmento = {
-    user_id: window.user_id,
-    course_id: window.course_id,
-    lesson_id: window.aulaAtual.id,
-    duration: Math.floor(window.duration),
-    segment: { start: window.lastTime, end: tempoAtual }
-  };
+
+const segmento = {
+  user_id: window.user_id,
+  course_id: window.course_id,
+  lesson_id: window.aulaAtual?.id,
+  duration: Math.floor(window.duration),
+  segment: { start: window.lastTime, end: tempoAtual }
+};
+
+// validação de integridade antes do insert
+if (
+  !segmento.user_id ||
+  !segmento.course_id ||
+  !segmento.lesson_id ||
+  isNaN(segmento.duration) ||
+  typeof segmento.segment?.start !== "number" ||
+  typeof segmento.segment?.end !== "number"
+) {
+  console.error("❌ Segmento com dados inválidos:", segmento);
+  narrar("❌ Dados incompletos ou inválidos para salvar progresso", "error");
+  return;
+}
+
+const { error } = await supabase.from('progress_segments').insert(segmento);
+
+if (error) {
+  console.error("❌ Falha no Supabase:", error.message, "📦 Payload:", segmento);
+  narrar(`❌ Erro ao salvar segmento: ${error.message}`, "error");
+  return;
+}
+
 
   const { error } = await supabase.from('progress_segments').insert(segmento);
   if (error) {
