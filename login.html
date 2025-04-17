@@ -81,6 +81,13 @@
       font-size: 13px;
       margin-top: 1rem;
     }
+
+main.sucesso {
+  border: 2px solid #22c55e; /* verde-500 */
+  box-shadow: 0 0 0 3px #bbf7d0; /* sombra verde clara */
+}
+
+    
   </style>
 </head>
 <body>
@@ -125,8 +132,11 @@
         return;
       }
 
-      msg.textContent = 'Acesso liberado! Redirecionando...';
-      msg.style.color = 'green';
+msg.textContent = 'Acesso liberado! Redirecionando...';
+msg.style.color = 'green';
+
+document.querySelector('main').classList.add('sucesso');
+
 
       const destino =
         data.role === 'admin' ? 'admin.html' :
