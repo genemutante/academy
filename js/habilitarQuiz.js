@@ -48,13 +48,14 @@ quizContainer.innerHTML = `
   <div class="bg-white w-full max-w-[1240px] h-[94vh] p-4 rounded-2xl shadow-2xl relative border border-slate-200 overflow-hidden">
     
     <!-- Botão de fechar DESTACADO e reposicionado -->
-    <button
-      onclick="this.closest('.fixed').remove(); if (window.player?.pauseVideo) window.player.pauseVideo();"
-      class="absolute top-4 left-4 bg-red-600 text-white font-bold w-9 h-9 rounded-full shadow-lg flex items-center justify-center text-xl hover:bg-red-700 transition-all z-50"
-      title="Fechar avaliação"
-    >
-      &times;
-    </button>
+<button
+  onclick="this.closest('.fixed').remove(); if (window.player?.pauseVideo) window.player.pauseVideo();"
+  class="absolute top-3 right-3 bg-red-600 hover:bg-red-700 text-white text-base font-bold w-8 h-8 rounded-full shadow-md flex items-center justify-center transition z-50"
+  title="Fechar avaliação"
+>
+  &times;
+</button>
+
 
     <iframe
       src="quiz.html?user_id=${user_id}&lesson_id=${aulaId}"
