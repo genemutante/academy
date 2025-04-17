@@ -40,7 +40,8 @@ export async function habilitarQuiz(aulaId) {
 
 function abrirQuiz(aulaId, user_id) {
   const quizContainer = document.createElement('div');
-  quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
+  quizContainer.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-visible";
+
 
   quizContainer.innerHTML = `
    <div class="bg-white w-[96vw] max-w-[1200px] h-[90vh] p-4 rounded-xl shadow-xl relative border border-slate-200 overflow-hidden">
