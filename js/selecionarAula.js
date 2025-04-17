@@ -4,10 +4,26 @@ import { initPlayer } from './initPlayer.js';
 import { narrar } from './narrativa.js';
 import { supabase } from './supabaseClient.js';
 
+// 🔁 Aguarda o elemento existir no DOM antes de executar a ação
+function esperarElemento(id, callback) {
+  const el = document.getElementById(id);
+  if (el) return callback(el);
+
+  const observer = new MutationObserver(() => {
+    const el = document.getElementById(id);
+    if (el) {
+      observer.disconnect();
+      callback(el);
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
 export async function selecionarAula(aula, user_id) {
   console.groupCollapsed(`🧭 [selecionarAula] Início - Aula: "${aula.title}" | ID: ${aula.id}`);
 
-  // Reset globais
+  window.user_id = user_id; // 🔐 Garante compatibilidade com outras funções
   window.aulaAtual = aula;
   window.maiorTempoVisualizado = 0;
   window.lastTime = 0;
@@ -17,18 +33,18 @@ export async function selecionarAula(aula, user_id) {
 
   narrar(`📥 Aula selecionada: "${aula.title}" (ID: ${aula.id})`, "info");
 
-  // UI
-  document.getElementById("tituloAula").textContent = aula.title;
-  document.getElementById("mensagemAluno").textContent = "";
-  document.getElementById("mensagemAluno").className = "";
-  document.getElementById("recomecarSugestao").innerHTML = "";
-  document.getElementById("indicadorNumerico").textContent = "";
-  const progressoEl = document.getElementById("progressoTexto");
-  if (progressoEl) progressoEl.innerHTML = "⏳ Carregando progresso...";
+  // UI: espera elementos e atualiza
+  esperarElemento("tituloAula", el => el.textContent = aula.title);
+  esperarElemento("mensagemAluno", el => {
+    el.textContent = "";
+    el.className = "";
+  });
+  esperarElemento("recomecarSugestao", el => el.innerHTML = "");
+  esperarElemento("indicadorNumerico", el => el.textContent = "");
+  esperarElemento("progressoTexto", el => el.innerHTML = "⏳ Carregando progresso...");
 
   window.pontoRetomada = null;
 
-  // Reset botão quiz
   const btnQuiz = document.getElementById("btnQuiz");
   if (btnQuiz) {
     btnQuiz.disabled = true;
@@ -44,30 +60,17 @@ export async function selecionarAula(aula, user_id) {
     narrar("🛑 Limpando ciclo anterior de rastreamento.", "info");
   }
 
-  // 🔍 Consulta progresso
-
-console.log("📌 [selecionarAula] Chamando Supabase RPC com:", {
-  user_id,
-  lesson_id: aula.id
-});
-
-console.log("✔ Verificando valores:", { user_id, aula_id: aula.id });
-
-console.log("🧪 Verificação antes do RPC:");
-console.log("📌 user_id:", user_id, typeof user_id);
-console.log("📌 aula.id:", aula?.id, typeof aula?.id);
- 
-  console.log("🔍 Chamando RPC: fn_progresso_por_usuario_e_aula");
+  console.log("📌 [selecionarAula] Chamando Supabase RPC com:", {
+    user_id,
+    lesson_id: aula.id
+  });
 
   const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-  p_user_id: user_id,
-  p_lesson_id: aula.id
-});
+    p_user_id: user_id,
+    p_lesson_id: aula.id
+  });
 
-// Não interrompe execução em caso de erro ou progresso nulo
-const dados = progresso?.[0] || null;
-console.log("📦 Dados de progresso recebidos:", dados);
-
+  const dados = progresso?.[0] || null;
   console.log("📦 Dados de progresso recebidos:", dados);
 
   if (dados) {
@@ -78,9 +81,9 @@ console.log("📦 Dados de progresso recebidos:", dados);
     if (dados.status === '✔ Concluída') {
       console.log("✅ Aula já marcada como concluída. Atualizando UI e habilitando quiz...");
       atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
-      if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
-      document.getElementById("recomecarSugestao").innerHTML = "";
-      document.getElementById("indicadorNumerico").textContent = "";
+      esperarElemento("progressoTexto", el => el.textContent = "✅ Aula concluída");
+      esperarElemento("recomecarSugestao", el => el.innerHTML = "");
+      esperarElemento("indicadorNumerico", el => el.textContent = "");
       await habilitarQuiz(aula.id, user_id);
       console.groupEnd();
       return;
@@ -107,7 +110,7 @@ console.log("📦 Dados de progresso recebidos:", dados);
         setTimeout(() => window.player.playVideo?.(), 500);
       };
 
-      document.getElementById("recomecarSugestao").appendChild(link);
+      esperarElemento("recomecarSugestao", el => el.appendChild(link));
     } else {
       console.log("🆕 Nenhum segundo assistido anteriormente.");
     }
