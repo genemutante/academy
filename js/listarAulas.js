@@ -12,8 +12,9 @@ export function listarAulas(aulas, user_id) {
 
     const podeAcessar = liberarProxima;
 
-    const icones = document.createElement('div');
-    icones.className = 'flex gap-3 min-w-[44px] justify-start text-base';
+const icones = document.createElement('div');
+icones.className = 'flex gap-3 w-[44px] justify-start text-base';
+
 
 
     if (aula.status === '✔ Concluída') {
