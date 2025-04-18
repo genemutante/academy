@@ -67,20 +67,6 @@
   import { verificarLoginObrigatorio, logout } from './js/auth.js';
   import { supabase } from './js/supabaseClient.js';
 
-
-function showMessageCurso(userId, courseId) {
-  const toast = document.createElement('div');
-  toast.innerHTML = `
-    <strong>🔐 Sessão ativa</strong><br>
-    Usuário: <code>${userId}</code><br>
-    Curso: <code>${courseId}</code>
-  `;
-  toast.className = 'fixed top-6 right-6 bg-green-700 text-white px-5 py-3 rounded shadow-lg z-50 animate-fade text-sm font-mono';
-  document.body.appendChild(toast);
-
-  setTimeout(() => toast.remove(), 5000);
-}
-
   
 
   (async () => {
