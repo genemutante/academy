@@ -302,37 +302,43 @@
 
     
   </script>
+
+
 <script>
-  window.addEventListener("DOMContentLoaded", () => {
-    console.log("🚀 Executando rotina automática de atualização de progresso...");
+  const aguardarAulasEAtualizarProgresso = setInterval(() => {
+    const aulas = window.aulas;
 
-    const barra = document.getElementById("barraProgresso");
-    const texto = document.getElementById("textoProgresso");
-    const aulas = window.aulas || [];
+    if (Array.isArray(aulas) && aulas.length > 0) {
+      console.log("🟢 Aulas carregadas, iniciando atualização de progresso...");
+      clearInterval(aguardarAulasEAtualizarProgresso);
 
-    if (!Array.isArray(aulas) || aulas.length === 0) {
-      console.warn("⚠️ Nenhuma aula disponível para cálculo de progresso.");
-      return;
+      const barra = document.getElementById("barraProgresso");
+      const texto = document.getElementById("textoProgresso");
+
+      let pontos = 0;
+      const totalPontos = aulas.length * 2;
+
+      aulas.forEach(aula => {
+        if (aula.status === "✔ Concluída") pontos++;
+        if (aula.quizEnviado === true) pontos++;
+      });
+
+      const percentual = Math.floor((pontos / totalPontos) * 100);
+
+      if (barra) barra.style.width = `${percentual}%`;
+      if (texto) texto.textContent = `${percentual}%`;
+
+      console.log(`📊 Progresso do curso: ${pontos}/${totalPontos} pontos = ${percentual}%`);
+    } else {
+      console.log("⏳ Aguardando carregamento das aulas...");
     }
-
-    let pontos = 0;
-    const totalPontos = aulas.length * 2;
-
-    aulas.forEach(aula => {
-      if (aula.status === "✔ Concluída") pontos++;
-      if (aula.quizEnviado === true) pontos++;
-    });
-
-    const percentual = Math.floor((pontos / totalPontos) * 100);
-
-    if (barra) barra.style.width = `${percentual}%`;
-    if (texto) texto.textContent = `${percentual}%`;
-
-    console.log(`📊 Progresso atualizado automaticamente: ${pontos}/${totalPontos} pontos = ${percentual}%`);
-  });
+  }, 500); // verifica a cada 500ms até o window.aulas estar pronto
 </script>
 
 
+
+
+  
 </body>
 
 
