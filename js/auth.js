@@ -35,6 +35,13 @@ export function logout() {
  * Caso deseje controlar manualmente o redirecionamento, comente a linha `forcarRedirecionamento()`.
  */
 export async function verificarLoginObrigatorio() {
+  // Se veio de logout, não faz a verificação
+  const logoutManual = sessionStorage.getItem("logoutManual");
+  if (logoutManual === "true") {
+    sessionStorage.removeItem("logoutManual"); // limpa a flag
+    return null;
+  }
+
   const sessao = JSON.parse(localStorage.getItem('sessaoUsuario'));
 
   if (!sessao || !sessao.userId || !sessao.userName) {
@@ -44,6 +51,7 @@ export async function verificarLoginObrigatorio() {
 
   return sessao;
 }
+
 
 /**
  * Exibe mensagem de sessão inválida e redireciona após 5 segundos.
