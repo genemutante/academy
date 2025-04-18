@@ -69,8 +69,7 @@
         🚪 Sair
       </button>
 
-<button id="forcarAtualizarProgresso"
-        style="position: fixed; top: 16px; right: 16px; z-index: 9999; background: #1d4ed8; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+<button id="forcarAtualizarProgresso" class="botaoEstiloso">
   🔄 Atualizar Progresso
 </button>
       
@@ -271,14 +270,25 @@
 </body>
 
 <script>
-  document.getElementById("forcarAtualizarProgresso")?.addEventListener("click", () => {
-    if (typeof carregarProgressoCurso === "function" && window.supabase && window.user_id && window.course_id) {
-      console.log("🧠 Recalculando progresso do curso manualmente...");
-      carregarProgressoCurso(window.supabase, window.user_id, window.course_id);
-    } else {
-      console.warn("⚠️ Dados insuficientes para atualizar progresso.");
-      alert("Usuário ou curso ainda não disponíveis.");
+  document.getElementById("forcarAtualizarProgresso").addEventListener("click", () => {
+    const uid = window.user_id;
+    const cid = window.course_id;
+    const supa = window.supabase;
+
+    console.log("🔍 Dados ao clicar:", { uid, cid, supa });
+
+    if (!uid || !cid || !supa) {
+      alert("❌ Dados ausentes no momento do clique. Verifique se o bootstrap carregou corretamente.");
+      return;
     }
+
+    if (typeof carregarProgressoCurso !== "function") {
+      alert("❌ Função carregarProgressoCurso não disponível.");
+      return;
+    }
+
+    console.log("🚀 Chamando carregarProgressoCurso com:", { uid, cid });
+    carregarProgressoCurso(supa, uid, cid);
   });
 </script>
 
