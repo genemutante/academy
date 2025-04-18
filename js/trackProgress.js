@@ -1,4 +1,11 @@
 import { exibirMensagemAluno, narrar } from './narrativa.js';
+import { atualizarIndicadorLocal } from './utils.js';
+import { supabase } from './supabaseClient.js';
+import { habilitarQuiz } from './habilitarQuiz.js';
+import { listarAulas } from './listarAulas.js';
+import { carregarProgressoCurso } from './carregarProgressoCurso.js';
+import { mostrarTransicaoParaProximaAula } from './mostrarTransicaoParaProximaAula.js';
+
 
 
 if (typeof window !== 'undefined') {
@@ -8,7 +15,7 @@ if (typeof window !== 'undefined') {
 
 
 
-import { atualizarIndicadorLocal } from './utils.js';
+
 
 export async function trackProgress() {
 
