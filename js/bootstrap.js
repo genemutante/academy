@@ -26,19 +26,6 @@ export async function salvarSessao({ id, name }) {
   localStorage.setItem('user_name', name);
 }
 
-export async function verificarLoginObrigatorio() {
-  const userId = localStorage.getItem('user_id');
-  const userName = localStorage.getItem('user_name');
-
-  if (!userId || !userName) {
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.href = '/';
-    return null;
-  }
-
-  return { userId, userName };
-}
 
 export async function logout() {
   try {
@@ -101,4 +88,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 export { supabase };
+
+export { verificarLoginObrigatorio, logout, salvarSessao } from './auth.js';
 
