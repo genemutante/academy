@@ -192,6 +192,10 @@
     }, 300);
   </script>
 
+
+
+
+
   <!-- Script principal com postMessage -->
 <script type="module">
   import { verificarLoginObrigatorio, logout } from './js/auth.js';
@@ -201,13 +205,19 @@
 
   let courseId = new URL(location.href).searchParams.get("course_id");
 
-  // 📩 Se vier via postMessage (usado com iframe), sobrescreve
+  // ⛔️ evita ciclo infinito
+  const JA_PROCESSADO = 'course_id_processado';
+
+  // 📩 Se vier via postMessage (iframe)
   window.addEventListener('message', async (event) => {
     const { tipo, dados } = event.data || {};
     if (tipo === 'curso' && dados?.courseId) {
-      courseId = dados.courseId;
-      sessionStorage.setItem('course_id_override', courseId);
-      window.location.reload(); // recarrega com novo course_id
+      const salvo = sessionStorage.getItem(JA_PROCESSADO);
+      if (salvo === dados.courseId) return; // já foi processado
+
+      sessionStorage.setItem('course_id_override', dados.courseId);
+      sessionStorage.setItem(JA_PROCESSADO, dados.courseId);
+      window.location.href = 'curso.html'; // não usa reload, para evitar duplicação de histórico
     }
   });
 
@@ -240,7 +250,7 @@
     const userId = sessao.userId;
     const userName = sessao.userName;
 
-    console.log("✅ Sessão ativa:", { userId, userName });
+    console.log("✅ Sessão ativa:", sessao);
     console.log("📚 course_id utilizado:", courseId);
 
     const nomeEl = document.getElementById("nomeAluno");
@@ -258,11 +268,16 @@
       btnLogout.addEventListener("click", logout);
     }
 
-    // ✅ Chama o carregamento completo do curso
+    if (!courseId) {
+      console.error("❌ Nenhum course_id definido.");
+      return;
+    }
+
     await carregarDados(userId, courseId);
     carregarProgressoCurso(supabase, userId, courseId);
   })();
 </script>
+
 
 
 </body>
