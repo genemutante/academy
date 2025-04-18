@@ -133,7 +133,7 @@ container.addEventListener('click', (e) => {
   sessionStorage.setItem('log_debug', `Acessando curso "${courseTitle}" (ID: ${courseId}) às ${new Date().toISOString()}`);
 
   // ✅ Mostra mensagem com IDs antes de redirecionar
-  showMessageCurso(userId, courseId);
+//  showMessageCurso(userId, courseId);
 
   setTimeout(() => {
     window.location.href = `curso.html?course_id=${courseId}`;
