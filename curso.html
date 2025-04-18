@@ -115,12 +115,22 @@
       <!-- Coluna lateral: Curso -->
       <div class="lg:col-span-1">
         <div class="mb-6">
-          <p class="text-sm mb-1">
-            <span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span>
-          </p>
-          <div class="w-full h-3 bg-gray-200 rounded">
-            <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
-          </div>
+
+
+
+          
+<div id="progressoContainer" class="hidden">
+  <p class="text-sm mb-1">
+    <span>📊</span> Progresso do curso: <span id="textoProgresso">0%</span>
+  </p>
+  <div class="w-full h-3 bg-gray-200 rounded">
+    <div id="barraProgresso" class="h-3 bg-blue-600 rounded transition-all" style="width: 0%"></div>
+  </div>
+</div>
+
+
+
+          
         </div>
         <h1 id="tituloCurso" class="text-2xl font-bold mb-2">Carregando curso...</h1>
         <p id="descricaoCurso" class="mb-4 text-gray-600 text-sm leading-relaxed"></p>
@@ -325,10 +335,14 @@
 
       const percentual = Math.floor((pontos / totalPontos) * 100);
 
-      if (barra) barra.style.width = `${percentual}%`;
-      if (texto) texto.textContent = `${percentual}%`;
+if (barra) barra.style.width = `${percentual}%`;
+if (texto) texto.textContent = `${percentual}%`;
 
-      console.log(`📊 Progresso do curso: ${pontos}/${totalPontos} pontos = ${percentual}%`);
+// Torna visível o container
+document.getElementById("progressoContainer")?.classList.remove("hidden");
+
+console.log(`📊 Progresso do curso: ${pontos}/${totalPontos} pontos = ${percentual}%`);
+
     } else {
       console.log("⏳ Aguardando carregamento das aulas...");
     }
