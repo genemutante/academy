@@ -19,8 +19,13 @@ export function salvarSessao({ id, name }) {
 export function logout() {
   localStorage.clear();
   sessionStorage.clear();
+
+  // Flag para indicar que foi logout manual
+  sessionStorage.setItem("logoutManual", "true");
+
   window.location.href = 'index.html';
 }
+
 
 /**
  * Verifica se a sessão do usuário é válida.
