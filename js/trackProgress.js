@@ -1,3 +1,12 @@
+import { exibirMensagemAluno } from './narrativa.js';
+
+if (typeof window !== 'undefined') {
+  window.exibirMensagemAluno = exibirMensagemAluno;
+}
+
+
+
+
 import { atualizarIndicadorLocal } from './utils.js';
 
 export async function trackProgress() {
