@@ -250,11 +250,14 @@
     import { carregarProgressoCurso } from './js/carregarProgressoCurso.js';
     import { supabase } from './js/supabaseClient.js';
 
+    const sessao = await verificarLoginObrigatorio();
+    if (!sessao) return; // já tratamos tudo dentro da função
+
     window.supabase = supabase;
 
     async function obterContextoAluno(dadosRecebidos) {
       // Tenta recuperar os dados de todas as formas possíveis
-      const sessao = await verificarLoginObrigatorio();
+      
 
       const userId = dadosRecebidos?.user?.id || window.user_id || sessao?.userId;
       const userName = dadosRecebidos?.user?.name || window.user_name || sessao?.userName;
