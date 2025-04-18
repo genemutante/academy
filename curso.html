@@ -69,9 +69,54 @@
         🚪 Sair
       </button>
 
-<button id="forcarAtualizarProgresso" class="botaoEstiloso">
+<button
+  class="botaoEstiloso"
+  onclick="
+    (async () => {
+      const uid = window.user_id;
+      const cid = window.course_id;
+      const supa = window.supabase;
+
+      if (!uid || !cid || !supa) {
+        alert('⚠️ Dados insuficientes para atualizar progresso.');
+        return;
+      }
+
+      try {
+        const { data: aulas, error } = await supa
+          .from('aulas')
+          .select('id')
+          .eq('curso_id', cid);
+
+        if (error) throw error;
+
+        const { data: concluidas, error: erro2 } = await supa
+          .from('progresso_aulas')
+          .select('id_aula')
+          .eq('id_aluno', uid)
+          .eq('id_curso', cid)
+          .eq('concluida', true);
+
+        if (erro2) throw erro2;
+
+        const total = aulas?.length || 0;
+        const feitas = concluidas?.length || 0;
+        const percentual = total ? Math.round((feitas / total) * 100) : 0;
+
+        document.getElementById('barraProgresso').style.width = percentual + '%';
+        document.getElementById('textoProgresso').textContent = percentual + '%';
+
+        alert('✅ Progresso atualizado com sucesso!');
+      } catch (e) {
+        console.error(e);
+        alert('❌ Erro ao tentar atualizar o progresso.');
+      }
+    })();
+  "
+>
   🔄 Atualizar Progresso
 </button>
+
       
     </div>
   </header>
@@ -269,36 +314,7 @@
 
 </body>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const botao = document.getElementById("forcarAtualizarProgresso");
 
-  botao?.addEventListener("click", async () => {
-    const uid = window.user_id;
-    const cid = window.course_id;
-    const supa = window.supabase;
-
-    if (!uid || !cid || !supa) {
-      alert("⚠️ Dados insuficientes para atualizar progresso.");
-      return;
-    }
-
-    if (typeof window.carregarProgressoCurso !== "function") {
-      alert("❌ Função carregarProgressoCurso não está disponível.");
-      return;
-    }
-
-    try {
-      await window.carregarProgressoCurso(supa, uid, cid);
-      alert("✅ Progresso atualizado com sucesso!");
-    } catch (erro) {
-      console.error(erro);
-      alert("❌ Erro ao tentar atualizar o progresso.");
-    }
-  });
-});
-
-</script>
 
   
 </html>
