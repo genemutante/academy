@@ -57,38 +57,35 @@
     <p class="text-gray-600 mb-6">Veja abaixo os cursos disponíveis para você:</p>
 
     <div id="cursos" class="grid gap-4">
-      <p class="text-sm text-gray-500">⏳ Carregando cursos...</p>
+      <p class="text-sm text-gray-500">⏳ Aguardando dados de sessão...</p>
     </div>
   </main>
 
-  <!-- Script principal -->
-
 <script type="module">
-  import { verificarLoginObrigatorio, logout } from './js/auth.js';
   import { supabase } from './js/supabaseClient.js';
+  import { logout } from './js/auth.js';
 
-  
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', logout);
+  }
 
-  (async () => {
-    const sessao = await verificarLoginObrigatorio();
-    if (!sessao) return;
+  const nomeEl = document.getElementById('aluno-nome');
+  const saudacaoEl = document.getElementById('aluno-nome-saudacao');
+  const container = document.getElementById('cursos');
 
-    const userId = sessao.userId;
-    const userName = sessao.userName;
+  // Aguardando os dados da sessão do pai (iframe principal)
+  window.addEventListener('message', async (event) => {
+    const { tipo, dados } = event.data || {};
 
-    const nomeEl = document.getElementById('aluno-nome');
-    const saudacaoEl = document.getElementById('aluno-nome-saudacao');
+    if (tipo !== 'sessao' || !dados?.id) return;
 
-    if (nomeEl) nomeEl.textContent = userName;
-    if (saudacaoEl) saudacaoEl.textContent = userName;
+    const userId = dados.id;
+    const userName = dados.name;
 
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', logout);
-    }
-
-    const container = document.getElementById('cursos');
-    if (!container) return console.error('⚠️ Container de cursos não encontrado.');
+    // Atualiza nome
+    nomeEl.textContent = userName;
+    saudacaoEl.textContent = userName;
 
     try {
       const { data, error } = await supabase
@@ -122,38 +119,25 @@
         container.appendChild(card);
       });
 
-container.addEventListener('click', (e) => {
-  const botao = e.target.closest('.abrir-curso');
-  if (!botao) return;
+      // Evento de clique em cursos
+      container.addEventListener('click', (e) => {
+        const botao = e.target.closest('.abrir-curso');
+        if (!botao) return;
 
-  const courseId = botao.dataset.id;
-  const courseTitle = botao.dataset.nome;
+        const courseId = botao.dataset.id;
+        const courseTitle = botao.dataset.nome;
 
-  console.log(`🧭 Curso selecionado: ${courseTitle} (ID ${courseId})`);
-  sessionStorage.setItem('log_debug', `Acessando curso "${courseTitle}" (ID: ${courseId}) às ${new Date().toISOString()}`);
+        console.log(`🧭 Curso selecionado: ${courseTitle} (ID ${courseId})`);
 
-  // ✅ Mostra mensagem com IDs antes de redirecionar
-//  showMessageCurso(userId, courseId);
+        window.parent.postMessage({ tipo: 'abrirCurso', course_id: courseId }, '*');
+      });
 
-window.location.href = `curso.html?course_id=${courseId}`;
-
-});
-
-
-      
     } catch (err) {
       console.error("❌ Erro ao carregar cursos:", err);
       container.innerHTML = `<p class="text-red-600">Erro ao carregar cursos. Tente novamente mais tarde.</p>`;
     }
-  })();
+  });
 </script>
 
-
-
-
-
-
-
-  
 </body>
 </html>
