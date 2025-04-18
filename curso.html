@@ -193,53 +193,75 @@
   </script>
 
   <!-- Script principal com postMessage -->
-  <script type="module">
-    import { logout } from './js/auth.js';
-    import { supabase } from './js/supabaseClient.js';
+ <script type="module">
+  import { logout } from './js/auth.js';
+  import { supabase } from './js/supabaseClient.js';
 
-    window.addEventListener('message', async (event) => {
-      const { tipo, dados } = event.data || {};
-      if (tipo !== 'curso' || !dados?.user?.id || !dados.courseId) return;
+  const nomeEl = document.getElementById("nomeAluno");
+  const btnVoltar = document.getElementById("btnVoltarCursos");
+  const btnLogout = document.getElementById("logoutBtn");
 
-      const userId = dados.user.id;
-      const userName = dados.user.name;
-      const courseId = dados.courseId;
-
-      console.log("✅ Sessão recebida:", { userId, userName, courseId });
-
-      const nomeEl = document.getElementById("nomeAluno");
+  // Função de carregamento original, adaptada
+  async function carregarCurso(userId, userName, courseId) {
+    try {
       if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
+      if (btnVoltar) btnVoltar.addEventListener("click", () => window.location.href = "aluno.html");
+      if (btnLogout) btnLogout.addEventListener("click", logout);
 
-      const btnVoltar = document.getElementById("btnVoltarCursos");
-      if (btnVoltar) {
-        btnVoltar.addEventListener("click", () => {
-          window.location.href = "aluno.html"; // ou enviar postMessage se quiser voltar dentro do iframe
-        });
-      }
-
-      const btnLogout = document.getElementById("logoutBtn");
-      if (btnLogout) {
-        btnLogout.addEventListener("click", logout);
-      }
-
-      // Carrega informações do curso com Supabase
-      const { data: curso, error } = await supabase
+      const { data: curso, error: errorCurso } = await supabase
         .from('courses')
         .select('title, description')
         .eq('id', courseId)
         .maybeSingle();
 
-      if (curso) {
-        document.getElementById("tituloCurso").textContent = curso.title;
-        document.getElementById("descricaoCurso").textContent = curso.description;
-      } else {
-        document.getElementById("tituloCurso").textContent = 'Curso não encontrado';
-        document.getElementById("descricaoCurso").textContent = 'Verifique com o suporte.';
+      if (errorCurso || !curso) {
+        document.getElementById("tituloCurso").textContent = "Curso não encontrado";
+        return;
       }
 
-      // Aqui você pode carregar as aulas do curso usando o courseId se desejar.
-    });
-  </script>
+      document.getElementById("tituloCurso").textContent = curso.title;
+      document.getElementById("descricaoCurso").textContent = curso.description;
+
+      const { data: aulas, error: errorAulas } = await supabase
+        .from('lessons')
+        .select('id, title')
+        .eq('course_id', courseId)
+        .order('order');
+
+      const lista = document.getElementById("listaAulas");
+      if (!lista) return;
+
+      lista.innerHTML = '';
+      if (errorAulas || !aulas.length) {
+        lista.innerHTML = '<li class="text-gray-500">Nenhuma aula disponível.</li>';
+        return;
+      }
+
+      aulas.forEach(aula => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <button class="w-full text-left px-3 py-2 rounded hover:bg-blue-100 transition"
+                  onclick="alert('Aula selecionada: ${aula.title}')">
+            ▶️ ${aula.title}
+          </button>
+        `;
+        lista.appendChild(li);
+      });
+
+    } catch (err) {
+      console.error("Erro ao carregar curso e aulas:", err);
+    }
+  }
+
+  // Espera os dados via postMessage
+  window.addEventListener('message', (event) => {
+    const { tipo, dados } = event.data || {};
+    if (tipo === 'curso' && dados?.user?.id && dados.courseId) {
+      carregarCurso(dados.user.id, dados.user.name, dados.courseId);
+    }
+  });
+</script>
+
 </body>
 </html>
 
