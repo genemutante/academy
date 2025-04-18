@@ -65,9 +65,11 @@
   import { verificarLoginObrigatorio, logout } from './js/auth.js';
   import { supabase } from './js/supabaseClient.js';
 
+     const sessao = await verificarLoginObrigatorio();
+    if (!sessao) return; 
+
   (async () => {
-    const sessao = await verificarLoginObrigatorio();
-    if (!sessao) return;
+
 
     const userId = sessao.userId;
     const userName = sessao.userName;
