@@ -12,29 +12,26 @@ import { verificarConclusaoAula } from './verificarConclusaoAula.js';
 import { carregarProgressoCurso } from './carregarProgressoCurso.js';
 
 import { supabase } from './supabaseClient.js';
-import { verificarLoginObrigatorio, logout, salvarSessao } from './auth.js'; // ✅ Centralizado
+import { verificarLoginObrigatorio, logout, salvarSessao } from './auth.js';
 
 window.supabase = supabase;
 
-// 🌐 Params da URL (se necessários em algumas páginas)
-const url = new URL(location.href);
-window.user_id = url.searchParams.get('user_id');
-window.course_id = url.searchParams.get('course_id');
+// 📦 Exporta funções globais (opcional)
+Object.assign(window, {
+  trackProgress,
+  verificarQuizRespondido,
+  carregarDados,
+  selecionarAula,
+  habilitarQuiz,
+  narrar,
+  exibirMensagemAluno,
+  initPlayer,
+  onPlayerReady,
+  verificarConclusaoAula,
+  carregarProgressoCurso
+});
 
-// 📦 Exporta funções globais para o navegador (facultativo)
-window.trackProgress = trackProgress;
-window.verificarQuizRespondido = verificarQuizRespondido;
-window.carregarDados = carregarDados;
-window.selecionarAula = selecionarAula;
-window.habilitarQuiz = habilitarQuiz;
-window.narrar = narrar;
-window.exibirMensagemAluno = exibirMensagemAluno;
-window.initPlayer = initPlayer;
-window.onPlayerReady = onPlayerReady;
-window.verificarConclusaoAula = verificarConclusaoAula;
-window.carregarProgressoCurso = carregarProgressoCurso;
-
-// 🔁 Mostra botão flutuante da narrativa (opcional)
+// 🔁 Exibe botão da narrativa
 window.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('abrirPainelBtn');
   if (btn) {
@@ -43,33 +40,44 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// 🚀 Execução principal (somente se URL tiver user_id e course_id)
+// 🚀 Execução principal da tela de curso
 document.addEventListener("DOMContentLoaded", async () => {
-  if (!window.user_id || !window.course_id) return;
+  console.log("📦 Iniciando verificação de sessão...");
+
+  const sessao = await verificarLoginObrigatorio();
+  if (!sessao) return;
+
+  const user_id = sessao.userId;
+  const user_name = sessao.userName;
+  const course_id = new URL(location.href).searchParams.get('course_id');
+
+  if (!course_id) {
+    narrar("❌ Nenhum course_id fornecido na URL.", "error");
+    return;
+  }
+
+  // 🔗 Disponibiliza globalmente se necessário
+  window.user_id = user_id;
+  window.course_id = course_id;
+
+  console.log("✅ Sessão ativa:", { user_id, user_name });
+  console.log("📚 course_id da URL:", course_id);
 
   try {
-    const { data: user } = await supabase
-      .from('users')
-      .select('name')
-      .eq('id', window.user_id)
-      .single();
-
-    if (user) {
-      const el = document.getElementById('nomeAluno');
-      if (el) el.textContent = user.name;
-    }
+    const el = document.getElementById('nomeAluno');
+    if (el) el.textContent = user_name;
 
     const aulasRef = { value: [] };
-    await carregarDados(window.user_id, window.course_id, aulasRef);
+    await carregarDados(user_id, course_id, aulasRef);
 
-    carregarProgressoCurso?.();
+    carregarProgressoCurso?.(supabase, user_id, course_id);
   } catch (err) {
-    console.error("❌ Erro ao inicializar aplicativo:", err);
-    alert("Erro ao carregar dados iniciais. Tente recarregar a página.");
+    console.error("❌ Erro ao carregar dados iniciais:", err);
+    alert("Erro ao carregar o curso. Tente recarregar a página.");
   }
 });
 
-// ✅ Exportações limpas
+// ✅ Exportações
 export {
   supabase,
   verificarLoginObrigatorio,
