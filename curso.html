@@ -68,6 +68,12 @@
               class="text-xs bg-white text-primary-700 font-semibold px-3 py-1 rounded-full hover:bg-primary-100 transition shadow-sm">
         🚪 Sair
       </button>
+
+<button id="forcarAtualizarProgresso"
+        style="position: fixed; top: 16px; right: 16px; z-index: 9999; background: #1d4ed8; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+  🔄 Atualizar Progresso
+</button>
+      
     </div>
   </header>
 
@@ -263,6 +269,20 @@
 
 
 </body>
+
+<script>
+  document.getElementById("forcarAtualizarProgresso")?.addEventListener("click", () => {
+    if (typeof carregarProgressoCurso === "function" && window.supabase && window.user_id && window.course_id) {
+      console.log("🧠 Recalculando progresso do curso manualmente...");
+      carregarProgressoCurso(window.supabase, window.user_id, window.course_id);
+    } else {
+      console.warn("⚠️ Dados insuficientes para atualizar progresso.");
+      alert("Usuário ou curso ainda não disponíveis.");
+    }
+  });
+</script>
+
+  
 </html>
 
 
