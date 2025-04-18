@@ -251,75 +251,68 @@
   import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
   (async () => {
-    try {
-      console.log("📦 Iniciando verificação de sessão...");
-      const sessao = await verificarLoginObrigatorio();
+    console.log("📦 Iniciando verificação de sessão...");
+    const courseId = new URL(location.href).searchParams.get("course_id");
 
-      if (!sessao || !sessao.userId || !sessao.userName) {
-        console.warn("⛔ Sessão inválida. Redirecionando para login em 10s...");
-        
-        // Mostra mensagem com IDs vazios
-        const toast = document.createElement('div');
-        toast.innerHTML = `
-          <div class="fixed top-6 right-6 z-50 bg-red-600 text-white shadow-lg rounded-lg px-5 py-4 text-sm font-medium space-y-1">
-            <div class="font-bold">⚠️ Sessão inválida</div>
-            <div>Nenhuma informação de usuário foi encontrada.</div>
-            <div>Redirecionando para login...</div>
-          </div>
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-          toast.remove();
-          window.location.href = "index.html";
-        }, 10000);
-        return;
-      }
-
-      // Se chegou aqui, sessão válida
-      const userId = sessao.userId;
-      const userName = sessao.userName;
-      const courseId = new URL(location.href).searchParams.get("course_id");
-
-      console.log("✅ Sessão ativa:", { userId, userName });
-      console.log("📚 course_id da URL:", courseId);
-
-      window.user_id = userId;
-      window.nomeAluno = userName;
-      window.course_id = courseId;
-
-      // ✅ Exibe mensagem temporária
+    const sessao = await verificarLoginObrigatorio();
+    if (!sessao) {
       const toast = document.createElement('div');
       toast.innerHTML = `
-        <div class="fixed top-6 right-6 z-50 bg-green-600 text-white shadow-lg rounded-lg px-5 py-4 text-sm font-medium space-y-1">
-          <div class="font-bold">🔐 Sessão ativa</div>
-          <div><strong>Usuário:</strong> ${userId}</div>
-          <div><strong>Curso:</strong> ${courseId}</div>
+        <div class="fixed top-6 right-6 z-50 bg-red-600 text-white shadow-lg rounded-lg px-5 py-4 text-sm font-medium space-y-1">
+          <div class="font-bold">⚠️ Sessão inválida</div>
+          <div>Nenhuma informação de usuário foi encontrada.</div>
+          <div>Redirecionando para login em <strong>10s</strong>...</div>
         </div>
       `;
       document.body.appendChild(toast);
 
       setTimeout(() => {
-        toast.firstElementChild.classList.add('opacity-0', 'transition-opacity', 'duration-1000');
-        setTimeout(() => toast.remove(), 1000);
+        toast.remove();
+        logout();
       }, 10000);
+      return;
+    }
 
-      // Atualiza nome do aluno
-      const nomeEl = document.getElementById("nomeAluno");
-      if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
+    const userId = sessao.userId;
+    const userName = sessao.userName;
 
-      // Botão "Voltar"
-      document.getElementById("btnVoltarCursos")?.addEventListener("click", () => {
+    console.log("✅ Sessão ativa:", { userId, userName });
+    console.log("📚 course_id da URL:", courseId);
+
+    // Exibe toast de sessão ativa
+    const toast = document.createElement('div');
+    toast.innerHTML = `
+      <div class="fixed top-6 right-6 z-50 bg-green-600 text-white shadow-lg rounded-lg px-5 py-4 text-sm font-medium space-y-1">
+        <div class="font-bold">🔐 Sessão ativa</div>
+        <div><strong>Usuário:</strong> ${userId}</div>
+        <div><strong>Curso:</strong> ${courseId}</div>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 10000);
+
+    // Preenche nome do usuário no cabeçalho
+    const nomeEl = document.getElementById("nomeAluno");
+    if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
+
+    // Botão "Meus Cursos"
+    const btnVoltar = document.getElementById("btnVoltarCursos");
+    if (btnVoltar) {
+      btnVoltar.addEventListener("click", () => {
         window.location.href = "aluno.html";
       });
-
-      // Botão logout
-      document.getElementById("logoutBtn")?.addEventListener("click", logout);
-
-    } catch (err) {
-      console.error("❌ Erro inesperado na verificação de sessão:", err);
     }
+
+    // Botão "Sair"
+    const btnLogout = document.getElementById("logoutBtn");
+    if (btnLogout) {
+      btnLogout.addEventListener("click", logout);
+    }
+
+    console.log("✅ Autenticação finalizada. Aplicação pronta para carregar dados.");
   })();
 </script>
+
 
 
 
