@@ -270,26 +270,34 @@
 </body>
 
 <script>
-  document.getElementById("forcarAtualizarProgresso").addEventListener("click", () => {
+document.addEventListener("DOMContentLoaded", () => {
+  const botao = document.getElementById("btnAtualizarProgresso");
+
+  botao?.addEventListener("click", async () => {
     const uid = window.user_id;
     const cid = window.course_id;
     const supa = window.supabase;
 
-    console.log("🔍 Dados ao clicar:", { uid, cid, supa });
-
     if (!uid || !cid || !supa) {
-      alert("❌ Dados ausentes no momento do clique. Verifique se o bootstrap carregou corretamente.");
+      alert("⚠️ Dados insuficientes para atualizar progresso.");
       return;
     }
 
-    if (typeof carregarProgressoCurso !== "function") {
-      alert("❌ Função carregarProgressoCurso não disponível.");
+    if (typeof window.carregarProgressoCurso !== "function") {
+      alert("❌ Função carregarProgressoCurso não está disponível.");
       return;
     }
 
-    console.log("🚀 Chamando carregarProgressoCurso com:", { uid, cid });
-    carregarProgressoCurso(supa, uid, cid);
+    try {
+      await window.carregarProgressoCurso(supa, uid, cid);
+      alert("✅ Progresso atualizado com sucesso!");
+    } catch (erro) {
+      console.error(erro);
+      alert("❌ Erro ao tentar atualizar o progresso.");
+    }
   });
+});
+
 </script>
 
   
