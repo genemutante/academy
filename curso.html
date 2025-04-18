@@ -69,69 +69,73 @@
         🚪 Sair
       </button>
 
-<button
-  class="bg-blue-600 text-white font-bold py-2 px-4 rounded shadow hover:bg-blue-700 transition"
-  onclick="
-    (async () => {
-      console.log('🚀 Iniciando rotina de atualização de progresso...');
-
-      const uid = window.user_id;
-      const cid = window.course_id;
-      const supa = window.supabase;
-
-      console.log('🔍 Variáveis detectadas:', { uid, cid, supa });
-
-      if (!uid || !cid || !supa || typeof supa.from !== 'function') {
-        console.error('❌ Supabase mal definido ou funções indisponíveis');
-        alert('❌ Supabase inválido. Certifique-se de que foi inicializado corretamente.');
-        return;
-      }
-
-      try {
-        console.log('📡 Buscando todas as aulas...');
-        const { data: aulas, error: erroAulas } = await supa
-          .from('aulas')
-          .select('id')
-          .eq('curso_id', cid);
-
-        if (erroAulas) throw new Error('Erro ao consultar aulas: ' + erroAulas.message);
-
-        console.log('📚 Aulas encontradas:', aulas);
-
-        console.log('📡 Buscando aulas concluídas do aluno...');
-        const { data: concluidas, error: erroConclusao } = await supa
-          .from('progresso_aulas')
-          .select('id_aula')
-          .eq('id_aluno', uid)
-          .eq('id_curso', cid)
-          .eq('concluida', true);
-
-        if (erroConclusao) throw new Error('Erro ao consultar progresso: ' + erroConclusao.message);
-
-        const total = aulas?.length || 0;
-        const feitas = concluidas?.length || 0;
-        const percentual = total > 0 ? Math.round((feitas / total) * 100) : 0;
-
-        console.log(`📊 ${feitas} de ${total} aulas concluídas (${percentual}%)`);
-
-        const barra = document.getElementById('barraProgresso');
-        const texto = document.getElementById('textoProgresso');
-
-        if (barra) barra.style.width = percentual + '%';
-        if (texto) texto.textContent = `${percentual}%`;
-
-        alert(`✅ Progresso atualizado: ${feitas}/${total} (${percentual}%)`);
-      } catch (e) {
-        console.error('🔥 Erro durante atualização:', e);
-        alert('❌ Falha ao atualizar progresso.\n\n' + (e.message || JSON.stringify(e)));
-      }
-
-      console.log('🏁 Rotina finalizada.');
-    })();
-  "
->
+<button onclick="atualizarProgressoManual()" class="btn-azul">
   🔄 Atualizar Progresso
 </button>
+
+<script>
+  async function atualizarProgressoManual() {
+    try {
+      console.log("🚀 Iniciando atualização de progresso manual...");
+
+      const user_id = window.user_id;
+      const course_id = window.course_id;
+      const supa = window.supabase; // já importado corretamente como no seu exemplo
+
+      if (!supa || !supa.from) {
+        throw new Error("❌ Supabase não está inicializado corretamente.");
+      }
+      if (!user_id || !course_id) {
+        throw new Error("❌ Dados obrigatórios ausentes: user_id ou course_id.");
+      }
+
+      console.log("🔍 Consultando aulas do curso...");
+      const { data: aulas, error: erroAulas } = await supa
+        .from("aulas")
+        .select("id, ordem")
+        .eq("curso_id", course_id);
+
+      if (erroAulas) throw erroAulas;
+
+      console.log("✅ Aulas recebidas:", aulas);
+
+      console.log("🔍 Consultando progresso das aulas do aluno...");
+      const { data: progresso, error: erroProgresso } = await supa
+        .from("aula_aluno")
+        .select("aula_id, concluida")
+        .eq("aluno_id", user_id);
+
+      if (erroProgresso) throw erroProgresso;
+
+      console.log("📊 Progresso recuperado:", progresso);
+
+      const idsConcluidos = progresso.filter(p => p.concluida).map(p => p.aula_id);
+      const totalAulas = aulas.length;
+      const concluidas = aulas.filter(aula => idsConcluidos.includes(aula.id)).length;
+      const percentual = Math.floor((concluidas / totalAulas) * 100);
+
+      console.log(`📈 Progresso atual: ${concluidas}/${totalAulas} aulas (${percentual}%)`);
+
+      console.log("💾 Salvando progresso consolidado...");
+      const { error: erroSave } = await supa
+        .from("progresso_aluno")
+        .upsert({
+          aluno_id: user_id,
+          curso_id: course_id,
+          percentual,
+          atualizado_em: new Date().toISOString()
+        }, { onConflict: ['aluno_id', 'curso_id'] });
+
+      if (erroSave) throw erroSave;
+
+      alert("✅ Progresso atualizado com sucesso!");
+    } catch (err) {
+      console.error("🔥 ERRO na atualização manual:", err);
+      alert("❌ Erro ao atualizar progresso:\n" + err.message);
+    }
+  }
+</script>
+
 
 
       
