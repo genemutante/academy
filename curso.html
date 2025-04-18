@@ -48,33 +48,26 @@
 
 <body class="font-sans bg-gradient-to-br from-surface-50 to-surface-100 text-gray-800 min-h-screen transition-colors duration-300">
 
+
   <!-- Cabeçalho -->
   <header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
     <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
       <h1 class="text-xl font-display font-bold tracking-tight">Academy-Tools</h1>
 
+      <div class="flex items-center gap-4">
+        <span id="nomeAluno" class="text-sm font-bold bg-white/10 px-3 py-1 rounded-full text-white shadow-sm hover:bg-white/20 transition">
+          Nome do Aluno
+        </span>
+        <button id="btnVoltarCursos"
+                class="text-xs bg-white text-primary-700 font-semibold px-3 py-1 rounded-full hover:bg-primary-100 transition shadow-sm">
+          🔙 Meus Cursos
+        </button>
+      </div>
 
-
-      
-<div class="flex items-center gap-4">
-  <span id="nomeAluno" class="text-sm font-bold bg-white/10 px-3 py-1 rounded-full text-white shadow-sm hover:bg-white/20 transition">
-    Nome do Aluno
-  </span>
-  <button id="btnVoltarCursos"
-          class="text-xs bg-white text-primary-700 font-semibold px-3 py-1 rounded-full hover:bg-primary-100 transition shadow-sm">
-    🔙 Meus Cursos
-  </button>
-</div>
-
-<button id="logoutBtn"
-        class="text-xs bg-white text-primary-700 font-semibold px-3 py-1 rounded-full hover:bg-primary-100 transition shadow-sm">
-  🚪 Sair
-</button>
-
-
-
-
-      
+      <button id="logoutBtn"
+              class="text-xs bg-white text-primary-700 font-semibold px-3 py-1 rounded-full hover:bg-primary-100 transition shadow-sm">
+        🚪 Sair
+      </button>
     </div>
   </header>
 
@@ -98,232 +91,161 @@
         <ul id="listaAulas" class="list-none space-y-1 text-sm bg-white p-4 rounded shadow-sm border"></ul>
       </div>
 
-<!-- Coluna principal: Aula -->
-<div class="lg:col-span-2">
-  <div class="relative w-full pt-[56.25%] rounded overflow-hidden shadow mb-4" id="videoContainer">
-    <!-- 56.25% padding-top = 16:9 aspect ratio -->
-    
-    <!-- Iframe do YouTube ocupará toda a área -->
-    <div id="videoPlayer" class="absolute inset-0 w-full h-full z-0"></div>
+      <!-- Coluna principal: Aula -->
+      <div class="lg:col-span-2">
+        <div class="relative w-full pt-[56.25%] rounded overflow-hidden shadow mb-4" id="videoContainer">
+          <div id="videoPlayer" class="absolute inset-0 w-full h-full z-0"></div>
+          <div id="videoOverlay"
+               class="absolute inset-0 z-10 bg-transparent pointer-events-auto cursor-not-allowed"
+               title="Interação desabilitada durante o rastreamento">
+          </div>
 
-    <!-- Overlay de bloqueio -->
-    <div id="videoOverlay"
-         class="absolute inset-0 z-10 bg-transparent pointer-events-auto cursor-not-allowed"
-         title="Interação desabilitada durante o rastreamento">
-    </div>
+          <div id="controlesCustomizados"
+               class="absolute bottom-0 left-0 right-0 z-20 bg-black/80 text-white text-sm flex justify-between items-center px-4 py-2">
+            <div class="flex items-center gap-3">
+              <button onclick="retrocederVideo()" class="hover:scale-110 transition" title="Voltar 10s">⏪</button>
+              <button onclick="togglePlayPause()" id="playPauseBtn"
+                      class="bg-white text-black font-bold text-xs px-2 py-1 rounded hover:bg-gray-200 transition"
+                      title="Reproduzir / Pausar">
+                ⏸️
+              </button>
+              <button onclick="avancarVideo()" class="hover:scale-110 transition" title="Avançar 10s">⏩</button>
+              <span class="ml-3">Velocidade:</span>
+              <button onclick="definirVelocidade(1)" class="hover:underline">1x</button>
+              <button onclick="definirVelocidade(1.5)" class="hover:underline">1.5x</button>
+              <button onclick="definirVelocidade(2)" class="hover:underline">2x</button>
+            </div>
+            <div id="infoControle" class="text-xs text-white/80 italic">
+              Interação desabilitada durante o rastreamento
+            </div>
+          </div>
+        </div>
 
+        <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
+          <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
+          <button id="btnQuiz" disabled
+                  class="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
+            Fazer Avaliação da Aula
+          </button>
+        </div>
 
-<!-- Controles personalizados sobre o vídeo -->
-<div id="controlesCustomizados"
-     class="absolute bottom-0 left-0 right-0 z-20 bg-black/80 text-white text-sm flex justify-between items-center px-4 py-2">
-  <div class="flex items-center gap-3">
-    <button onclick="retrocederVideo()" class="hover:scale-110 transition" title="Voltar 10s">⏪</button>
+        <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
 
-    <button onclick="togglePlayPause()" id="playPauseBtn"
-            class="bg-white text-black font-bold text-xs px-2 py-1 rounded hover:bg-gray-200 transition"
-            title="Reproduzir / Pausar">
-      ⏸️
-    </button>
-
-    <button onclick="avancarVideo()" class="hover:scale-110 transition" title="Avançar 10s">⏩</button>
-
-    <span class="ml-3">Velocidade:</span>
-    <button onclick="definirVelocidade(1)" class="hover:underline">1x</button>
-    <button onclick="definirVelocidade(1.5)" class="hover:underline">1.5x</button>
-    <button onclick="definirVelocidade(2)" class="hover:underline">2x</button>
-  </div>
-
-  <div id="infoControle" class="text-xs text-white/80 italic">
-    Interação desabilitada durante o rastreamento
-  </div>
-</div>
-
-
-
-
-    
-  </div>
-
-
-  
-
-  <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
-    <h3 id="tituloAula" class="text-lg font-semibold">Título da Aula</h3>
-<button id="btnQuiz" disabled
-        class="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
-  Fazer Avaliação da Aula
-</button>
-
-  </div>
-
-  <p class="text-xs text-gray-500">⚙️ Progresso salvo automaticamente durante a reprodução</p>
-
-  <div class="mt-3 space-y-1">
-    <p id="progressoTexto" class="text-sm text-gray-700 flex items-center gap-2">
-      ⏱ <span id="indicadorNumerico"
-              class="text-blue-700 font-semibold animate-pulse"></span>
-    </p>
-    <p id="mensagemAluno" class="text-sm text-blue-700"></p>
-    <p id="recomecarSugestao"
-       class="text-sm text-blue-600 underline cursor-pointer hover:text-blue-800 transition"></p>
-  </div>
-</div>
+        <div class="mt-3 space-y-1">
+          <p id="progressoTexto" class="text-sm text-gray-700 flex items-center gap-2">
+            ⏱ <span id="indicadorNumerico"
+                    class="text-blue-700 font-semibold animate-pulse"></span>
+          </p>
+          <p id="mensagemAluno" class="text-sm text-blue-700"></p>
+          <p id="recomecarSugestao"
+             class="text-sm text-blue-600 underline cursor-pointer hover:text-blue-800 transition"></p>
+        </div>
+      </div>
     </div>
   </main>
-
-  <!-- Painel de Narrativa -->
-  <div id="painelNarrativo" class="hidden fixed top-16 right-4 w-[420px] max-h-[88vh] overflow-y-auto bg-gray-900 text-green-200 text-sm font-mono shadow-xl rounded-xl p-4 z-50 space-y-1">
-    <div class="flex justify-between items-center mb-3">
-      <div class="text-green-400 font-bold">📜 Narrativa da Execução</div>
-      <button onclick="document.getElementById('painelNarrativo').classList.add('hidden')" class="text-xs text-gray-400 hover:text-red-400 transition">✖ Fechar</button>
-    </div>
-    <div class="mb-2 flex gap-2 flex-wrap">
-<button id="btnAtivarNarra" onclick="ativarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3">
-  ▶️ Reativar Narração
-</button>
-<button id="btnPausarNarra" onclick="pausarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3 hidden">
-  ⏹️ Pausar Narração
-</button>
-      <button onclick="exportarNarrativa()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3">📄 Exportar Narrativa</button>
-    </div>
-    <ul id="narrativaLog" class="space-y-2"></ul>
-  </div>
-
-  <!-- Botão flutuante para reabrir o painel -->
-
-
-  <!-- Bootstrap principal com todos os módulos JS importados -->
-  <script type="module" src="./js/bootstrap.js"></script>
-
-
-<script>
-  function definirVelocidade(fator) {
-    if (window.player?.setPlaybackRate) {
-      window.player.setPlaybackRate(fator);
-      document.getElementById("infoControle").textContent = `🔁 Velocidade: ${fator}x`;
-    }
-  }
-
-  function togglePlayPause() {
-    const estado = window.player?.getPlayerState?.();
-    const btn = document.getElementById("playPauseBtn");
-
-    if (estado === 1) {
-      window.player.pauseVideo();
-      btn.textContent = "▶️";
-      document.getElementById("infoControle").textContent = "⏸️ Pausado";
-    } else {
-      window.player.playVideo();
-      btn.textContent = "⏸️";
-      document.getElementById("infoControle").textContent = "▶️ Reproduzindo";
-    }
-  }
-
-  function retrocederVideo() {
-    const atual = window.player?.getCurrentTime?.();
-    if (typeof atual === "number") {
-      window.player.seekTo(Math.max(0, atual - 10), true);
-      document.getElementById("infoControle").textContent = "⏪ Voltou 10s";
-    }
-  }
-
-  function avancarVideo() {
-    const atual = window.player?.getCurrentTime?.();
-    if (typeof atual === "number") {
-      window.player.seekTo(atual + 10, true);
-      document.getElementById("infoControle").textContent = "⏩ Avançou 10s";
-    }
-  }
-
-  // Sincroniza o ícone de play/pause ao iniciar
-  const checarEstadoInicial = setInterval(() => {
-    if (window.player?.getPlayerState) {
-      const estado = window.player.getPlayerState();
-      document.getElementById("playPauseBtn").textContent = estado === 1 ? "⏸️" : "▶️";
-      clearInterval(checarEstadoInicial);
-    }
-  }, 300);
-</script>
-
-
-  
-  
-  
-  
-  
-<script type="module">
-  import { verificarLoginObrigatorio, logout } from './js/auth.js';
-
-  (async () => {
-    console.log("📦 Iniciando verificação de sessão...");
-    const courseId = new URL(location.href).searchParams.get("course_id");
-
-    const sessao = await verificarLoginObrigatorio();
-    if (!sessao) {
-      const toast = document.createElement('div');
-      toast.innerHTML = `
-        <div class="fixed top-6 right-6 z-50 bg-red-600 text-white shadow-lg rounded-lg px-5 py-4 text-sm font-medium space-y-1">
-          <div class="font-bold">⚠️ Sessão inválida</div>
-          <div>Nenhuma informação de usuário foi encontrada.</div>
-          <div>Redirecionando para login em <strong>10s</strong>...</div>
-        </div>
-      `;
-      document.body.appendChild(toast);
-
-      setTimeout(() => {
-        toast.remove();
-        logout();
-      }, 10000);
-      return;
+  <!-- Scripts do YouTube Player -->
+  <script>
+    function definirVelocidade(fator) {
+      if (window.player?.setPlaybackRate) {
+        window.player.setPlaybackRate(fator);
+        document.getElementById("infoControle").textContent = `🔁 Velocidade: ${fator}x`;
+      }
     }
 
-    const userId = sessao.userId;
-    const userName = sessao.userName;
+    function togglePlayPause() {
+      const estado = window.player?.getPlayerState?.();
+      const btn = document.getElementById("playPauseBtn");
 
-    console.log("✅ Sessão ativa:", { userId, userName });
-    console.log("📚 course_id da URL:", courseId);
-
-    // Exibe toast de sessão ativa
-    // const toast = document.createElement('div');
-   //  toast.innerHTML = `
-   //    <div class="fixed top-6 right-6 z-50 bg-green-600 text-white shadow-lg rounded-lg px-5 py-4 text-sm font-medium space-y-1">
-    //     <div class="font-bold">🔐 Sessão ativa</div>
-    //     <div><strong>Usuário:</strong> ${userId}</div>
-    //     <div><strong>Curso:</strong> ${courseId}</div>
-    //   </div>
-   //  `;
-   //  document.body.appendChild(toast);
-   //  setTimeout(() => toast.remove(), 10000);
-
-    // Preenche nome do usuário no cabeçalho
-    const nomeEl = document.getElementById("nomeAluno");
-    if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
-
-    // Botão "Meus Cursos"
-    const btnVoltar = document.getElementById("btnVoltarCursos");
-    if (btnVoltar) {
-      btnVoltar.addEventListener("click", () => {
-        window.location.href = "aluno.html";
-      });
+      if (estado === 1) {
+        window.player.pauseVideo();
+        btn.textContent = "▶️";
+        document.getElementById("infoControle").textContent = "⏸️ Pausado";
+      } else {
+        window.player.playVideo();
+        btn.textContent = "⏸️";
+        document.getElementById("infoControle").textContent = "▶️ Reproduzindo";
+      }
     }
 
-    // Botão "Sair"
-    const btnLogout = document.getElementById("logoutBtn");
-    if (btnLogout) {
-      btnLogout.addEventListener("click", logout);
+    function retrocederVideo() {
+      const atual = window.player?.getCurrentTime?.();
+      if (typeof atual === "number") {
+        window.player.seekTo(Math.max(0, atual - 10), true);
+        document.getElementById("infoControle").textContent = "⏪ Voltou 10s";
+      }
     }
 
-    console.log("✅ Autenticação finalizada. Aplicação pronta para carregar dados.");
-  })();
-</script>
+    function avancarVideo() {
+      const atual = window.player?.getCurrentTime?.();
+      if (typeof atual === "number") {
+        window.player.seekTo(atual + 10, true);
+        document.getElementById("infoControle").textContent = "⏩ Avançou 10s";
+      }
+    }
 
+    const checarEstadoInicial = setInterval(() => {
+      if (window.player?.getPlayerState) {
+        const estado = window.player.getPlayerState();
+        document.getElementById("playPauseBtn").textContent = estado === 1 ? "⏸️" : "▶️";
+        clearInterval(checarEstadoInicial);
+      }
+    }, 300);
+  </script>
 
+  <!-- Script principal com postMessage -->
+  <script type="module">
+    import { logout } from './js/auth.js';
+    import { supabase } from './js/supabaseClient.js';
 
+    window.addEventListener('message', async (event) => {
+      const { tipo, dados } = event.data || {};
+      if (tipo !== 'curso' || !dados?.user?.id || !dados.courseId) return;
 
+      const userId = dados.user.id;
+      const userName = dados.user.name;
+      const courseId = dados.courseId;
 
+      console.log("✅ Sessão recebida:", { userId, userName, courseId });
 
+      const nomeEl = document.getElementById("nomeAluno");
+      if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
 
+      const btnVoltar = document.getElementById("btnVoltarCursos");
+      if (btnVoltar) {
+        btnVoltar.addEventListener("click", () => {
+          window.location.href = "aluno.html"; // ou enviar postMessage se quiser voltar dentro do iframe
+        });
+      }
 
-  
+      const btnLogout = document.getElementById("logoutBtn");
+      if (btnLogout) {
+        btnLogout.addEventListener("click", logout);
+      }
+
+      // Carrega informações do curso com Supabase
+      const { data: curso, error } = await supabase
+        .from('courses')
+        .select('title, description')
+        .eq('id', courseId)
+        .maybeSingle();
+
+      if (curso) {
+        document.getElementById("tituloCurso").textContent = curso.title;
+        document.getElementById("descricaoCurso").textContent = curso.description;
+      } else {
+        document.getElementById("tituloCurso").textContent = 'Curso não encontrado';
+        document.getElementById("descricaoCurso").textContent = 'Verifique com o suporte.';
+      }
+
+      // Aqui você pode carregar as aulas do curso usando o courseId se desejar.
+    });
+  </script>
 </body>
 </html>
+
+
+
+
+
+
+  
