@@ -67,14 +67,21 @@
   import { verificarLoginObrigatorio, logout } from './js/bootstrap.js';
   import { supabase } from './js/supabaseClient.js';
 
-  function showMessageUsuario(nome) {
-    const toast = document.createElement('div');
-    toast.textContent = `✅ Bem-vindo, ${nome}! Redirecionando para o curso...`;
-    toast.className = 'fixed top-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 animate-fade';
-    document.body.appendChild(toast);
 
-    setTimeout(() => toast.remove(), 4000);
-  }
+function showMessageCurso(userId, courseId) {
+  const toast = document.createElement('div');
+  toast.innerHTML = `
+    <strong>🔐 Sessão ativa</strong><br>
+    Usuário: <code>${userId}</code><br>
+    Curso: <code>${courseId}</code>
+  `;
+  toast.className = 'fixed top-6 right-6 bg-green-700 text-white px-5 py-3 rounded shadow-lg z-50 animate-fade text-sm font-mono';
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.remove(), 5000);
+}
+
+  
 
   (async () => {
     const sessao = await verificarLoginObrigatorio();
@@ -129,22 +136,26 @@
         container.appendChild(card);
       });
 
-      container.addEventListener('click', (e) => {
-        const botao = e.target.closest('.abrir-curso');
-        if (!botao) return;
+container.addEventListener('click', (e) => {
+  const botao = e.target.closest('.abrir-curso');
+  if (!botao) return;
 
-        const id = botao.dataset.id;
-        const nome = botao.dataset.nome;
+  const courseId = botao.dataset.id;
+  const courseTitle = botao.dataset.nome;
 
-        console.log(`🧭 Curso selecionado: ${nome} (ID ${id})`);
-        sessionStorage.setItem('log_debug', `Acessando curso "${nome}" (ID: ${id}) às ${new Date().toISOString()}`);
+  console.log(`🧭 Curso selecionado: ${courseTitle} (ID ${courseId})`);
+  sessionStorage.setItem('log_debug', `Acessando curso "${courseTitle}" (ID: ${courseId}) às ${new Date().toISOString()}`);
 
-        showMessageUsuario(userName); // ✅ mostra a mensagem
+  // ✅ Mostra mensagem com IDs antes de redirecionar
+  showMessageCurso(userId, courseId);
 
-        setTimeout(() => {
-          window.location.href = `curso.html?course_id=${id}`;
-        }, 2000); // aguarda a mensagem
-      });
+  setTimeout(() => {
+    window.location.href = `curso.html?course_id=${courseId}`;
+  }, 5000);
+});
+
+
+      
     } catch (err) {
       console.error("❌ Erro ao carregar cursos:", err);
       container.innerHTML = `<p class="text-red-600">Erro ao carregar cursos. Tente novamente mais tarde.</p>`;
