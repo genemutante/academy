@@ -120,6 +120,9 @@ const { error } = await supabase.from('progress_segments').insert(segmento);
   const percentual = ((window.maiorTempoVisualizado / window.duration) * 100).toFixed(1);
 
   if (percentual >= 97) {
+
+
+    
     progressoEl.textContent = "✅ Aula concluída";
     document.getElementById("recomecarSugestao").innerHTML = "";
 
@@ -127,7 +130,9 @@ const { error } = await supabase.from('progress_segments').insert(segmento);
 
     await habilitarQuiz(window.aulaAtual.id);
     listarAulas(window.aulas, window.user_id);
-    carregarProgressoCurso();
+    
+    await carregarProgressoCurso(supabase, window.user_id, window.course_id);
+
 
     exibirMensagemAluno("✅ Aula concluída! A próxima começará em 5 segundos...", "success");
 
