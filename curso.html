@@ -242,62 +242,21 @@
 </script>
 
 <script type="module">
-
-const logAnterior = sessionStorage.getItem('log_debug');
-if (logAnterior) {
-  console.log("📦 Log anterior de navegação:", logAnterior);
-}
-
-  
   import { verificarLoginObrigatorio, logout } from './js/auth.js';
 
   (async () => {
     console.log("📦 Iniciando verificação de sessão...");
 
-if (!sessao) {
-  console.warn("⛔ Sessão inválida ou não encontrada.");
-
-  const courseId = new URL(location.href).searchParams.get("course_id") || '---';
-  const userId = localStorage.getItem('user_id') || '---';
-
-  // Cria mensagem temporária
-  const msgBox = document.createElement("div");
-  msgBox.innerHTML = `
-    <div style="
-      position: fixed;
-      top: 80px;
-      right: 20px;
-      background-color: #15803d;
-      color: white;
-      padding: 16px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      font-family: 'Outfit', sans-serif;
-      z-index: 9999;
-      max-width: 340px;
-    ">
-      <strong>🔒 Sessão ativa</strong><br/>
-      <b>Usuário:</b> ${userId}<br/>
-      <b>Curso:</b> ${courseId}
-    </div>
-  `;
-  document.body.appendChild(msgBox);
-
-  setTimeout(() => {
-    msgBox.remove();
-    console.log("⏳ Redirecionando após exibir mensagem de sessão...");
-    window.location.href = "aluno.html";
-  }, 10000);
-
-  return;
-}
-
+    const sessao = await verificarLoginObrigatorio();
+    if (!sessao) {
+      console.warn("⛔ Sessão inválida ou não encontrada. Redirecionando...");
+      return;
+    }
 
     const userId = sessao.userId;
     const userName = sessao.userName;
     const courseId = new URL(location.href).searchParams.get("course_id");
 
-    // Logs de contexto
     console.log("✅ Sessão ativa:", { userId, userName });
     console.log("📚 course_id da URL:", courseId);
 
@@ -305,39 +264,45 @@ if (!sessao) {
     window.nomeAluno = userName;
     window.course_id = courseId;
 
+    // ✅ Mostra mensagem temporária antes de carregar a tela (10s)
+    const toast = document.createElement('div');
+    toast.innerHTML = `
+      <div class="fixed top-6 right-6 z-50 bg-green-600 text-white shadow-lg rounded-lg px-5 py-4 text-sm font-medium space-y-1">
+        <div class="font-bold">🔐 Sessão ativa</div>
+        <div><strong>Usuário:</strong> ${userId}</div>
+        <div><strong>Curso:</strong> ${courseId}</div>
+      </div>
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 10000); // 10 segundos
+
     // Atualiza nome no cabeçalho
     const nomeEl = document.getElementById("nomeAluno");
     if (nomeEl) {
       nomeEl.textContent = `👤 ${userName}`;
-    } else {
-      console.warn("⚠️ Elemento #nomeAluno não encontrado na página.");
     }
 
     // Voltar para lista de cursos
     const btnVoltar = document.getElementById("btnVoltarCursos");
     if (btnVoltar) {
       btnVoltar.addEventListener("click", () => {
-        console.log("↩️ Redirecionando para lista de cursos...");
         window.location.href = "aluno.html";
       });
-    } else {
-      console.warn("⚠️ Botão #btnVoltarCursos não encontrado.");
     }
 
     // Botão logout
     const btnLogout = document.getElementById("logoutBtn");
     if (btnLogout) {
-      btnLogout.addEventListener("click", () => {
-        console.log("🚪 Logout solicitado.");
-        logout();
-      });
-    } else {
-      console.warn("⚠️ Botão #logoutBtn não encontrado.");
+      btnLogout.addEventListener("click", logout);
     }
 
     console.log("✅ Autenticação finalizada. Aplicação pronta para carregar dados.");
   })();
 </script>
+
 
 
 
