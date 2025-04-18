@@ -62,30 +62,29 @@
   </main>
 
 <script type="module">
+  import { verificarLoginObrigatorio, logout } from './js/auth.js';
   import { supabase } from './js/supabaseClient.js';
-  import { logout } from './js/auth.js';
 
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', logout);
-  }
+  (async () => {
+    const sessao = await verificarLoginObrigatorio();
+    if (!sessao) return;
 
-  const nomeEl = document.getElementById('aluno-nome');
-  const saudacaoEl = document.getElementById('aluno-nome-saudacao');
-  const container = document.getElementById('cursos');
+    const userId = sessao.userId;
+    const userName = sessao.userName;
 
-  // Aguardando os dados da sessão do pai (iframe principal)
-  window.addEventListener('message', async (event) => {
-    const { tipo, dados } = event.data || {};
+    const nomeEl = document.getElementById('aluno-nome');
+    const saudacaoEl = document.getElementById('aluno-nome-saudacao');
 
-    if (tipo !== 'sessao' || !dados?.id) return;
+    if (nomeEl) nomeEl.textContent = userName;
+    if (saudacaoEl) saudacaoEl.textContent = userName;
 
-    const userId = dados.id;
-    const userName = dados.name;
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', logout);
+    }
 
-    // Atualiza nome
-    nomeEl.textContent = userName;
-    saudacaoEl.textContent = userName;
+    const container = document.getElementById('cursos');
+    if (!container) return console.error('⚠️ Container de cursos não encontrado.');
 
     try {
       const { data, error } = await supabase
@@ -119,7 +118,6 @@
         container.appendChild(card);
       });
 
-      // Evento de clique em cursos
       container.addEventListener('click', (e) => {
         const botao = e.target.closest('.abrir-curso');
         if (!botao) return;
@@ -128,16 +126,29 @@
         const courseTitle = botao.dataset.nome;
 
         console.log(`🧭 Curso selecionado: ${courseTitle} (ID ${courseId})`);
+        sessionStorage.setItem('log_debug', `Acessando curso "${courseTitle}" (ID: ${courseId}) às ${new Date().toISOString()}`);
 
-        window.parent.postMessage({ tipo: 'abrirCurso', course_id: courseId }, '*');
+        const estaDentroDeIframe = window.self !== window.top;
+
+        if (estaDentroDeIframe) {
+          // 🧠 Envia para o index.html pai
+          window.parent.postMessage({
+            tipo: 'abrirCurso',
+            course_id: courseId
+          }, '*');
+        } else {
+          // 🌐 Comportamento tradicional
+          window.location.href = `curso.html?course_id=${courseId}`;
+        }
       });
 
     } catch (err) {
       console.error("❌ Erro ao carregar cursos:", err);
       container.innerHTML = `<p class="text-red-600">Erro ao carregar cursos. Tente novamente mais tarde.</p>`;
     }
-  });
+  })();
 </script>
+
 
 </body>
 </html>
