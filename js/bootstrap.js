@@ -98,3 +98,9 @@ export {
   logout,
   salvarSessao
 };
+
+
+// 🔄 Garante que a função esteja globalmente disponível mesmo com type="module"
+window.carregarProgressoCurso = carregarProgressoCurso;
+
+
