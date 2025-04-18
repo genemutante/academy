@@ -19,7 +19,7 @@ export async function verificarLoginObrigatorio() {
   const sessao = JSON.parse(localStorage.getItem('sessaoUsuario'));
 
   if (!sessao || !sessao.userId || !sessao.userName) {
-    logout(); // força redirecionamento
+   // logout(); // força redirecionamento
     return null;
   }
 
