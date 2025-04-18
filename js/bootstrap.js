@@ -1,5 +1,3 @@
-// bootstrap.js
-
 import { trackProgress } from './trackProgress.js';
 import { verificarQuizRespondido } from './verificarQuizRespondido.js';
 import { carregarDados } from './carregarDados.js';
@@ -31,16 +29,8 @@ Object.assign(window, {
   carregarProgressoCurso
 });
 
-// 🔁 Exibe botão da narrativa
-//window.addEventListener('DOMContentLoaded', () => {
-//  const btn = document.getElementById('abrirPainelBtn');
-//  if (btn) {
-//    btn.classList.remove('hidden');
-//    setTimeout(() => btn.classList.add('hidden'), 10000);
-//  }
-//});
-
 // 🚀 Execução principal da tela de curso
+
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("📦 Iniciando verificação de sessão...");
 
@@ -49,16 +39,41 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const user_id = sessao.userId;
   const user_name = sessao.userName;
-  const course_id = new URL(location.href).searchParams.get('course_id');
+  let course_id = new URL(location.href).searchParams.get('course_id');
 
+  // 🔁 Caso esteja dentro de iframe e ainda não tenha course_id
   if (!course_id) {
-    narrar("❌ Nenhum course_id fornecido na URL.", "error");
+    console.warn("⏳ Aguardando course_id via postMessage...");
+
+    window.addEventListener("message", async (event) => {
+      const { tipo, dados } = event.data || {};
+      if (tipo === "curso" && dados?.courseId) {
+        course_id = dados.courseId;
+        window.course_id = course_id;
+        window.user_id = user_id;
+        window.user_name = user_name;
+
+        // Atualiza a URL virtualmente
+        const novaUrl = new URL(location.href);
+        novaUrl.searchParams.set("course_id", course_id);
+        history.replaceState({}, "", novaUrl);
+
+        const el = document.getElementById('nomeAluno');
+        if (el) el.textContent = user_name;
+
+        const aulasRef = { value: [] };
+        await carregarDados(user_id, course_id, aulasRef);
+        carregarProgressoCurso?.(supabase, user_id, course_id);
+      }
+    });
+
     return;
   }
 
-  // 🔗 Disponibiliza globalmente se necessário
+  // 🔗 Disponibiliza globalmente
   window.user_id = user_id;
   window.course_id = course_id;
+  window.user_name = user_name;
 
   console.log("✅ Sessão ativa:", { user_id, user_name });
   console.log("📚 course_id da URL:", course_id);
@@ -69,7 +84,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const aulasRef = { value: [] };
     await carregarDados(user_id, course_id, aulasRef);
-
     carregarProgressoCurso?.(supabase, user_id, course_id);
   } catch (err) {
     console.error("❌ Erro ao carregar dados iniciais:", err);
