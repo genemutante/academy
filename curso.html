@@ -178,8 +178,12 @@
       <button onclick="document.getElementById('painelNarrativo').classList.add('hidden')" class="text-xs text-gray-400 hover:text-red-400 transition">✖ Fechar</button>
     </div>
     <div class="mb-2 flex gap-2 flex-wrap">
-      "btnAtivarNarra" onclick="ativarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3">▶️ Reativar Narração</button>
-      "btnPausarNarra" onclick="pausarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3 hidden">⏹️ Pausar Narração</button>
+<button id="btnAtivarNarra" onclick="ativarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3">
+  ▶️ Reativar Narração
+</button>
+<button id="btnPausarNarra" onclick="pausarNarracao()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3 hidden">
+  ⏹️ Pausar Narração
+</button>
       <button onclick="exportarNarrativa()" class="text-xs text-gray-300 hover:text-white mb-3 ml-3">📄 Exportar Narrativa</button>
     </div>
     <ul id="narrativaLog" class="space-y-2"></ul>
