@@ -32,13 +32,13 @@ Object.assign(window, {
 });
 
 // 🔁 Exibe botão da narrativa
-window.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('abrirPainelBtn');
-  if (btn) {
-    btn.classList.remove('hidden');
-    setTimeout(() => btn.classList.add('hidden'), 10000);
-  }
-});
+//window.addEventListener('DOMContentLoaded', () => {
+//  const btn = document.getElementById('abrirPainelBtn');
+//  if (btn) {
+//    btn.classList.remove('hidden');
+//    setTimeout(() => btn.classList.add('hidden'), 10000);
+//  }
+//});
 
 // 🚀 Execução principal da tela de curso
 document.addEventListener("DOMContentLoaded", async () => {
