@@ -197,87 +197,69 @@
 
 
   <!-- Script principal com postMessage -->
-<script type="module">
-  import { verificarLoginObrigatorio, logout } from './js/auth.js';
-  import { carregarDados } from './js/carregarDados.js';
-  import { supabase } from './js/supabaseClient.js';
-  import { carregarProgressoCurso } from './js/carregarProgressoCurso.js';
+  <script type="module">
+    import { verificarLoginObrigatorio, logout } from './js/auth.js';
+    import { carregarDados } from './js/carregarDados.js';
+    import { carregarProgressoCurso } from './js/carregarProgressoCurso.js';
+    import { supabase } from './js/supabaseClient.js';
 
-  let courseId = new URL(location.href).searchParams.get("course_id");
+    async function obterContextoAluno(dadosRecebidos) {
+      // Tenta recuperar os dados de todas as formas possíveis
+      const sessao = await verificarLoginObrigatorio();
 
-  // ⛔️ evita ciclo infinito
-  const JA_PROCESSADO = 'course_id_processado';
+      const userId = dadosRecebidos?.user?.id || window.user_id || sessao?.userId;
+      const userName = dadosRecebidos?.user?.name || window.user_name || sessao?.userName;
+      const courseId = dadosRecebidos?.courseId || window.course_id || new URL(location.href).searchParams.get("course_id");
 
-  // 📩 Se vier via postMessage (iframe)
-  window.addEventListener('message', async (event) => {
-    const { tipo, dados } = event.data || {};
-    if (tipo === 'curso' && dados?.courseId) {
-      const salvo = sessionStorage.getItem(JA_PROCESSADO);
-      if (salvo === dados.courseId) return; // já foi processado
+      // Garante que todos os scripts enxerguem esses dados
+      window.user_id = userId;
+      window.user_name = userName;
+      window.course_id = courseId;
 
-      sessionStorage.setItem('course_id_override', dados.courseId);
-      sessionStorage.setItem(JA_PROCESSADO, dados.courseId);
-      window.location.href = 'curso.html'; // não usa reload, para evitar duplicação de histórico
-    }
-  });
-
-  (async () => {
-    console.log("📦 Iniciando verificação de sessão...");
-
-    const override = sessionStorage.getItem('course_id_override');
-    if (!courseId && override) {
-      courseId = override;
+      return { userId, userName, courseId };
     }
 
-    const sessao = await verificarLoginObrigatorio();
-    if (!sessao) {
-      const toast = document.createElement('div');
-      toast.innerHTML = `
-        <div class="fixed top-6 right-6 z-50 bg-red-600 text-white shadow-lg rounded-lg px-5 py-4 text-sm font-medium space-y-1">
-          <div class="font-bold">⚠️ Sessão inválida</div>
-          <div>Nenhuma informação de usuário foi encontrada.</div>
-          <div>Redirecionando para login em <strong>10s</strong>...</div>
-        </div>
-      `;
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.remove();
-        logout();
-      }, 10000);
-      return;
+    async function iniciarCursoComDados(userId, userName, courseId) {
+      // Atualiza o nome do aluno
+      const nomeEl = document.getElementById("nomeAluno");
+      if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
+
+      // Atualiza a URL para manter compatibilidade com URLSearchParams
+      const novaUrl = new URL(location.href);
+      novaUrl.searchParams.set("course_id", courseId);
+      history.replaceState({}, "", novaUrl);
+
+      console.log("📆 Carregando curso...");
+      await carregarDados(userId, courseId);
+      await carregarProgressoCurso(supabase, userId, courseId);
     }
 
-    const userId = sessao.userId;
-    const userName = sessao.userName;
+    // Recebe dados do iframe se vierem
+    window.addEventListener("message", async (event) => {
+      const { tipo, dados } = event.data || {};
+      if (tipo === "curso") {
+        const { userId, userName, courseId } = await obterContextoAluno(dados);
+        if (userId && courseId) {
+          await iniciarCursoComDados(userId, userName, courseId);
+        }
+      }
+    });
 
-    console.log("✅ Sessão ativa:", sessao);
-    console.log("📚 course_id utilizado:", courseId);
+    // Caso acesso direto, tenta montar o contexto
+    (async () => {
+      const { userId, userName, courseId } = await obterContextoAluno();
+      if (userId && courseId) {
+        await iniciarCursoComDados(userId, userName, courseId);
+      }
+    })();
 
-    const nomeEl = document.getElementById("nomeAluno");
-    if (nomeEl) nomeEl.textContent = `👤 ${userName}`;
+    // Controles de interface
+    document.getElementById("btnVoltarCursos")?.addEventListener("click", () => {
+      window.location.href = "aluno.html";
+    });
 
-    const btnVoltar = document.getElementById("btnVoltarCursos");
-    if (btnVoltar) {
-      btnVoltar.addEventListener("click", () => {
-        window.location.href = "aluno.html";
-      });
-    }
-
-    const btnLogout = document.getElementById("logoutBtn");
-    if (btnLogout) {
-      btnLogout.addEventListener("click", logout);
-    }
-
-    if (!courseId) {
-      console.error("❌ Nenhum course_id definido.");
-      return;
-    }
-
-    await carregarDados(userId, courseId);
-    carregarProgressoCurso(supabase, userId, courseId);
-  })();
-</script>
-
+    document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  </script>
 
 
 </body>
