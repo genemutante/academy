@@ -35,36 +35,60 @@ export function logout() {
  * Caso deseje controlar manualmente o redirecionamento, comente a linha `forcarRedirecionamento()`.
  */
 export async function verificarLoginObrigatorio() {
-  // Se veio de logout, não faz a verificação
-  const logoutManual = sessionStorage.getItem("logoutManual");
-  if (logoutManual === "true") {
-    sessionStorage.removeItem("logoutManual"); // limpa a flag
+  const dadosBrutos = localStorage.getItem("sessaoAcademyTools");
+
+  if (!dadosBrutos) {
+    console.warn("⚠️ Sessão não encontrada.");
+
+    // Garante que isso só acontece se **não estiver na própria tela de login**
+    const jaEstaNoLogin = location.pathname.includes("index.html");
+
+    if (!jaEstaNoLogin) {
+      // Redireciona de forma elegante
+      mostrarMensagemSessaoInvalida();
+    }
+
     return null;
   }
 
-  const sessao = JSON.parse(localStorage.getItem('sessaoUsuario'));
+  try {
+    const dados = JSON.parse(dadosBrutos);
 
-  if (!sessao || !sessao.userId || !sessao.userName) {
-    forcarRedirecionamento();
+    if (!dados.userId) throw new Error("Sessão inválida: sem userId");
+
+    return dados;
+
+  } catch (erro) {
+    console.error("❌ Erro ao validar sessão:", erro);
+    mostrarMensagemSessaoInvalida();
     return null;
   }
-
-  return sessao;
 }
 
 
-/**
- * Exibe mensagem de sessão inválida e redireciona após 5 segundos.
- */
-function forcarRedirecionamento() {
+
+function mostrarMensagemSessaoInvalida() {
   document.body.innerHTML = `
-    <div style="text-align: center; margin-top: 20vh; font-family: sans-serif;">
-      <h1 style="font-size: 2rem; color: #1E3A8A;">🔒 Sessão inválida ou expirada</h1>
-      <p style="margin-top: 1rem; color: #555;">Você será redirecionado para a tela de login em 5 segundos.</p>
+    <div style="font-family: sans-serif; text-align: center; padding: 5rem;">
+      <h1 style="font-size: 2rem; color: #1e3a8a;">🔒 Sessão inválida ou expirada</h1>
+      <p style="margin-top: 1rem; color: #444;">Você será redirecionado para a tela de login em 5 segundos.</p>
     </div>
   `;
 
-  setTimeout(() => {
-    window.location.href = 'index.html';
-  }, 5000);
+  // Caso esteja rodando dentro de um iframe
+  if (window.top !== window.self) {
+    setTimeout(() => {
+      window.parent.postMessage({ tipo: "logout" }, "*");
+    }, 5000);
+  } else {
+    // Se estiver acessando diretamente (sem iframe)
+    setTimeout(() => {
+      if (!location.pathname.includes("index.html")) {
+        window.location.href = "index.html";
+      }
+    }, 5000);
+  }
 }
+
+
+
