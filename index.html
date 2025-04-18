@@ -10,11 +10,18 @@
     body {
       font-family: 'Carlito', sans-serif;
       background-color: #f3f4f6;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #login {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      flex-grow: 1;
     }
 
     main {
@@ -44,7 +51,6 @@
       margin-bottom: 1.25rem;
     }
 
-    /* Estilos personalizados que ignoram o Pico */
     .compacto {
       all: unset;
       font-family: 'Carlito', sans-serif;
@@ -82,15 +88,22 @@
       margin-top: 1rem;
     }
 
-main.sucesso {
-  border: 2px solid #22c55e; /* verde-500 */
-  box-shadow: 0 0 0 3px #bbf7d0; /* sombra verde clara */
-}
+    main.sucesso {
+      border: 2px solid #22c55e;
+      box-shadow: 0 0 0 3px #bbf7d0;
+    }
 
-    
+    #appFrame {
+      width: 100%;
+      height: 100vh;
+      border: none;
+      display: none;
+    }
   </style>
 </head>
 <body>
+
+<div id="login">
   <main>
     <div class="logo">🎓</div>
     <h2>Acesso à Plataforma</h2>
@@ -100,60 +113,78 @@ main.sucesso {
     <button id="btnEntrar" class="compacto">Entrar</button>
     <p id="msg"></p>
   </main>
+</div>
 
-  
+<iframe id="appFrame" src=""></iframe>
+
 <script type="module">
+  import { salvarSessao } from './js/bootstrap.js';
 
-
-import { salvarSessao } from './js/bootstrap.js';
-
-const supabase = window.supabase;
-
-
-document.getElementById('btnEntrar').addEventListener('click', async () => {
-  const codigo = document.getElementById('codigo').value.trim().toUpperCase();
+  const supabase = window.supabase;
+  const btnEntrar = document.getElementById('btnEntrar');
   const msg = document.getElementById('msg');
-  msg.textContent = '';
-  msg.style.color = '#4b5563';
+  const iframe = document.getElementById('appFrame');
+  const loginDiv = document.getElementById('login');
 
-  if (!codigo || codigo.length < 4) {
-    msg.textContent = 'Por favor, informe um código válido.';
-    msg.style.color = 'red';
-    return;
-  }
+  btnEntrar.addEventListener('click', async () => {
+    const codigo = document.getElementById('codigo').value.trim().toUpperCase();
+    msg.textContent = '';
+    msg.style.color = '#4b5563';
 
-  const { data, error } = await supabase
-    .from('users')
-    .select('id, name, role')
-    .eq('codigo_acesso', codigo)
-    .maybeSingle();
+    if (!codigo || codigo.length < 4) {
+      msg.textContent = 'Por favor, informe um código válido.';
+      msg.style.color = 'red';
+      return;
+    }
 
-  if (error || !data) {
-    msg.textContent = 'Código não encontrado.';
-    msg.style.color = 'red';
-    return;
-  }
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, name, role')
+      .eq('codigo_acesso', codigo)
+      .maybeSingle();
 
-  // Salva no localStorage
-  salvarSessao({ id: data.id, name: data.name });
+    if (error || !data) {
+      msg.textContent = 'Código não encontrado.';
+      msg.style.color = 'red';
+      return;
+    }
 
-  msg.textContent = 'Acesso liberado! Redirecionando...';
-  msg.style.color = 'green';
-  document.querySelector('main').classList.add('sucesso');
+    const user = { id: data.id, name: data.name, role: data.role };
 
-  const destino =
-    data.role === 'admin' ? 'admin.html' :
-    data.role === 'teacher' ? 'professor.html' :
-    'aluno.html';
+    salvarSessao(user);
+    msg.textContent = 'Acesso liberado! Carregando...';
+    msg.style.color = 'green';
+    document.querySelector('main').classList.add('sucesso');
 
-  setTimeout(() => {
-    window.location.href = destino;
+    // Oculta login e mostra o iframe
+    loginDiv.style.display = 'none';
+    iframe.style.display = 'block';
 
-  }, 1000);
-});
+    // Define página inicial no iframe
+    const paginaInicial = user.role === 'admin'
+      ? 'admin.html'
+      : user.role === 'teacher'
+        ? 'professor.html'
+        : 'aluno.html';
 
+    iframe.src = paginaInicial;
 
-  
+    // Aguarda carregamento e envia dados da sessão
+    iframe.onload = () => {
+      iframe.contentWindow.postMessage({ tipo: 'sessao', dados: user }, '*');
+    };
+  });
+
+  // Caso o iframe peça redirecionamento interno (ex: curso.html)
+  window.addEventListener('message', (event) => {
+    if (event?.data?.tipo === 'abrirCurso' && event.data.course_id) {
+      const user = JSON.parse(localStorage.getItem('sessaoAcademy'));
+      iframe.src = 'curso.html';
+      iframe.onload = () => {
+        iframe.contentWindow.postMessage({ tipo: 'curso', dados: { user, courseId: event.data.course_id } }, '*');
+      };
+    }
+  });
 </script>
 
 </body>
