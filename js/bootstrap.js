@@ -12,32 +12,14 @@ import { verificarConclusaoAula } from './verificarConclusaoAula.js';
 import { carregarProgressoCurso } from './carregarProgressoCurso.js';
 
 import { supabase } from './supabaseClient.js';
+import { verificarLoginObrigatorio, logout, salvarSessao } from './auth.js'; // ✅ Centralizado
 
 window.supabase = supabase;
 
-// 🌐 Params da URL
+// 🌐 Params da URL (se necessários em algumas páginas)
 const url = new URL(location.href);
 window.user_id = url.searchParams.get('user_id');
 window.course_id = url.searchParams.get('course_id');
-
-// ✅ Funções de sessão reutilizáveis
-export async function salvarSessao({ id, name }) {
-  localStorage.setItem('user_id', id);
-  localStorage.setItem('user_name', name);
-}
-
-
-export async function logout() {
-  try {
-    await supabase.auth.signOut(); // caso use autenticação Supabase
-  } catch (e) {
-    console.warn("Erro ao fazer logout:", e);
-  }
-
-  localStorage.clear();
-  sessionStorage.clear();
-  window.location.href = '/';
-}
 
 // 📦 Exporta funções globais para o navegador (facultativo)
 window.trackProgress = trackProgress;
@@ -61,7 +43,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// 🚀 Execução principal (condicional, se estiver na tela de curso)
+// 🚀 Execução principal (somente se URL tiver user_id e course_id)
 document.addEventListener("DOMContentLoaded", async () => {
   if (!window.user_id || !window.course_id) return;
 
@@ -87,7 +69,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-export { supabase };
-
-export { verificarLoginObrigatorio, logout, salvarSessao } from './auth.js';
-
+// ✅ Exportações limpas
+export {
+  supabase,
+  verificarLoginObrigatorio,
+  logout,
+  salvarSessao
+};
