@@ -1,4 +1,5 @@
-import { exibirMensagemAluno } from './narrativa.js';
+import { exibirMensagemAluno, narrar } from './narrativa.js';
+
 
 if (typeof window !== 'undefined') {
   window.exibirMensagemAluno = exibirMensagemAluno;
