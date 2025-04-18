@@ -70,52 +70,89 @@
       </button>
 
 <button
-  class="botaoEstiloso"
+  class="bg-blue-600 text-white font-bold py-2 px-4 rounded shadow hover:bg-blue-700 transition"
   onclick="
     (async () => {
+      console.log('🚀 Iniciando rotina de atualização de progresso...');
+      
       const uid = window.user_id;
       const cid = window.course_id;
       const supa = window.supabase;
 
+      console.log('🔍 Variáveis iniciais:', { uid, cid, supa });
+
       if (!uid || !cid || !supa) {
-        alert('⚠️ Dados insuficientes para atualizar progresso.');
+        console.warn('⚠️ user_id, course_id ou supabase não disponíveis.');
+        alert('⚠️ Não foi possível obter dados do usuário, curso ou Supabase.');
         return;
       }
 
       try {
-        const { data: aulas, error } = await supa
+        console.log('📡 Consultando todas as aulas do curso...');
+        const { data: aulas, error: erroAulas } = await supa
           .from('aulas')
           .select('id')
           .eq('curso_id', cid);
 
-        if (error) throw error;
+        if (erroAulas) {
+          console.error('❌ Erro ao buscar aulas:', erroAulas);
+          throw new Error('Erro ao consultar aulas do curso.');
+        }
 
-        const { data: concluidas, error: erro2 } = await supa
+        console.log(`📚 Total de aulas encontradas: ${aulas.length}`, aulas);
+
+        console.log('📡 Consultando aulas concluídas pelo aluno...');
+        const { data: concluidas, error: erroProgresso } = await supa
           .from('progresso_aulas')
           .select('id_aula')
           .eq('id_aluno', uid)
           .eq('id_curso', cid)
           .eq('concluida', true);
 
-        if (erro2) throw erro2;
+        if (erroProgresso) {
+          console.error('❌ Erro ao buscar progresso:', erroProgresso);
+          throw new Error('Erro ao consultar aulas concluídas.');
+        }
+
+        console.log(`✅ Total de aulas concluídas: ${concluidas.length}`, concluidas);
 
         const total = aulas?.length || 0;
         const feitas = concluidas?.length || 0;
         const percentual = total ? Math.round((feitas / total) * 100) : 0;
 
-        document.getElementById('barraProgresso').style.width = percentual + '%';
-        document.getElementById('textoProgresso').textContent = percentual + '%';
+        console.log(`📊 Progresso calculado: ${feitas}/${total} aulas = ${percentual}%`);
 
-        alert('✅ Progresso atualizado com sucesso!');
+        // Atualiza barra visualmente
+        const barra = document.getElementById('barraProgresso');
+        const texto = document.getElementById('textoProgresso');
+
+        if (barra) {
+          barra.style.width = percentual + '%';
+          console.log('🎨 Barra de progresso atualizada.');
+        } else {
+          console.warn('⚠️ Elemento da barra de progresso não encontrado.');
+        }
+
+        if (texto) {
+          texto.textContent = `${percentual}%`;
+          console.log('📝 Texto de progresso atualizado.');
+        } else {
+          console.warn('⚠️ Elemento de texto de progresso não encontrado.');
+        }
+
+        alert(`✅ Progresso atualizado com sucesso: ${feitas}/${total} aulas (${percentual}%)`);
       } catch (e) {
-        console.error(e);
-        alert('❌ Erro ao tentar atualizar o progresso.');
+        console.error('🔥 ERRO GERAL na atualização de progresso:', e);
+        alert('❌ Falha ao atualizar progresso.\n\n' + (e.message || JSON.stringify(e)));
       }
+
+      console.log('🏁 Fim da rotina de atualização de progresso.');
     })();
   "
 >
   🔄 Atualizar Progresso
 </button>
+
 
       
     </div>
