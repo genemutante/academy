@@ -254,11 +254,44 @@ if (logAnterior) {
   (async () => {
     console.log("📦 Iniciando verificação de sessão...");
 
-    const sessao = await verificarLoginObrigatorio();
-    if (!sessao) {
-      console.warn("⛔ Sessão inválida ou não encontrada. Redirecionando...");
-      return;
-    }
+if (!sessao) {
+  console.warn("⛔ Sessão inválida ou não encontrada.");
+
+  const courseId = new URL(location.href).searchParams.get("course_id") || '---';
+  const userId = localStorage.getItem('user_id') || '---';
+
+  // Cria mensagem temporária
+  const msgBox = document.createElement("div");
+  msgBox.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background-color: #15803d;
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-family: 'Outfit', sans-serif;
+      z-index: 9999;
+      max-width: 340px;
+    ">
+      <strong>🔒 Sessão ativa</strong><br/>
+      <b>Usuário:</b> ${userId}<br/>
+      <b>Curso:</b> ${courseId}
+    </div>
+  `;
+  document.body.appendChild(msgBox);
+
+  setTimeout(() => {
+    msgBox.remove();
+    console.log("⏳ Redirecionando após exibir mensagem de sessão...");
+    window.location.href = "aluno.html";
+  }, 10000);
+
+  return;
+}
+
 
     const userId = sessao.userId;
     const userName = sessao.userName;
