@@ -51,10 +51,13 @@
 
   <!-- Cabeçalho -->
   <header class="bg-primary-600 text-white h-14 flex items-center shadow-md">
+  
     <div class="max-w-6xl mx-auto px-4 w-full flex justify-between items-center">
-      <h1 class="text-xl font-display font-bold tracking-tight">Academy-Tools</h1>
+	  
+	  
+      <h1 class="text-lg font-bold tracking-tight">🎓 Academy-Tools</h1>
 
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <span id="nomeAluno" class="text-sm font-bold bg-white/10 px-3 py-1 rounded-full text-white shadow-sm hover:bg-white/20 transition">
           Nome do Aluno
         </span>
@@ -69,39 +72,39 @@
         🚪 Sair
       </button>
 
-<button class="hidden" onclick="(async () => {
-  console.log('🚀 Iniciando rotina de atualização de progresso manual...');
-
-  const barra = document.getElementById('barraProgresso');
-  const texto = document.getElementById('textoProgresso');
-  const aulas = window.aulas || [];
-
-  if (!Array.isArray(aulas) || aulas.length === 0) {
-    alert('⚠️ Nenhuma aula disponível para atualizar progresso.');
-    console.warn('⚠️ Nenhuma aula disponível para cálculo de progresso.');
-    return;
-  }
-
-  let pontos = 0;
-  const totalPontos = aulas.length * 2;
-
-  aulas.forEach(aula => {
-    if (aula.status === '✔ Concluída') pontos++;
-    if (aula.quizEnviado === true) pontos++;
-  });
-
-  const percentual = Math.floor((pontos / totalPontos) * 100);
-
-  if (barra) barra.style.width = `${percentual}%`;
-  if (texto) texto.textContent = `${percentual}%`;
-
-  console.log(`📊 Progresso do curso atualizado: ${pontos}/${totalPontos} pontos = ${percentual}%`);
-
-  alert(`✅ Progresso atualizado com sucesso!\n\n${percentual}% concluído.`);
-})()" class="botaoPrimario">
-  📈 Atualizar Progresso
-</button>
-
+         <button class="hidden" onclick="(async () => {
+           console.log('🚀 Iniciando rotina de atualização de progresso manual...');
+         
+           const barra = document.getElementById('barraProgresso');
+           const texto = document.getElementById('textoProgresso');
+           const aulas = window.aulas || [];
+         
+           if (!Array.isArray(aulas) || aulas.length === 0) {
+             alert('⚠️ Nenhuma aula disponível para atualizar progresso.');
+             console.warn('⚠️ Nenhuma aula disponível para cálculo de progresso.');
+             return;
+           }
+         
+           let pontos = 0;
+           const totalPontos = aulas.length * 2;
+         
+           aulas.forEach(aula => {
+             if (aula.status === '✔ Concluída') pontos++;
+             if (aula.quizEnviado === true) pontos++;
+           });
+         
+           const percentual = Math.floor((pontos / totalPontos) * 100);
+         
+           if (barra) barra.style.width = `${percentual}%`;
+           if (texto) texto.textContent = `${percentual}%`;
+         
+           console.log(`📊 Progresso do curso atualizado: ${pontos}/${totalPontos} pontos = ${percentual}%`);
+         
+           alert(`✅ Progresso atualizado com sucesso!\n\n${percentual}% concluído.`);
+         })()" class="botaoPrimario">
+           📈 Atualizar Progresso
+         </button>
+         
 
 
       
