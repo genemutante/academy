@@ -1,9 +1,9 @@
 const { createClient } = require('@supabase/supabase-js')
 
-const client = createClient(
-  'https://bkueljjvhijojzcyodvk.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdWVsamp2aGlqb2p6Y3lvZHZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzUwNTQ4OSwiZXhwIjoyMDU5MDgxNDg5fQ.o-G5KmxoyfQjeNM5e7rbgxpryOHYC9k1OIo9fYzyeYE'
-)
+const supabase = createClient(
+    'https://hiigckoowkrpewlybfef.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaWdja29vd2tycGV3bHliZmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MTc3NzIsImV4cCI6MjA4MzI5Mzc3Mn0.b5Uf3GXkE_jOVE0J1h3ssWdldiFjm6qQ1yUZr_Mu3Oo'
+  );
 
 exports.handler = async (event) => {
   const { user_id, course_id } = event.queryStringParameters
@@ -36,3 +36,4 @@ exports.handler = async (event) => {
     body: JSON.stringify(data || {})
   }
 }
+
