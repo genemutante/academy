@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-  <style>
+  <style> 
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Outfit:wght@300;400;600&display=swap');
     body { font-family: 'Outfit', sans-serif; }
     .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
@@ -50,9 +50,9 @@
   <script type="module">
     // --- CONFIGURAÇÃO SUPABASE ---
     const SUPABASE_URL = 'https://hiigckoowkrpewlybfef.supabase.co',
-    const SUPABASE_KEY = 'SUA_ANON_KEY_AQUI'; // <--- INSIRA A SUA ANON KEY DO SUPABASE AQUI
-    const _supabase = supabase.createClient('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaWdja29vd2tycGV3bHliZmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MTc3NzIsImV4cCI6MjA4MzI5Mzc3Mn0.b5Uf3GXkE_jOVE0J1h3ssWdldiFjm6qQ1yUZr_Mu3Oo');
-    // --- ESTADO DO QUIZ ---
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaWdja29vd2tycGV3bHliZmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MTc3NzIsImV4cCI6MjA4MzI5Mzc3Mn0.b5Uf3GXkE_jOVE0J1h3ssWdldiFjm6qQ1yUZr_Mu3Oo';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
     let questions = [];
     let currentStep = 0;
     let userAnswers = {};
