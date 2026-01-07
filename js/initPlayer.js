@@ -49,23 +49,47 @@ export async function initPlayer() {
 }
 
 // NOVA FUNÇÃO: Força a conclusão quando o vídeo termina
+// Dentro do initPlayer.js
+
 async function onPlayerStateChange(event) {
-  // YT.PlayerState.ENDED = 0 (Vídeo finalizado)
+  // YT.PlayerState.ENDED = 0
   if (event.data === YT.PlayerState.ENDED) {
-    console.log("🏁 Vídeo finalizado! Forçando gravação do checkpoint final...");
+    console.log("🏁 Vídeo finalizado! Forçando gravação no banco...");
     
     const duration = Math.floor(event.target.getDuration());
-    
-    // 1. Envia o último segmento cobrindo o final do vídeo
-    // Usamos start = duration - 1 para garantir que o range cubra o fim
-    await supabase.from('progress_segments').insert({
-      user_id: window.user_id,
-      lesson_id: window.aulaAtual.id,
-      segment: { start: Math.max(0, duration - 5), end: duration }
-    });
+    const userId = window.user_id;
+    const lessonId = window.aulaAtual.id;
 
-    // 2. Executa a lógica de conclusão que já existia no seu código original
-    await finalizarAulaCompletamente();
+    // Criamos um segmento pequeno que "fecha" o vídeo (ex: do 478 ao 483)
+    // Usamos o maiorTempoVisualizado como início para garantir continuidade
+    const inicioSegmentoFinal = window.maiorTempoVisualizado || (duration - 5);
+
+    try {
+      const { error } = await supabase
+        .from('progress_segments')
+        .insert([
+          {
+            user_id: userId,
+            lesson_id: lessonId,
+            // Importante: o objeto segment deve bater com o que sua função espera
+            segment: { start: inicioSegmentoFinal, end: duration } 
+          }
+        ]);
+
+      if (error) {
+        console.error("❌ Erro ao gravar progresso final:", error.message);
+      } else {
+        console.log("✅ Checkpoint final gravado com sucesso no banco!");
+        // Após gravar, atualizamos a UI e as variáveis globais
+        window.maiorTempoVisualizado = duration;
+        window.pontoRetomada = duration;
+        
+        // Executa a lógica de conclusão (liberar quiz, transição, etc)
+        await finalizarAulaCompletamente();
+      }
+    } catch (e) {
+      console.error("❌ Falha na comunicação com o banco:", e);
+    }
   }
 }
 
