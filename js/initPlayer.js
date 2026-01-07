@@ -17,17 +17,17 @@ export function loadYouTubeAPI() {
 }
 
 export async function initPlayer() {
-  // 🧹 Destroi player anterior
   if (window.player && typeof window.player.destroy === 'function') {
     window.player.destroy();
     window.player = null;
-    document.getElementById('videoPlayer').innerHTML = '';
-    narrar("♻️ Player anterior destruído e DOM limpo.", "info");
+    const container = document.getElementById('videoPlayer');
+    if (container) container.innerHTML = '';
+    narrar("♻️ Player anterior destruído.", "info");
   }
 
   const videoId = getYouTubeId(window.aulaAtual.youtube_url);
   if (!videoId) {
-    narrar("❌ Erro: vídeo do YouTube não encontrado para esta aula.", "error");
+    narrar("❌ Erro: vídeo não encontrado.", "error");
     return;
   }
 
@@ -36,54 +36,71 @@ export async function initPlayer() {
   window.player = new YT.Player('videoPlayer', {
     videoId,
     playerVars: {
-      origin: location.origin,
-      enablejsapi: 1,
+      autoplay: 1,
       modestbranding: 1,
       rel: 0,
-      controls: 1,
-      disablekb: 1,
-      fs: 0,
-      iv_load_policy: 3,
-      showinfo: 0
+      origin: window.location.origin
     },
     events: {
       onReady: onPlayerReady,
-      onStateChange: async (event) => {
-        if (event.data === YT.PlayerState.ENDED) {
-          console.log("🏁 Vídeo finalizado!");
-          await trackProgress();
-
-          const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-            p_user_id: window.user_id,
-            p_lesson_id: window.aulaAtual.id
-          });
-
-          const aulaFinalizada = progressoAtualizado?.[0]?.status === '✔ Concluída';
-          const quizRespondido = await verificarQuizRespondido(window.user_id, window.aulaAtual.id);
-
-          if (aulaFinalizada && quizRespondido) {
-            const progressoEl = document.getElementById("progressoTexto");
-            const sugestaoEl = document.getElementById("recomecarSugestao");
-            if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
-            if (sugestaoEl) sugestaoEl.innerHTML = "";
-
-            await habilitarQuiz(window.aulaAtual.id);
-            listarAulas();
-            carregarProgressoCurso();
-
-            const atualIndex = window.aulas.findIndex(a => a.id === window.aulaAtual.id);
-            const proxima = window.aulas[atualIndex + 1];
-            if (proxima) {
-              mostrarTransicaoParaProximaAula(proxima, window.selecionarAula);
-            } else {
-              exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
-            }
-          } else {
-            narrar("⛔ Aula finalizada, mas avaliação pendente. Não avançará automaticamente.", "warning");
-            exibirMensagemAluno("📋 Aula assistida! Responda a avaliação para avançar.", "warning");
-          }
-        }
-      }
+      onStateChange: onPlayerStateChange // <--- ADICIONADO: Captura mudança de estado
     }
   });
+}
+
+// NOVA FUNÇÃO: Força a conclusão quando o vídeo termina
+async function onPlayerStateChange(event) {
+  // YT.PlayerState.ENDED = 0 (Vídeo finalizado)
+  if (event.data === YT.PlayerState.ENDED) {
+    console.log("🏁 Vídeo finalizado! Forçando gravação do checkpoint final...");
+    
+    const duration = Math.floor(event.target.getDuration());
+    
+    // 1. Envia o último segmento cobrindo o final do vídeo
+    // Usamos start = duration - 1 para garantir que o range cubra o fim
+    await supabase.from('progress_segments').insert({
+      user_id: window.user_id,
+      lesson_id: window.aulaAtual.id,
+      segment: { start: Math.max(0, duration - 5), end: duration }
+    });
+
+    // 2. Executa a lógica de conclusão que já existia no seu código original
+    await finalizarAulaCompletamente();
+  }
+}
+
+async function finalizarAulaCompletamente() {
+  await trackProgress(); // Uma última execução do rastreador
+
+  const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+    p_user_id: window.user_id,
+    p_lesson_id: window.aulaAtual.id
+  });
+
+  const aulaFinalizada = progressoAtualizado?.[0]?.status === '✔ Concluída';
+  const quizRespondido = await verificarQuizRespondido(window.user_id, window.aulaAtual.id);
+
+  if (aulaFinalizada) {
+    const progressoEl = document.getElementById("progressoTexto");
+    const sugestaoEl = document.getElementById("recomecarSugestao");
+    if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
+    if (sugestaoEl) sugestaoEl.innerHTML = "";
+
+    await habilitarQuiz(window.aulaAtual.id);
+    listarAulas();
+    carregarProgressoCurso();
+
+    if (quizRespondido) {
+      const atualIndex = window.aulas.findIndex(a => a.id === window.aulaAtual.id);
+      const proxima = window.aulas[atualIndex + 1];
+      if (proxima) {
+        mostrarTransicaoParaProximaAula(proxima, window.selecionarAula);
+      } else {
+        exibirMensagemAluno("🏁 Fim do curso. Parabéns!", "success");
+      }
+    } else {
+      narrar("📋 Aula assistida! Responda a avaliação para avançar.", "warning");
+      exibirMensagemAluno("📋 Aula assistida! Responda a avaliação para avançar.", "warning");
+    }
+  }
 }
