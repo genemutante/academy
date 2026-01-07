@@ -3,664 +3,201 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avaliação da Jornada do Aluno</title>
+  <title>Avaliação da Aula</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'media',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Outfit', 'sans-serif'],
-            display: ['Nunito', 'sans-serif']
-          },
-          colors: {
-            primary: { 50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 400: '#60A5FA', 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 800: '#1E40AF', 900: '#1E3A8A' },
-            surface: { 50: '#F8FAFC', 100: '#F1F5F9', 800: '#1E293B', 900: '#0F172A' },
-            accent: { 400: '#38BDF8', 500: '#0EA5E9' }
-          },
-          boxShadow: {
-            glow: '0 0 20px rgba(56, 189, 248, 0.3)',
-            'glow-lg': '0 0 30px rgba(56, 189, 248, 0.2)'
-          },
-          borderRadius: {
-            xl: '1rem', '2xl': '1.5rem', '3xl': '2rem'
-          }
-        }
-      }
-    }
-  </script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Outfit:wght@300;400;600&display=swap');
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    .option-card { transition: all 0.2s ease; border: 2px solid transparent; }
+    .option-card:hover { border-color: #3B82F6; background: #EFF6FF; }
+    .option-card.selected { border-color: #2563EB; background: #DBEAFE; }
+  </style>
 </head>
+<body class="bg-slate-50 min-h-screen font-['Outfit']">
 
-  
-<body class="font-sans antialiased p-4 md:p-8 min-h-screen flex items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800 transition-colors duration-300">
-
-  
-<div class="flex justify-center items-start gap-6 w-full">
-  <!-- Barra lateral de navegação -->
-  <div id="questionNav" class="hidden md:flex flex-col gap-2 pt-2">
-    <!-- Botões são inseridos dinamicamente -->
+  <div id="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-white">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
   </div>
 
-  <!-- Painel principal do quiz -->
-  <div class="w-full max-w-none bg-white dark:bg-slate-800 text-slate-800 dark:text-white px-4 py-2 md:px-6 md:py-3 rounded-2xl shadow-xl space-y-4 min-h-[540px] relative" id="quizContainer">
-
-    
-    <!-- ⏱️ Temporizador fixo no topo direito -->
-<div id="timer" class="absolute -top-2 -right-2 bg-primary-600 text-white tracking-tight text-xs px-2.5 py-1 text-xs uppercase tracking-wider font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-md z-10">
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6a8 8 0 100 12 8 8 0 000-12zm0 2v4l2.5 2.5" />
-  </svg>
-  <span id="timerValue">--:--</span>
-</div>
-
-
-    <div class="mb-2">
-    <h1 class="font-display text-2xl md:text-3xl font-bold tracking-tight leading-tight text-slate-900 dark:text-white mb-1 bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent">
-  Avaliação da Jornada do Aluno
-    </h1>
-
-      
-   
-    </div>
- 
-
-
-    <div id="stepContent" class="transition-all duration-500 ease-in-out min-h-[260px] flex flex-col gap-4"></div>
-
-    <div class="flex justify-between gap-3 mt-8">
-      <button id="btnBack" class="px-3 py-1.5 rounded font-semibold min-w-[100px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium disabled:opacity-40 transition hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 shadow-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Voltar
-      </button>
-      <button id="btnNext"class="px-3 py-1.5 rounded font-semibold min-w-[100px] bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white font-medium shadow-md hover:shadow-lg transition duration-200 flex items-center gap-2">
-        Avançar
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <script>
-    const supabase = window.supabase.createClient(
-    'https://hiigckoowkrpewlybfef.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaWdja29vd2tycGV3bHliZmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MTc3NzIsImV4cCI6MjA4MzI5Mzc3Mn0.b5Uf3GXkE_jOVE0J1h3ssWdldiFjm6qQ1yUZr_Mu3Oo'
-    );;
-
-
-const params = new URLSearchParams(window.location.search);
-const userId = params.get('user_id');
-const lessonId = params.get('lesson_id');
-
-// Agora que os valores foram definidos, podemos usar:
-const storageKey = `quiz-${userId}-${lessonId}`;
-
-
-    let currentStep = 0;
-    let steps = [];
-    const answers = {};
-    let timerInterval;
-    const tempoPorPergunta = 5 * 60; // 5 minutos em segundos (ajustável)
-    let tempoRestante = 0;
-
-    const stepContent = document.getElementById('stepContent');
-
-    const progressText = document.getElementById('progressText');
-    const timerEl = document.getElementById('timer');
-    const btnNext = document.getElementById('btnNext');
-    const btnBack = document.getElementById('btnBack');
-
-    function iniciarTimerGlobal() {
-      clearInterval(timerInterval);
-      updateTimer();
-      timerInterval = setInterval(() => {
-        tempoRestante--;
-        updateTimer();
-        if (tempoRestante <= 0) {
-          clearInterval(timerInterval);
-          enviarRespostas();
-        }
-      }, 1000);
-    }
-
-function updateTimer() {
-  const m = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
-  const s = String(tempoRestante % 60).padStart(2, '0');
-  document.getElementById('timerValue').textContent = `${m}:${s}`;
-
-  const perc = ((tempoRestante / (steps.length * tempoPorPergunta)) * 100).toFixed(2);
-
-// Atualiza a barra com suavidade
-gsap.to("#progressBarGlobal", {
-  width: `${perc}%`,
-  duration: 0.8,
-  ease: "power2.out"
-});
-
-
-  if (tempoRestante < 60) {
-    document.getElementById('timer').classList.add('timer-warning');
-  } else {
-    document.getElementById('timer').classList.remove('timer-warning');
-  }
-
-
-}
-
-
-    async function loadQuiz() {
-      stepContent.innerHTML = `
-        <div class="flex items-center justify-center h-full">
-          <div class="flex flex-col items-center">
-            <svg class="animate-spin h-8 w-8 text-primary-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p class="text-slate-600 dark:text-slate-300 text-sm font-medium">Carregando quiz...</p>
-          </div>
+  <div class="max-w-2xl mx-auto px-4 py-8">
+    <div id="quiz-container" class="hidden">
+      <div class="mb-8 text-center">
+        <h1 id="lesson-title" class="text-2xl font-bold text-slate-800 font-['Nunito'] mb-2">Avaliação</h1>
+        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+          <div id="progress-bar" class="bg-blue-600 h-full w-0 transition-all duration-500"></div>
         </div>
-      `;
-      
-      const { data, error } = await supabase.from('quiz_view').select('*').eq('id_aula', lessonId);
-      if (error || !data || data.length === 0) {
-        stepContent.innerHTML = `
-          <div class="flex items-center justify-center h-full">
-            <div class="text-center p-6 bg-red-50 dark:bg-red-900/30 rounded-xl border border-red-200 dark:border-red-800">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p class="text-red-700 dark:text-red-300 font-medium">Erro ao carregar perguntas.</p>
-              <p class="text-red-600 dark:text-red-400 text-sm mt-2">Verifique sua conexão ou tente novamente mais tarde.</p>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      const grouped = {};
-      data.forEach(row => {
-        const pid = row.id_pergunta;
-        if (!grouped[pid]) {
-          grouped[pid] = {
-            type: 'quiz',
-            id: pid,
-            question: row.pergunta,
-            quiz_id: row.id_quiz,
-            options: []
-          };
-        }
-        grouped[pid].options.push({ text: row.alternativa, is_correct: row.is_correct });
-      });
-
-      steps = Object.values(grouped);
-      steps.push(
-        { type: 'qual', id: 'aprendizado', question: 'Como você se sentiu em relação ao seu aprendizado durante esta aula?', options: ['Aprendi com facilidade e me senti engajado', 'Aprendi com algum esforço', 'Tive dificuldades', 'Não me conectei'] },
-        { type: 'qual', id: 'sentido', question: 'O conteúdo desta aula fez sentido para você?', options: ['Contribuiu muito', 'Parcialmente', 'Pouco', 'Não fez sentido'] },
-        { type: 'qual', id: 'relevancia', question: 'Este tema dialoga com suas necessidades?', options: ['Totalmente', 'Em parte', 'Pouco', 'Não dialoga'] }
-      );
-
-      const saved = localStorage.getItem(storageKey);
-if (saved) {
-  Object.assign(answers, JSON.parse(saved));
-}
-
-
-      tempoRestante = steps.length * tempoPorPergunta;
-      inicioProva = Date.now(); // captura o início em milissegundos
-      renderStep();
-      iniciarTimerGlobal();
-    }
-
-
-
-function renderQuestionNavigator() {
-  const navContainer = document.getElementById('questionNav');
-  if (!navContainer || steps.length === 0) return;
-
-  navContainer.innerHTML = '';
-
-  steps.forEach((step, index) => {
-    const btn = document.createElement('button');
-    btn.className = `w-10 h-10 rounded-full text-sm font-bold transition-all border focus:outline-none
-      ${index === currentStep ? 'bg-primary-600 text-white border-primary-700' :
-      answers[step.id] !== undefined ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' :
-      'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'}`;
-
-    btn.textContent = index + 1;
-    btn.title = step.question.slice(0, 40);
-
-    btn.addEventListener('click', () => {
-      currentStep = index;
-      renderStep();
-    });
-
-    navContainer.appendChild(btn);
-  });
-}
-
-// Atualiza também o renderizador principal para incluir o navigator
-   
-    function renderStep() {
-      const step = steps[currentStep];
-      stepContent.innerHTML = '';
-      
-
-      // Adicionar subtítulo com ícone e estilo especial de acordo com o tipo de pergunta
-      const headerContainer = document.createElement('div');
-      headerContainer.className = 'mb-6';
-      
-      // Determine o tipo de pergunta para mostrar o subtítulo apropriado
-      const isQuiz = step.type === 'quiz';
-      const subtitleBadge = document.createElement('div');
-      subtitleBadge.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white mb-3 ${isQuiz ? 'quiz-badge' : 'feedback-badge'}`;
-      
-      // Ícone diferente para cada tipo de pergunta
-      if (isQuiz) {
-        subtitleBadge.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-          </svg>
-          Avaliação de Conhecimento`;
-      } else {
-        subtitleBadge.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-          Feedback do Aluno`;
-      }
-      
-      headerContainer.appendChild(subtitleBadge);
-      
-      // Adicionar o título da pergunta com estilo aprimorado
-      const question = document.createElement('h2');
-      question.className = 'font-semibold text-lg mb-1 text-left text-rose-600 dark:text-rose-400 border-l-4 pl-3 border-rose-400';
-
-      question.textContent = step.question;
-      headerContainer.appendChild(question);
-      
-      // Adicionar uma breve descrição/orientação personalizada de acordo com o tipo de pergunta
-      const description = document.createElement('p');
-      description.className = 'text-sm text-slate-500 dark:text-slate-400 mt-1';
-      
-      if (isQuiz) {
-        description.textContent = 'Selecione a alternativa que melhor responde à questão apresentada.';
-      } else {
-        // Personalizar a descrição de acordo com a pergunta de feedback específica
-        if (step.id === 'aprendizado') {
-          description.textContent = 'Avalie sinceramente como você se sentiu em relação ao seu aprendizado nesta aula.';
-        } else if (step.id === 'sentido') {
-          description.textContent = 'Reflita sobre quão bem o conteúdo desta aula se conectou com você.';
-        } else if (step.id === 'relevancia') {
-          description.textContent = 'Sua opinião nos ajuda a melhorar nosso conteúdo para suas necessidades.';
-        }
-      }
-      
-      headerContainer.appendChild(description);
-      stepContent.appendChild(headerContainer);
-
-
-
-// Dentro da função renderStep(), depois do headerContainer:
-
-     
-
-      // Container para as opções
-      const optionsContainer = document.createElement('div');
-      optionsContainer.className = 'space-y-3 mt-2';
-      stepContent.appendChild(optionsContainer);
-
-      step.options.forEach((opt, idx) => {
-        const label = document.createElement('label');
-        label.className = 'block mb-3 p-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer transition relative';
-
-if (answers[step.id] == idx) {
-  label.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
-} else {
-  label.classList.add('hover:bg-blue-50', 'dark:hover:bg-slate-600');
-}
-
-        label.style.animationDelay = `${idx * 100}ms`;
-
-        if (answers[step.id] == idx) {
-          label.classList.add('option-selected');
-        }
-
-        // Criar efeito de hover com pseudo-elemento
-        const hoverEffect = document.createElement('div');
-        hoverEffect.className = 'absolute inset-0 bg-primary-50 dark:bg-primary-900/20 opacity-0 transition-opacity duration-200 pointer-events-none';
-        hoverEffect.style.zIndex = '0';
-        label.appendChild(hoverEffect);
-
-        const contentWrapper = document.createElement('div');
-        contentWrapper.className = 'flex items-center relative z-10';
-        
-        const radioWrapper = document.createElement('div');
-        radioWrapper.className = 'flex items-center justify-center h-5 w-5 rounded-full border-2 border-slate-300 dark:border-slate-600 mr-3 flex-shrink-0';
-        
-        const radioInner = document.createElement('div');
-        radioInner.className = 'h-2 w-2 rounded-full bg-primary-600 scale-0 transition-transform duration-200';
-        
-        const input = document.createElement('input');
-        input.type = 'radio';
-        input.name = step.id;
-        input.value = idx;
-        input.className = 'sr-only';
-
-        if (answers[step.id] == idx) {
-          radioWrapper.className = 'flex items-center justify-center h-5 w-5 rounded-full border-2 border-primary-500 mr-3 flex-shrink-0';
-          radioInner.className = 'h-2 w-2 rounded-full bg-primary-600 scale-100 transition-transform duration-200';
-        }
-
-        input.addEventListener('change', () => {
-          answers[step.id] = idx;
-          gsap.to(label, {
-            scale: 1.02,
-            duration: 0.2,
-            onComplete: () => {
-              gsap.to(label, {
-                scale: 1,
-                duration: 0.2
-              });
-            }
-          });
-          localStorage.setItem(storageKey, JSON.stringify(answers));
-          renderStep();
-        });
-
-
-        
-
-        radioWrapper.appendChild(radioInner);
-        contentWrapper.appendChild(radioWrapper);
-        contentWrapper.appendChild(document.createTextNode(opt.text || opt));
-        
-        label.appendChild(input);
-        label.appendChild(contentWrapper);
-        
-        label.addEventListener('mouseenter', () => {
-          hoverEffect.style.opacity = '1';
-        });
-        
-        label.addEventListener('mouseleave', () => {
-          hoverEffect.style.opacity = '0';
-        });
-        
-        optionsContainer.appendChild(label);
-      });
-
-      btnBack.disabled = currentStep === 0;
-      btnNext.innerHTML = currentStep === steps.length - 1 ? 
-        'Finalizar <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>' : 
-        'Avançar <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>';
-   
-    renderQuestionNavigator(); 
-    
-    }
-
-    btnBack.addEventListener('click', () => {
-      if (currentStep > 0) {
-        gsap.to(stepContent, {
-          opacity: 0,
-          y: 20,
-          duration: 0.3,
-          onComplete: () => {
-            currentStep--;
-            renderStep();
-            gsap.to(stepContent, {
-              opacity: 1,
-              y: 0,
-              duration: 0.3
-            });
-          }
-        });
-      }
-    });
-
-    btnNext.addEventListener('click', () => {
-      const selected = answers[steps[currentStep].id];
-      if (selected === undefined) {
-        // Animação de shake para alertar o usuário
-        gsap.to(stepContent, {
-          x: 10,
-          duration: 0.1,
-          repeat: 3,
-          yoyo: true,
-          onComplete: () => {
-            gsap.set(stepContent, { x: 0 });
-          }
-        });
-        
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg transform translate-y-[-20px] opacity-0';
-        notification.textContent = 'Selecione uma opção para continuar';
-        document.body.appendChild(notification);
-        
-        gsap.to(notification, {
-          y: 0,
-          opacity: 1,
-          duration: 0.3,
-          onComplete: () => {
-            setTimeout(() => {
-              gsap.to(notification, {
-                y: -20,
-                opacity: 0,
-                duration: 0.3,
-                onComplete: () => {
-                  notification.remove();
-                }
-              });
-            }, 2000);
-          }
-        });
-        
-        return;
-      }
-      
-      if (currentStep < steps.length - 1) {
-        gsap.to(stepContent, {
-          opacity: 0,
-          y: -20,
-          duration: 0.3,
-          onComplete: () => {
-            currentStep++;
-            renderStep();
-            gsap.to(stepContent, {
-              opacity: 1,
-              y: 0,
-              duration: 0.3
-            });
-          }
-        });
-      } else {
-        enviarRespostas();
-      }
-    });
-
-
-// ENVIAR RESPOSTAS INÍCIO
-
-async function enviarRespostas() {
-  clearInterval(timerInterval);
-
-  const tempoFinal = Date.now();
-  const duracaoEmSegundos = Math.floor((tempoFinal - inicioProva) / 1000);
-  const minutos = Math.floor(duracaoEmSegundos / 60);
-  const segundos = duracaoEmSegundos % 60;
-  const tempoFormatado = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
-
-  btnNext.disabled = true;
-  btnNext.innerHTML = `
-    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-    Enviando...
-  `;
-
-  const quizSteps = steps.filter(s => s.type === 'quiz');
-  const feedbackSteps = steps.filter(s => s.type === 'qual');
-
-  const quizId = quizSteps[0]?.quiz_id || null;
-
-  const quizAnswers = quizSteps.map(s => ({
-    question_id: s.id,
-    selected_index: answers[s.id]
-  }));
-
-  const score = quizSteps.reduce((acc, s) => {
-    const opt = s.options[answers[s.id]];
-    return acc + (opt && opt.is_correct ? 1 : 0);
-  }, 0);
-
-  const payload = {
-    user_id: userId,
-    lesson_id: lessonId,
-    quiz_id: quizId,
-    answers: quizAnswers,
-    score,
-    total: quizAnswers.length,
-    aprendizado: steps.find(s => s.id === 'aprendizado')?.options[answers['aprendizado']],
-    sentido: steps.find(s => s.id === 'sentido')?.options[answers['sentido']],
-    relevancia: steps.find(s => s.id === 'relevancia')?.options[answers['relevancia']],
-    duracao_em_segundos: duracaoEmSegundos
-  };
-
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  const { error } = await supabase.from('user_quiz_results').insert(payload);
-  if (error) {
-    stepContent.innerHTML = `
-      <div class="text-center p-6 bg-red-50 dark:bg-red-900/30 rounded-xl border border-red-200 dark:border-red-600">
-        <h2 class="text-lg font-bold text-red-700 dark:text-red-300 mb-2">❌ Erro ao enviar respostas</h2>
-        <p class="text-sm">Tente novamente em instantes. Se o erro persistir, contate o suporte.</p>
+        <p id="step-indicator" class="text-sm text-slate-500 mt-2 font-medium">Pergunta 1 de 5</p>
       </div>
-    `;
-    return;
-  }
 
-  gsap.to(stepContent, {
-    opacity: 0,
-    scale: 0.95,
-    duration: 0.3,
-    onComplete: () => {
-      stepContent.innerHTML = `
-        <div class="text-center p-8 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800 relative overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-emerald-100/50 to-transparent dark:from-emerald-700/10 dark:to-transparent"></div>
-
-          <div class="relative z-10">
-            <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 mb-4 mx-auto">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
+      <div class="glass-card rounded-3xl p-8 shadow-xl border border-white mb-6">
+        <div id="question-content">
+          <h2 id="question-text" class="text-xl text-slate-800 font-semibold mb-6">Carregando pergunta...</h2>
+          <div id="options-container" class="space-y-3">
             </div>
+        </div>
+      </div>
 
-            <h2 class="text-2xl font-bold font-display text-emerald-700 dark:text-emerald-300 mb-2">Avaliação Concluída</h2>
-            <p class="text-emerald-600 dark:text-emerald-400 mb-6">
-              Suas respostas foram registradas com sucesso. <br/>Obrigado por participar!
-            </p>
+      <div class="flex justify-between items-center">
+        <button id="btn-back" class="px-6 py-3 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition invisible">Voltar</button>
+        <button id="btn-next" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>Avançar</button>
+      </div>
+    </div>
+  </div>
 
-            <div class="flex justify-center gap-4 flex-wrap">
-              <div class="inline-flex items-center bg-white dark:bg-emerald-900/30 px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                <div class="text-4xl font-bold text-emerald-600 dark:text-emerald-400 mr-3">${score}</div>
-                <div class="text-left">
-                  <div class="text-xs uppercase tracking-wide text-emerald-500 dark:text-emerald-500 font-medium">Acertos</div>
-                  <div class="text-emerald-700 dark:text-emerald-300">de ${quizAnswers.length} questões</div>
-                </div>
-              </div>
+  <script type="module">
+    // --- CONFIGURAÇÃO SUPABASE ---
+    const SUPABASE_URL = 'https://hiigckoowkrpewlybfef.supabase.co';
+    const SUPABASE_KEY = 'SUA_CHAVE_ANONIMA_AQUI'; // Certifique-se de que esta chave é a correta
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-              <div class="inline-flex items-center bg-white dark:bg-purple-900/20 px-4 py-3 rounded-lg border border-purple-200 dark:border-purple-800">
-                <div class="text-4xl font-bold text-purple-600 dark:text-purple-300 mr-3">${feedbackSteps.length}</div>
-                <div class="text-left">
-                  <div class="text-xs uppercase tracking-wide text-purple-500 dark:text-purple-400 font-medium">Feedback</div>
-                  <div class="text-purple-700 dark:text-purple-300">respostas recebidas</div>
-                </div>
-              </div>
+    // --- VARIÁVEIS DE ESTADO ---
+    let questions = [];
+    let currentStep = 0;
+    let userAnswers = {};
+    
+    // Captura parâmetros da URL
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get('user_id');
+    const lessonId = params.get('lesson_id');
+    const courseId = params.get('course_id');
 
-              <!-- Novo: tempo de conclusão -->
-              <div class="inline-flex items-center bg-white dark:bg-blue-900/20 px-4 py-3 rounded-lg border border-blue-200 dark:border-blue-600">
-                <div class="text-4xl font-bold text-blue-600 dark:text-blue-300 mr-3">${tempoFormatado}</div>
-                <div class="text-left">
-                  <div class="text-xs uppercase tracking-wide text-blue-500 dark:text-blue-400 font-medium">Tempo</div>
-                  <div class="text-blue-700 dark:text-blue-300">para concluir</div>
-                </div>
-              </div>
-            </div>
-          </div>
+    async function init() {
+      if (!lessonId || !userId) {
+        showError("Parâmetros de aula ou usuário ausentes na URL.");
+        return;
+      }
+
+      try {
+        console.log("🔍 Buscando perguntas para Lesson ID:", lessonId);
+        const { data, error } = await _supabase
+          .from('quiz_questions')
+          .select('*')
+          .eq('lesson_id', lessonId)
+          .order('order', { ascending: true });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          showError("Nenhuma pergunta encontrada para esta avaliação.");
+          return;
+        }
+
+        questions = data;
+        renderQuiz();
+      } catch (err) {
+        console.error("❌ Erro ao carregar quiz:", err);
+        showError("Falha na comunicação com o banco de dados.");
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('quiz-container').classList.remove('hidden');
+      }
+    }
+
+    function renderQuiz() {
+      const question = questions[currentStep];
+      const container = document.getElementById('options-container');
+      const text = document.getElementById('question-text');
+      const stepIndicator = document.getElementById('step-indicator');
+      const progressBar = document.getElementById('progress-bar');
+      const btnNext = document.getElementById('btn-next');
+      const btnBack = document.getElementById('btn-back');
+
+      // Atualiza interface
+      text.textContent = question.question_text;
+      stepIndicator.textContent = `Pergunta ${currentStep + 1} de ${questions.length}`;
+      progressBar.style.width = `${((currentStep + 1) / questions.length) * 100}%`;
+      
+      container.innerHTML = '';
+      
+      // Gera opções (A, B, C, D...)
+      const options = ['a', 'b', 'c', 'd', 'e'];
+      options.forEach(opt => {
+        if (question[`option_${opt}`]) {
+          const div = document.createElement('div');
+          div.className = `option-card p-4 rounded-2xl cursor-pointer border-2 ${userAnswers[currentStep] === opt ? 'selected' : 'border-slate-100'}`;
+          div.innerHTML = `<span class="font-bold mr-2 uppercase">${opt})</span> ${question[`option_${opt}`]}`;
+          div.onclick = () => selectOption(opt);
+          container.appendChild(div);
+        }
+      });
+
+      // Botões
+      btnBack.classList.toggle('invisible', currentStep === 0);
+      btnNext.textContent = currentStep === questions.length - 1 ? 'Finalizar' : 'Avançar';
+      btnNext.disabled = !userAnswers[currentStep];
+    }
+
+    function selectOption(opt) {
+      userAnswers[currentStep] = opt;
+      renderQuiz();
+    }
+
+    window.nextStep = async () => {
+      if (currentStep < questions.length - 1) {
+        currentStep++;
+        renderQuiz();
+      } else {
+        await finishQuiz();
+      }
+    };
+
+    window.prevStep = () => {
+      if (currentStep > 0) {
+        currentStep--;
+        renderQuiz();
+      }
+    };
+
+    async function finishQuiz() {
+      document.getElementById('loading').classList.remove('hidden');
+      
+      const score = questions.reduce((acc, q, idx) => {
+        return acc + (userAnswers[idx] === q.correct_option ? 1 : 0);
+      }, 0);
+
+      const percent = Math.round((score / questions.length) * 100);
+
+      try {
+        const { error } = await _supabase
+          .from('user_quiz_results')
+          .insert({
+            user_id: userId,
+            lesson_id: lessonId,
+            course_id: courseId,
+            score: percent,
+            answers: userAnswers
+          });
+
+        if (error) throw error;
+
+        // Feedback de sucesso e fechamento/redirecionamento
+        alert(`Parabéns! Você concluiu com ${percent}% de acerto.`);
+        window.parent.postMessage({ type: 'QUIZ_COMPLETE', lessonId }, '*');
+      } catch (err) {
+        console.error("Erro ao salvar resultado:", err);
+        alert("Erro ao salvar seu resultado. Tente novamente.");
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('quiz-container').innerHTML = `
+        <div class="text-center p-8 bg-red-50 rounded-3xl border border-red-100">
+          <div class="text-4xl mb-4">⚠️</div>
+          <h2 class="text-lg font-bold text-red-800 mb-2">Ops! Algo deu errado</h2>
+          <p class="text-red-600">${msg}</p>
         </div>
       `;
-
-      gsap.from(".inline-flex", {
-        scale: 0.8,
-        opacity: 0,
-        duration: 0.5,
-        delay: 0.3,
-        ease: "back.out(1.7)"
-      });
-
-      gsap.to(stepContent, {
-        opacity: 1,
-        scale: 1,
-        duration: 0.5
-      });
-    }
-  });
-
-  btnBack.style.display = 'none';
-  btnNext.style.display = 'none';
-  
-  localStorage.removeItem(storageKey);
-
-  //
-  // 🔄 Tentar simular clique na próxima aula após 6s
-setTimeout(() => {
-  const listaAulas = document.querySelectorAll('#listaAulas li');
-  let encontrouAtual = false;
-
-  for (const li of listaAulas) {
-    const id = li.dataset.id || li.textContent;
-    if (!encontrouAtual) {
-      if (id.includes(lessonId)) {
-        encontrouAtual = true;
-      }
-      continue;
+      document.getElementById('quiz-container').classList.remove('hidden');
     }
 
-    // Próxima aula clicável
-    if (li.classList.contains('cursor-pointer')) {
-      li.click();
-      break;
-    }
-  }
-}, 6000);
+    document.getElementById('btn-next').onclick = window.nextStep;
+    document.getElementById('btn-back').onclick = window.prevStep;
 
-  
-}
-
-// ENVIAR RESPOSTAS FIM
-
-
-
-    
-    // Iniciar com uma animação de entrada
-    gsap.from("#quizContainer", {
-      opacity: 0,
-      y: 30,
-      duration: 0.8,
-      ease: "power3.out"
-    });
-
-    loadQuiz();
+    init();
   </script>
 </body>
 </html>
-
-
-
-
-    
