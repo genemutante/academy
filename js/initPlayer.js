@@ -22,7 +22,6 @@ export async function initPlayer() {
     window.player = null;
     const container = document.getElementById('videoPlayer');
     if (container) container.innerHTML = '';
-    console.log("♻️ Player anterior limpo.");
   }
 
   const videoId = getYouTubeId(window.aulaAtual.youtube_url);
@@ -53,20 +52,21 @@ async function onPlayerStateChange(event) {
     const duration = Math.floor(event.target.getDuration());
     const userId = window.user_id;
     const lessonId = window.aulaAtual.id;
-    const courseId = window.aulaAtual.course_id; // Pegando o ID do curso que faltava
+    const courseId = window.aulaAtual.course_id;
 
-    // Define o início do último pedaço com base no que já foi visto ou nos últimos 5s
+    // Define o início do último pedaço com base no que já foi visto
     const inicioSegmentoFinal = window.maiorTempoVisualizado || (duration - 5);
 
     try {
-      // AJUSTE: Incluído course_id para satisfazer a restrição do banco
+      // AJUSTE: Incluído 'duration' para satisfazer a restrição NOT NULL do banco
       const { error } = await supabase
         .from('progress_segments')
         .insert([
           {
             user_id: userId,
             lesson_id: lessonId,
-            course_id: courseId, // <-- CORREÇÃO AQUI
+            course_id: courseId,
+            duration: duration, // <-- CORREÇÃO: Faltava este campo!
             segment: { start: inicioSegmentoFinal, end: duration } 
           }
         ]);
@@ -87,7 +87,7 @@ async function onPlayerStateChange(event) {
 }
 
 async function finalizarAulaCompletamente() {
-  // Uma última execução do rastreador para garantir consistência
+  // Uma última execução do rastreador para garantir sincronia
   await trackProgress(); 
 
   const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
@@ -98,7 +98,7 @@ async function finalizarAulaCompletamente() {
   const dados = progressoAtualizado?.[0];
   const aulaFinalizada = dados?.status === '✔ Concluída';
   
-  // Corrigindo a verificação do quiz para não passar "false"
+  // Garantindo que passamos o ID da aula e não um booleano
   const quizRespondido = await verificarQuizRespondido(window.user_id, window.aulaAtual.id);
 
   if (aulaFinalizada) {
@@ -110,7 +110,6 @@ async function finalizarAulaCompletamente() {
 
     await habilitarQuiz(window.aulaAtual.id);
     
-    // Atualiza as listagens laterais e progresso geral do curso
     if (typeof listarAulas === 'function') listarAulas();
     if (typeof carregarProgressoCurso === 'function') carregarProgressoCurso();
 
