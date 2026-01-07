@@ -73,7 +73,7 @@
 
       try {
         const { data, error } = await _supabase
-          .from('quiz_questions')
+          .from('questions')
           .select('*')
           .eq('lesson_id', lessonId)
           .order('order', { ascending: true });
