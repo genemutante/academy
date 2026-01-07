@@ -9,76 +9,68 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" />
-
-  <style>
-    .option-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid transparent; cursor: pointer; }
-    .option-card.selected { background: #2563EB !important; color: white !important; border-color: #1D4ED8; }
-    #loading-overlay { background: #ffffff; z-index: 100; position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  <style> 
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Outfit:wght@300;400;600&display=swap');
+    body { font-family: 'Outfit', sans-serif; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    .option-card { transition: all 0.2s ease; border: 2px solid #f1f5f9; cursor: pointer; }
+    .option-card:hover { border-color: #3B82F6; background: #EFF6FF; }
+    .option-card.selected { border-color: #2563EB; background: #DBEAFE; font-weight: 600; }
   </style>
 </head>
+<body class="bg-slate-50 min-h-screen">
 
-<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex items-center justify-center p-4">
-
-  <div id="loading-overlay">
-    <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p class="font-bold text-slate-600">Carregando Avaliação...</p>
+  <div id="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-white">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
   </div>
 
-  <div class="w-full max-w-2xl">
+  <div class="max-w-2xl mx-auto px-4 py-8">
     <div id="quiz-container" class="hidden">
-      
-      <div class="mb-8">
-        <div class="flex justify-between items-end mb-4">
-          <h1 class="text-2xl font-bold tracking-tight">Avaliação da Aula</h1>
-          <div class="text-right font-mono">
-            <span id="step-counter" class="text-2xl font-black text-blue-600">01</span>
-            <span id="total-steps" class="text-slate-400">/ 00</span>
-          </div>
+      <div class="mb-8 text-center">
+        <h1 id="lesson-title" class="text-2xl font-bold text-slate-800 font-['Nunito'] mb-2">Avaliação da Aula</h1>
+        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+          <div id="progress-bar" class="bg-blue-600 h-full w-0 transition-all duration-500"></div>
         </div>
-        <div class="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full">
-          <div id="progress-bar" class="h-full bg-blue-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+        <p id="step-indicator" class="text-sm text-slate-500 mt-2 font-medium">Pergunta 1 de ...</p>
+      </div>
+
+      <div class="glass-card rounded-3xl p-8 shadow-xl border border-white mb-6">
+        <div id="question-content">
+          <h2 id="question-text" class="text-xl text-slate-800 font-semibold mb-6">A carregar pergunta...</h2>
+          <div id="options-container" class="space-y-3"></div>
         </div>
       </div>
 
-      <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col min-h-[450px]">
-        <div id="step-content" class="flex-grow">
-          <h2 id="question-text" class="text-xl font-bold mb-8 leading-tight text-slate-800 dark:text-slate-100">...</h2>
-          <div id="options-container" class="grid gap-3"></div>
-        </div>
-
-        <div class="flex items-center justify-between mt-8 pt-6 border-t border-slate-50 dark:border-slate-800">
-          <button id="btn-back" class="font-bold text-slate-400 hover:text-blue-600 invisible">Voltar</button>
-          <button id="btn-next" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg disabled:opacity-50" disabled>Próxima</button>
-        </div>
+      <div class="flex justify-between items-center">
+        <button id="btn-back" class="px-6 py-3 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition invisible">Voltar</button>
+        <button id="btn-next" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>Avançar</button>
       </div>
     </div>
   </div>
 
-    <script
+  <script type="module">
     // --- CONFIGURAÇÃO SUPABASE ---
     const SUPABASE_URL = 'https://hiigckoowkrpewlybfef.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaWdja29vd2tycGV3bHliZmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MTc3NzIsImV4cCI6MjA4MzI5Mzc3Mn0.b5Uf3GXkE_jOVE0J1h3ssWdldiFjm6qQ1yUZr_Mu3Oo';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+    
     let questions = [];
     let currentStep = 0;
     let userAnswers = {};
-    let currentQuizId = null; // Guardará o ID do Quiz (context_id)
-    const startTime = Date.now();
-
+    let quizId = null; // Guardar o ID do Quiz para salvar depois
+    
     const params = new URLSearchParams(window.location.search);
-    const lessonId = params.get('lesson_id');
     const userId = params.get('user_id');
+    const lessonId = params.get('lesson_id');
 
-    async function init() {
+    async function initQuiz() {
       if (!lessonId || lessonId === "false") {
-        showError("ID da Aula não identificado.");
+        showError("ID da aula inválido.");
         return;
       }
 
       try {
-        // 1. Localizar o Quiz vinculado à aula (lesson_id)
+        // 1. Achar o Quiz vinculado a esta Aula (context_id)
         const { data: quizData, error: quizError } = await _supabase
           .from('quizzes')
           .select('id')
@@ -86,114 +78,108 @@
           .single();
 
         if (quizError || !quizData) throw new Error("Quiz não encontrado para esta aula.");
-        
-        currentQuizId = quizData.id;
+        quizId = quizData.id;
 
-        // 2. Carregar perguntas e opções
+        // 2. Buscar perguntas e opções desse Quiz específico
         const { data, error } = await _supabase
           .from('questions')
-          .select(`id, text, options(id, text, is_correct)`)
-          .eq('quiz_id', currentQuizId);
+          .select(`
+            id,
+            text,
+            options ( id, text, is_correct )
+          `)
+          .eq('quiz_id', quizId);
 
         if (error) throw error;
-        if (!data.length) throw new Error("Este quiz não tem perguntas.");
+        if (!data || data.length === 0) throw new Error("Nenhuma pergunta encontrada.");
 
-        // 3. Mapear para o formato do app
-        questions = data.map(q => ({
-          id: q.id,
-          question_text: q.text,
-          options: q.options,
-          correct_option_id: q.options.find(o => o.is_correct)?.id
-        }));
-
-        document.getElementById('total-steps').textContent = `/ ${String(questions.length).padStart(2, '0')}`;
-        render();
-        
-        document.getElementById('loading-overlay').style.display = 'none';
-        document.getElementById('quiz-container').classList.remove('hidden');
-
+        // Formatar os dados para o quiz
+        questions = data;
+        renderStep();
       } catch (err) {
         showError(err.message);
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('quiz-container').classList.remove('hidden');
       }
     }
 
-    function render() {
-      const q = questions[currentStep];
-      document.getElementById('question-text').textContent = q.question_text;
-      document.getElementById('step-counter').textContent = String(currentStep + 1).padStart(2, '0');
-      document.getElementById('progress-bar').style.width = `${((currentStep + 1) / questions.length) * 100}%`;
-
+    function renderStep() {
+      const question = questions[currentStep];
       const container = document.getElementById('options-container');
+      
+      document.getElementById('question-text').textContent = question.text;
+      document.getElementById('step-indicator').textContent = `Pergunta ${currentStep + 1} de ${questions.length}`;
+      document.getElementById('progress-bar').style.width = `${((currentStep + 1) / questions.length) * 100}%`;
+      
       container.innerHTML = '';
-
-      q.options.forEach(opt => {
-        const btn = document.createElement('div');
-        btn.className = `option-card p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-2 ${userAnswers[currentStep] === opt.id ? 'selected' : 'border-transparent'}`;
-        btn.textContent = opt.text;
-        btn.onclick = () => { userAnswers[currentStep] = opt.id; render(); };
-        container.appendChild(btn);
+      
+      question.options.forEach((opt) => {
+        const card = document.createElement('div');
+        const isSelected = userAnswers[currentStep] === opt.id;
+        card.className = `option-card p-4 rounded-2xl border-2 ${isSelected ? 'selected' : ''}`;
+        card.innerHTML = `${opt.text}`;
+        card.onclick = () => {
+          userAnswers[currentStep] = opt.id;
+          renderStep();
+        };
+        container.appendChild(card);
       });
 
-      document.getElementById('btn-back').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+      document.getElementById('btn-back').classList.toggle('invisible', currentStep === 0);
       const btnNext = document.getElementById('btn-next');
+      btnNext.textContent = currentStep === questions.length - 1 ? 'Finalizar' : 'Avançar';
       btnNext.disabled = !userAnswers[currentStep];
-      btnNext.textContent = currentStep === questions.length - 1 ? 'Finalizar' : 'Próxima';
     }
 
-    async function handleFinish() {
-      const btnNext = document.getElementById('btn-next');
-      btnNext.disabled = true;
-      btnNext.textContent = "Gravando...";
+    async function submitQuiz() {
+      document.getElementById('loading').classList.remove('hidden');
+      
+      // Cálculo de Acertos baseado no ID da opção correta
+      const correctCount = questions.reduce((acc, q, idx) => {
+        const selectedOptId = userAnswers[idx];
+        const isCorrect = q.options.find(o => o.id === selectedOptId)?.is_correct;
+        return acc + (isCorrect ? 1 : 0);
+      }, 0);
 
-      const acertos = questions.reduce((acc, q, idx) => acc + (userAnswers[idx] === q.correct_option_id ? 1 : 0), 0);
-      const scoreFinal = Math.round((acertos / questions.length) * 100);
-      const duracao = Math.floor((Date.now() - startTime) / 1000);
+      const scorePercent = Math.round((correctCount / questions.length) * 100);
 
       try {
-        // GRAVAÇÃO COMPATÍVEL COM SUA TABELA SQL
-        const { error } = await _supabase.from('user_quiz_results').insert({
-          user_id: userId,
-          lesson_id: lessonId,      // O ID da aula (essencial)
-          quiz_id: currentQuizId,   // O ID do quiz (essencial para a fkey)
-          score: scoreFinal,
-          total: questions.length,
-          answers: userAnswers,     // Objeto JSON com as respostas
-          duracao_em_segundos: duracao,
-          submitted_at: new Date().toISOString()
-        });
+        const { error } = await _supabase
+          .from('user_quiz_results')
+          .insert({
+            user_id: userId,
+            lesson_id: lessonId,
+            quiz_id: quizId, // Importante gravar o ID do Quiz
+            score: scorePercent,
+            answers: userAnswers
+          });
 
         if (error) throw error;
 
-        document.getElementById('step-content').innerHTML = `
-          <div class="text-center py-10">
-            <div class="text-5xl mb-4">🎯</div>
-            <h2 class="text-3xl font-bold mb-2">Resultado: ${scoreFinal}%</h2>
-            <p class="text-slate-500">Avaliação da aula gravada com sucesso!</p>
-          </div>
-        `;
+        alert(`Avaliação concluída! Acertou ${scorePercent}% das questões.`);
+        window.parent.postMessage({ type: 'QUIZ_COMPLETE', lessonId, score: scorePercent }, '*');
         
-        setTimeout(() => {
-          window.parent.postMessage({ type: 'QUIZ_COMPLETE', lessonId, score: scoreFinal }, '*');
-        }, 2000);
-
       } catch (err) {
-        alert("Erro ao gravar: " + err.message);
-        btnNext.disabled = false;
+        alert("Erro ao guardar o resultado: " + err.message);
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
       }
+    }
+
+    function showError(msg) {
+      document.getElementById('quiz-container').innerHTML = `<div class="text-center p-8 bg-red-50 text-red-700 rounded-3xl">⚠️ ${msg}</div>`;
+      document.getElementById('quiz-container').classList.remove('hidden');
+      document.getElementById('loading').classList.add('hidden');
     }
 
     document.getElementById('btn-next').onclick = () => {
-      if (currentStep < questions.length - 1) { currentStep++; render(); }
-      else { handleFinish(); }
+      if (currentStep < questions.length - 1) { currentStep++; renderStep(); } 
+      else submitQuiz();
     };
+    document.getElementById('btn-back').onclick = () => { if (currentStep > 0) { currentStep--; renderStep(); } };
 
-    document.getElementById('btn-back').onclick = () => { if (currentStep > 0) { currentStep--; render(); }};
-
-    function showError(msg) {
-      document.getElementById('loading-overlay').innerHTML = `<p class="text-red-500 font-bold">${msg}</p>`;
-    }
-
-    init();
+    initQuiz();
   </script>
 </body>
 </html>
