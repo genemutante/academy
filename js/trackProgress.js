@@ -3,50 +3,53 @@ import { carregarProgressoCurso } from './carregarProgressoCurso.js';
 
 let tempoInicioSegmento = null;
 let ultimoTempoVerificado = 0;
+let ultimaExecucaoReal = Date.now(); // ⏱️ Adicionado para medir tempo real do relógio
 
 export async function trackProgress() {
-  // LOG DE MONITORAMENTO
-  if (!window.player || typeof window.player.getPlayerState !== 'function') {
-      console.warn("⚠️ [Monitor] Player não encontrado ou não inicializado na window.");
-      return;
-  }
+  if (!window.player || typeof window.player.getPlayerState !== 'function') return;
 
   const estado = window.player.getPlayerState();
   const tempoAtual = Math.floor(window.player.getCurrentTime() || 0);
-
-  // Log para debug no console
-  console.log(`🎬 [Monitor] Estado: ${estado} | Tempo: ${tempoAtual}s | Início Seg: ${tempoInicioSegmento}`);
+  
+  // Cálculo de tempo real decorrido (em segundos) desde a última execução
+  const agora = Date.now();
+  const decorridoReal = (agora - ultimaExecucaoReal) / 1000;
+  ultimaExecucaoReal = agora;
 
   if (window.aulaFinalizada) return;
 
-  // 1. Iniciar segmento (Estado 1 = Tocando)
+  // 1. Iniciar segmento
   if (estado === 1 && tempoInicioSegmento === null) {
     tempoInicioSegmento = tempoAtual;
     ultimoTempoVerificado = tempoAtual;
-    console.log("🟢 [Monitor] Iniciando contagem de novo segmento.");
+    console.log("🟢 [Monitor] Iniciando segmento em:", tempoAtual);
     return;
   }
 
-  // 2. Fechar segmento por pausa ou fim (Qualquer estado que não seja Tocando)
+  // 2. Fechar segmento por pausa
   if (estado !== 1 && tempoInicioSegmento !== null) {
-    console.log("⏸️ [Monitor] Vídeo parado/pausado. Salvando trecho...");
+    console.log("⏸️ [Monitor] Pausa detectada. Salvando...");
     await fecharESalvarSegmento(tempoAtual);
     return;
   }
 
-  // 3. Verificação de Pulo ou Progresso Contínuo
+  // 3. Verificação Inteligente de Pulo
   if (tempoInicioSegmento !== null) {
-    const saltou = Math.abs(tempoAtual - ultimoTempoVerificado) > 2;
+    const diffVideo = Math.abs(tempoAtual - ultimoTempoVerificado);
+    
+    // CIRURGIA AQUI: Só é pulo se o vídeo andou muito mais (ou menos) que o tempo do relógio
+    // Adicionamos uma margem de erro de 3 segundos sobre o tempo real decorrido
+    const saltou = diffVideo > (decorridoReal + 3); 
     
     if (saltou) {
-      console.log("⏩ [Monitor] Pulo detectado! Salvando segmento anterior.");
+      console.log(`⏩ [Monitor] Pulo detectado! (Vídeo moveu ${diffVideo}s, mas o relógio apenas ${decorridoReal.toFixed(1)}s)`);
       await fecharESalvarSegmento(ultimoTempoVerificado);
-      tempoInicioSegmento = tempoAtual; // Reinicia no novo ponto após o pulo
+      tempoInicioSegmento = tempoAtual;
     } 
     else if (tempoAtual - tempoInicioSegmento >= 10) {
-      console.log("⏲️ [Monitor] 10 segundos atingidos. Gravando bloco preventivo...");
+      console.log("⏲️ [Monitor] Bloco de 10s atingido. Gravando...");
       await fecharESalvarSegmento(tempoAtual);
-      tempoInicioSegmento = tempoAtual; // Reinicia para o próximo bloco de 10s
+      tempoInicioSegmento = tempoAtual;
     }
   }
 
@@ -54,21 +57,12 @@ export async function trackProgress() {
 }
 
 async function fecharESalvarSegmento(tempoFim) {
-  // Evita salvar se não houver tempo decorrido
   if (tempoInicioSegmento === null || tempoInicioSegmento === tempoFim) {
     tempoInicioSegmento = null;
     return;
   }
 
-  const segmento = {
-    start: tempoInicioSegmento,
-    end: tempoFim
-  };
-
-  console.log("💾 [DB] Tentando salvar segmento no Supabase:", segmento);
-
-  // Reseta o início para evitar duplicidade enquanto processa o banco
-  const inicioParaSalvar = tempoInicioSegmento;
+  const segmento = { start: tempoInicioSegmento, end: tempoFim };
   tempoInicioSegmento = null;
 
   const { error } = await supabase
@@ -78,27 +72,17 @@ async function fecharESalvarSegmento(tempoFim) {
       course_id: window.course_id,
       lesson_id: window.aulaAtual?.id,
       duration: window.aulaAtual?.duration || 0,
-      segment: { start: inicioParaSalvar, end: tempoFim }
+      segment: segmento
     });
 
-  if (error) {
-    console.error("❌ [DB] Erro ao salvar segmento:", error.message);
-    // Em caso de erro, permite tentar novamente no próximo ciclo
-    tempoInicioSegmento = inicioParaSalvar; 
-  } else {
-    console.log("✅ [DB] Segmento salvo com sucesso!");
-    
-    // --- ATUALIZAÇÃO DA INTERFACE EM TEMPO REAL ---
-    
-    // 1. Atualiza a barra de porcentagem no topo
+  if (!error) {
+    console.log("✅ [DB] Segmento salvo:", segmento);
+    // Atualiza progresso e lista lateral
     await carregarProgressoCurso(supabase, window.user_id, window.course_id);
-    
-    // 2. Atualiza os checks (✅) na lista lateral se a função listarAulas existir
     if (typeof window.listarAulas === 'function') {
-        // Usamos as aulas e a função de seleção que estão na window
         window.listarAulas(window.aulas, window.selecionarAula);
-    } else {
-        console.warn("⚠️ Função listarAulas não encontrada no escopo global.");
     }
+  } else {
+    console.error("❌ [DB] Erro:", error.message);
   }
 }
