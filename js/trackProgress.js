@@ -1,9 +1,8 @@
 import { supabase } from './supabaseClient.js';
-import { carregarProgressoCurso } from './carregarProgressoCurso.js';
 
 let tempoInicioSegmento = null;
 let ultimoTempoVerificado = 0;
-let ultimaExecucaoReal = Date.now(); // ⏱️ Adicionado para medir tempo real do relógio
+let ultimaExecucaoReal = Date.now();
 
 export async function trackProgress() {
   if (!window.player || typeof window.player.getPlayerState !== 'function') return;
@@ -11,7 +10,6 @@ export async function trackProgress() {
   const estado = window.player.getPlayerState();
   const tempoAtual = Math.floor(window.player.getCurrentTime() || 0);
   
-  // Cálculo de tempo real decorrido (em segundos) desde a última execução
   const agora = Date.now();
   const decorridoReal = (agora - ultimaExecucaoReal) / 1000;
   ultimaExecucaoReal = agora;
@@ -33,16 +31,13 @@ export async function trackProgress() {
     return;
   }
 
-  // 3. Verificação Inteligente de Pulo
+  // 3. Verificação de Pulo ou Bloco de 10s
   if (tempoInicioSegmento !== null) {
     const diffVideo = Math.abs(tempoAtual - ultimoTempoVerificado);
-    
-    // CIRURGIA AQUI: Só é pulo se o vídeo andou muito mais (ou menos) que o tempo do relógio
-    // Adicionamos uma margem de erro de 3 segundos sobre o tempo real decorrido
     const saltou = diffVideo > (decorridoReal + 3); 
     
     if (saltou) {
-      console.log(`⏩ [Monitor] Pulo detectado! (Vídeo moveu ${diffVideo}s, mas o relógio apenas ${decorridoReal.toFixed(1)}s)`);
+      console.log(`⏩ [Monitor] Pulo detectado! Salvando trecho anterior.`);
       await fecharESalvarSegmento(ultimoTempoVerificado);
       tempoInicioSegmento = tempoAtual;
     } 
@@ -63,26 +58,60 @@ async function fecharESalvarSegmento(tempoFim) {
   }
 
   const segmento = { start: tempoInicioSegmento, end: tempoFim };
+  const lessonId = window.aulaAtual?.id;
+  const userId = window.user_id;
+
+  // Reseta para o próximo ciclo
   tempoInicioSegmento = null;
 
-  const { error } = await supabase
+  // 💾 GRAVAÇÃO NO BANCO
+  const { error: insertError } = await supabase
     .from('progress_segments')
     .insert({
-      user_id: window.user_id,
+      user_id: userId,
       course_id: window.course_id,
-      lesson_id: window.aulaAtual?.id,
+      lesson_id: lessonId,
       duration: window.aulaAtual?.duration || 0,
       segment: segmento
     });
 
-  if (!error) {
-    console.log("✅ [DB] Segmento salvo:", segmento);
-    // Atualiza progresso e lista lateral
-    await carregarProgressoCurso(supabase, window.user_id, window.course_id);
-    if (typeof window.listarAulas === 'function') {
-        window.listarAulas(window.aulas, window.selecionarAula);
+  if (insertError) {
+    console.error("❌ [DB] Erro ao salvar segmento:", insertError.message);
+    return;
+  }
+
+  console.log("✅ [DB] Segmento salvo. Atualizando Progresso da Aula...");
+
+  // 🎯 ATUALIZAÇÃO CIRÚRGICA VIA RPC (fn_progresso_por_usuario_e_aula)
+  const { data: rpcData, error: rpcError } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+    p_user_id: userId,
+    p_lesson_id: lessonId
+  });
+
+  if (!rpcError && rpcData && rpcData.length > 0) {
+    const progresso = rpcData[0]; // Dados processados pela sua função SQL
+
+    // Elementos da UI abaixo do vídeo
+    const barra = document.getElementById("barraProgresso");
+    const texto = document.getElementById("progressoTexto");
+
+    // Injeção direta dos segundos reais e percentual assistido
+    if (barra) barra.style.width = `${progresso.percentual_assistido}%`;
+    if (texto) {
+      texto.textContent = `${progresso.segundos_assistidos}s assistidos de ${progresso.duracao_total}s (${progresso.percentual_assistido}%)`;
     }
-  } else {
-    console.error("❌ [DB] Erro:", error.message);
+
+    // Gerenciamento do status da aula
+    if (progresso.status === '✔ Concluída') {
+      window.aulaFinalizada = true;
+      console.log("🎓 Aula Concluída!");
+    }
+
+    // Sincroniza a lista lateral para mostrar o check (✅) ou 'Em andamento'
+    if (typeof window.listarAulas === 'function') {
+      window.listarAulas(window.aulas, window.selecionarAula);
+    }
+  } else if (rpcError) {
+    console.error("❌ [RPC] Erro ao calcular progresso da aula:", rpcError.message);
   }
 }
