@@ -54,11 +54,9 @@ async function onPlayerStateChange(event) {
     const lessonId = window.aulaAtual.id;
     const courseId = window.aulaAtual.course_id;
 
-    // Define o início do último pedaço com base no que já foi visto
     const inicioSegmentoFinal = window.maiorTempoVisualizado || (duration - 5);
 
     try {
-      // AJUSTE: Incluído 'duration' para satisfazer a restrição NOT NULL do banco
       const { error } = await supabase
         .from('progress_segments')
         .insert([
@@ -66,7 +64,7 @@ async function onPlayerStateChange(event) {
             user_id: userId,
             lesson_id: lessonId,
             course_id: courseId,
-            duration: duration, // <-- CORREÇÃO: Faltava este campo!
+            duration: duration,
             segment: { start: inicioSegmentoFinal, end: duration } 
           }
         ]);
@@ -77,7 +75,9 @@ async function onPlayerStateChange(event) {
         console.log("✅ Checkpoint final gravado com sucesso!");
         window.maiorTempoVisualizado = duration;
         window.pontoRetomada = duration;
+        window.aulaFinalizada = true; // Marca como finalizada globalmente
         
+        // Chamada segura para finalização
         await finalizarAulaCompletamente();
       }
     } catch (e) {
@@ -87,40 +87,46 @@ async function onPlayerStateChange(event) {
 }
 
 async function finalizarAulaCompletamente() {
-  // Uma última execução do rastreador para garantir sincronia
-  await trackProgress(); 
+  try {
+    // Tenta executar o trackProgress uma última vez
+    if (typeof trackProgress === 'function') await trackProgress(); 
 
-  const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-    p_user_id: window.user_id,
-    p_lesson_id: window.aulaAtual.id
-  });
+    const { data: progressoAtualizado } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+      p_user_id: window.user_id,
+      p_lesson_id: window.aulaAtual.id
+    });
 
-  const dados = progressoAtualizado?.[0];
-  const aulaFinalizada = dados?.status === '✔ Concluída';
-  
-  // Garantindo que passamos o ID da aula e não um booleano
-  const quizRespondido = await verificarQuizRespondido(window.user_id, window.aulaAtual.id);
-
-  if (aulaFinalizada) {
-    const progressoEl = document.getElementById("progressoTexto");
-    const sugestaoEl = document.getElementById("recomecarSugestao");
+    const dados = progressoAtualizado?.[0];
+    const aulaFinalizada = dados?.status === '✔ Concluída';
     
-    if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
-    if (sugestaoEl) sugestaoEl.innerHTML = "";
+    // Verifica quiz
+    const quizRespondido = await verificarQuizRespondido(window.user_id, window.aulaAtual.id);
 
-    await habilitarQuiz(window.aulaAtual.id);
-    
-    if (typeof listarAulas === 'function') listarAulas();
-    if (typeof carregarProgressoCurso === 'function') carregarProgressoCurso();
+    if (aulaFinalizada) {
+      const progressoEl = document.getElementById("progressoTexto");
+      const sugestaoEl = document.getElementById("recomecarSugestao");
+      
+      if (progressoEl) progressoEl.textContent = "✅ Aula concluída";
+      if (sugestaoEl) sugestaoEl.innerHTML = "";
 
-    if (quizRespondido) {
-      const atualIndex = window.aulas?.findIndex(a => a.id === window.aulaAtual.id);
-      const proxima = window.aulas?.[atualIndex + 1];
-      if (proxima) {
-        mostrarTransicaoParaProximaAula(proxima, window.selecionarAula);
+      await habilitarQuiz(window.aulaAtual.id);
+      
+      // Chamadas protegidas (Se as funções falharem, o código não trava mais)
+      try { if (typeof listarAulas === 'function') listarAulas(); } catch (e) { console.warn("Aviso: Falha ao atualizar lista lateral."); }
+      try { if (typeof carregarProgressoCurso === 'function') carregarProgressoCurso(); } catch (e) { console.warn("Aviso: Falha ao atualizar progresso do curso."); }
+
+      if (quizRespondido) {
+        const aulas = window.aulas || [];
+        const atualIndex = aulas.findIndex(a => a.id === window.aulaAtual.id);
+        const proxima = aulas[atualIndex + 1];
+        if (proxima && typeof mostrarTransicaoParaProximaAula === 'function') {
+          mostrarTransicaoParaProximaAula(proxima, window.selecionarAula);
+        }
+      } else {
+        narrar("📋 Aula concluída! Responda o quiz para avançar.", "warning");
       }
-    } else {
-      narrar("📋 Aula concluída! Responda o quiz para avançar.", "warning");
     }
+  } catch (err) {
+    console.error("❌ Erro interno no fluxo de finalização:", err);
   }
 }
