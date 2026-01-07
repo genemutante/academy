@@ -1,46 +1,28 @@
 
 
-
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avaliação da Jornada do Aluno</title>
+  <title>Avaliação da Aula</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" />
 
-  <script>
-    tailwind.config = {
-      darkMode: 'media',
-      theme: {
-        extend: {
-          fontFamily: {
-            jakarta: ['Plus Jakarta Sans', 'sans-serif'],
-            sans: ['Outfit', 'sans-serif']
-          },
-          colors: {
-            primary: { 50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 400: '#60A5FA', 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 800: '#1E40AF', 900: '#1E3A8A' }
-          }
-        }
-      }
-    }
-  </script>
-
   <style>
-    .option-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid transparent; }
-    .option-card.selected { background: #3B82F6 !important; color: white !important; border-color: #2563EB; }
-    #loading-overlay { background: #ffffff; z-index: 100; }
+    .option-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid transparent; cursor: pointer; }
+    .option-card.selected { background: #2563EB !important; color: white !important; border-color: #1D4ED8; }
+    #loading-overlay { background: #ffffff; z-index: 100; position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex items-center justify-center p-4 text-slate-900 dark:text-slate-100">
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex items-center justify-center p-4">
 
-  <div id="loading-overlay" class="fixed inset-0 flex flex-col items-center justify-center">
+  <div id="loading-overlay">
     <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p class="font-jakarta font-bold animate-pulse">A carregar perguntas...</p>
+    <p class="font-bold text-slate-600">Carregando Avaliação...</p>
   </div>
 
   <div class="w-full max-w-2xl">
@@ -48,32 +30,32 @@
       
       <div class="mb-8">
         <div class="flex justify-between items-end mb-4">
-          <h1 class="text-2xl font-jakarta font-extrabold tracking-tight">Avaliação da Aula</h1>
-          <div class="text-right">
+          <h1 class="text-2xl font-bold tracking-tight">Avaliação da Aula</h1>
+          <div class="text-right font-mono">
             <span id="step-counter" class="text-2xl font-black text-blue-600">01</span>
-            <span id="total-steps" class="text-slate-400 font-bold">/ 00</span>
+            <span id="total-steps" class="text-slate-400">/ 00</span>
           </div>
         </div>
         <div class="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full">
-          <div id="progress-bar" class="h-full bg-blue-600 rounded-full transition-all duration-700" style="width: 0%"></div>
+          <div id="progress-bar" class="h-full bg-blue-600 rounded-full transition-all duration-500" style="width: 0%"></div>
         </div>
       </div>
 
-      <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 min-h-[400px] flex flex-col">
+      <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col min-h-[450px]">
         <div id="step-content" class="flex-grow">
-          <h2 id="question-text" class="text-xl font-bold mb-8 leading-snug">...</h2>
+          <h2 id="question-text" class="text-xl font-bold mb-8 leading-tight text-slate-800 dark:text-slate-100">...</h2>
           <div id="options-container" class="grid gap-3"></div>
         </div>
 
         <div class="flex items-center justify-between mt-8 pt-6 border-t border-slate-50 dark:border-slate-800">
           <button id="btn-back" class="font-bold text-slate-400 hover:text-blue-600 invisible">Voltar</button>
-          <button id="btn-next" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg disabled:opacity-50" disabled>Próxima</button>
+          <button id="btn-next" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg disabled:opacity-50" disabled>Próxima</button>
         </div>
       </div>
     </div>
   </div>
 
-    <script>
+    <script
     // --- CONFIGURAÇÃO SUPABASE ---
     const SUPABASE_URL = 'https://hiigckoowkrpewlybfef.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaWdja29vd2tycGV3bHliZmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MTc3NzIsImV4cCI6MjA4MzI5Mzc3Mn0.b5Uf3GXkE_jOVE0J1h3ssWdldiFjm6qQ1yUZr_Mu3Oo';
@@ -82,90 +64,60 @@
     let questions = [];
     let currentStep = 0;
     let userAnswers = {};
+    let currentQuizId = null; // Guardará o ID do Quiz (context_id)
+    const startTime = Date.now();
 
     const params = new URLSearchParams(window.location.search);
     const lessonId = params.get('lesson_id');
     const userId = params.get('user_id');
-    const courseId = params.get('course_id');
 
-async function loadQuiz() {
-  if (!lessonId) {
-    showError("ID da aula não encontrado.");
-    return;
-  }
+    async function init() {
+      if (!lessonId || lessonId === "false") {
+        showError("ID da Aula não identificado.");
+        return;
+      }
 
-  try {
-    console.log("📡 Buscando perguntas via relacionamento Quiz -> Questions para aula:", lessonId);
-    
-    // 1. Primeiro, buscamos o ID do Quiz vinculado a esta aula (context_id)
-    const { data: quizData, error: quizError } = await _supabase
-      .from('quizzes')
-      .select('id')
-      .eq('context_id', lessonId)
-      .single();
+      try {
+        // 1. Localizar o Quiz vinculado à aula (lesson_id)
+        const { data: quizData, error: quizError } = await _supabase
+          .from('quizzes')
+          .select('id')
+          .eq('context_id', lessonId)
+          .single();
 
-    if (quizError || !quizData) {
-      console.error("❌ Quiz não encontrado para esta aula.");
-      showError("Não há avaliação cadastrada para esta aula.");
-      return;
+        if (quizError || !quizData) throw new Error("Quiz não encontrado para esta aula.");
+        
+        currentQuizId = quizData.id;
+
+        // 2. Carregar perguntas e opções
+        const { data, error } = await _supabase
+          .from('questions')
+          .select(`id, text, options(id, text, is_correct)`)
+          .eq('quiz_id', currentQuizId);
+
+        if (error) throw error;
+        if (!data.length) throw new Error("Este quiz não tem perguntas.");
+
+        // 3. Mapear para o formato do app
+        questions = data.map(q => ({
+          id: q.id,
+          question_text: q.text,
+          options: q.options,
+          correct_option_id: q.options.find(o => o.is_correct)?.id
+        }));
+
+        document.getElementById('total-steps').textContent = `/ ${String(questions.length).padStart(2, '0')}`;
+        render();
+        
+        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('quiz-container').classList.remove('hidden');
+
+      } catch (err) {
+        showError(err.message);
+      }
     }
 
-    const quizId = quizData.id;
-
-    // 2. Agora buscamos as perguntas E as alternativas em uma única chamada
-    // Note que usamos o relacionamento que sua VIEW mostrou: questions -> options
-    const { data, error } = await _supabase
-      .from('questions')
-      .select(`
-        id,
-        text,
-        weight,
-        options (
-          id,
-          text,
-          is_correct
-        )
-      `)
-      .eq('quiz_id', quizId);
-
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
-      showError("Este quiz ainda não possui perguntas cadastradas.");
-      return;
-    }
-
-    // 3. Mapeamos os dados para o formato que o seu HTML espera (com option_a, option_b, etc)
-    questions = data.map(q => {
-      const mapped = {
-        question_text: q.text,
-        correct_option: ''
-      };
-      
-      // Mapeia as alternativas (id_alternativa) para option_a, b, c...
-      const letras = ['a', 'b', 'c', 'd', 'e'];
-      q.options.forEach((opt, index) => {
-        const letra = letras[index];
-        mapped[`option_${letra}`] = opt.text;
-        if (opt.is_correct) mapped.correct_option = letra;
-      });
-
-      return mapped;
-    });
-
-    document.getElementById('total-steps').textContent = `/ ${String(questions.length).padStart(2, '0')}`;
-    renderStep();
-    
-    document.getElementById('loading-overlay').style.display = 'none';
-    document.getElementById('quiz-container').classList.remove('hidden');
-
-  } catch (err) {
-    console.error("❌ Erro ao carregar estrutura do quiz:", err);
-    showError("Erro técnico: " + err.message);
-  }
-}
-
-    function renderStep() {
+    function render() {
       const q = questions[currentStep];
       document.getElementById('question-text').textContent = q.question_text;
       document.getElementById('step-counter').textContent = String(currentStep + 1).padStart(2, '0');
@@ -174,15 +126,12 @@ async function loadQuiz() {
       const container = document.getElementById('options-container');
       container.innerHTML = '';
 
-      ['a', 'b', 'c', 'd', 'e'].forEach(opt => {
-        const text = q[`option_${opt}`];
-        if (text) {
-          const btn = document.createElement('div');
-          btn.className = `option-card p-4 rounded-xl cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-2 ${userAnswers[currentStep] === opt ? 'selected' : 'border-transparent'}`;
-          btn.innerHTML = `<span class="font-black mr-2 uppercase opacity-50">${opt})</span> ${text}`;
-          btn.onclick = () => { userAnswers[currentStep] = opt; renderStep(); };
-          container.appendChild(btn);
-        }
+      q.options.forEach(opt => {
+        const btn = document.createElement('div');
+        btn.className = `option-card p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-2 ${userAnswers[currentStep] === opt.id ? 'selected' : 'border-transparent'}`;
+        btn.textContent = opt.text;
+        btn.onclick = () => { userAnswers[currentStep] = opt.id; render(); };
+        container.appendChild(btn);
       });
 
       document.getElementById('btn-back').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
@@ -191,45 +140,60 @@ async function loadQuiz() {
       btnNext.textContent = currentStep === questions.length - 1 ? 'Finalizar' : 'Próxima';
     }
 
-    document.getElementById('btn-next').onclick = async () => {
-      if (currentStep < questions.length - 1) {
-        currentStep++;
-        renderStep();
-      } else {
-        await finish();
-      }
-    };
+    async function handleFinish() {
+      const btnNext = document.getElementById('btn-next');
+      btnNext.disabled = true;
+      btnNext.textContent = "Gravando...";
 
-    document.getElementById('btn-back').onclick = () => {
-      if (currentStep > 0) { currentStep--; renderStep(); }
-    };
-
-    async function finish() {
-      const score = questions.reduce((acc, q, idx) => acc + (userAnswers[idx] === q.correct_option ? 1 : 0), 0);
-      const percent = Math.round((score / questions.length) * 100);
+      const acertos = questions.reduce((acc, q, idx) => acc + (userAnswers[idx] === q.correct_option_id ? 1 : 0), 0);
+      const scoreFinal = Math.round((acertos / questions.length) * 100);
+      const duracao = Math.floor((Date.now() - startTime) / 1000);
 
       try {
+        // GRAVAÇÃO COMPATÍVEL COM SUA TABELA SQL
         const { error } = await _supabase.from('user_quiz_results').insert({
           user_id: userId,
-          lesson_id: lessonId,
-          course_id: courseId,
-          score: percent,
-          answers: userAnswers
+          lesson_id: lessonId,      // O ID da aula (essencial)
+          quiz_id: currentQuizId,   // O ID do quiz (essencial para a fkey)
+          score: scoreFinal,
+          total: questions.length,
+          answers: userAnswers,     // Objeto JSON com as respostas
+          duracao_em_segundos: duracao,
+          submitted_at: new Date().toISOString()
         });
+
         if (error) throw error;
 
-        document.getElementById('step-content').innerHTML = `<div class="text-center py-10"><h2 class="text-3xl font-black mb-4">Concluído!</h2><div class="text-5xl font-black text-blue-600">${percent}%</div></div>`;
-        setTimeout(() => window.parent.postMessage({ type: 'QUIZ_COMPLETE', lessonId, score: percent }, '*'), 2000);
+        document.getElementById('step-content').innerHTML = `
+          <div class="text-center py-10">
+            <div class="text-5xl mb-4">🎯</div>
+            <h2 class="text-3xl font-bold mb-2">Resultado: ${scoreFinal}%</h2>
+            <p class="text-slate-500">Avaliação da aula gravada com sucesso!</p>
+          </div>
+        `;
+        
+        setTimeout(() => {
+          window.parent.postMessage({ type: 'QUIZ_COMPLETE', lessonId, score: scoreFinal }, '*');
+        }, 2000);
+
       } catch (err) {
-        alert("Erro ao salvar: " + err.message);
+        alert("Erro ao gravar: " + err.message);
+        btnNext.disabled = false;
       }
     }
 
+    document.getElementById('btn-next').onclick = () => {
+      if (currentStep < questions.length - 1) { currentStep++; render(); }
+      else { handleFinish(); }
+    };
+
+    document.getElementById('btn-back').onclick = () => { if (currentStep > 0) { currentStep--; render(); }};
+
     function showError(msg) {
-      document.getElementById('loading-overlay').innerHTML = `<div class="text-center p-6"><p class="text-red-500 font-bold">${msg}</p></div>`;
+      document.getElementById('loading-overlay').innerHTML = `<p class="text-red-500 font-bold">${msg}</p>`;
     }
 
-    loadQuiz();
+    init();
   </script>
 </body>
 </html>
