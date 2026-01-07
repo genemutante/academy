@@ -88,41 +88,82 @@
     const userId = params.get('user_id');
     const courseId = params.get('course_id');
 
-    async function loadQuiz() {
-      if (!lessonId) {
-        showError("ID da aula não encontrado na URL.");
-        return;
-      }
+async function loadQuiz() {
+  if (!lessonId) {
+    showError("ID da aula não encontrado.");
+    return;
+  }
 
-      try {
-        console.log("📡 Consultando tabela 'questions' para lesson_id:", lessonId);
-        
-        // FOCO AQUI: Chamada direta à tabela 'questions'
-        const { data, error } = await _supabase
-          .from('questions')
-          .select('*')
-          .eq('lesson_id', lessonId)
-          .order('order', { ascending: true });
+  try {
+    console.log("📡 Buscando perguntas via relacionamento Quiz -> Questions para aula:", lessonId);
+    
+    // 1. Primeiro, buscamos o ID do Quiz vinculado a esta aula (context_id)
+    const { data: quizData, error: quizError } = await _supabase
+      .from('quizzes')
+      .select('id')
+      .eq('context_id', lessonId)
+      .single();
 
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-          showError("Nenhuma pergunta cadastrada para este ID de aula.");
-          return;
-        }
-
-        questions = data;
-        document.getElementById('total-steps').textContent = `/ ${String(questions.length).padStart(2, '0')}`;
-        renderStep();
-        
-        document.getElementById('loading-overlay').style.display = 'none';
-        document.getElementById('quiz-container').classList.remove('hidden');
-
-      } catch (err) {
-        console.error("❌ Erro Supabase:", err);
-        showError("Erro ao carregar dados: " + err.message);
-      }
+    if (quizError || !quizData) {
+      console.error("❌ Quiz não encontrado para esta aula.");
+      showError("Não há avaliação cadastrada para esta aula.");
+      return;
     }
+
+    const quizId = quizData.id;
+
+    // 2. Agora buscamos as perguntas E as alternativas em uma única chamada
+    // Note que usamos o relacionamento que sua VIEW mostrou: questions -> options
+    const { data, error } = await _supabase
+      .from('questions')
+      .select(`
+        id,
+        text,
+        weight,
+        options (
+          id,
+          text,
+          is_correct
+        )
+      `)
+      .eq('quiz_id', quizId);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      showError("Este quiz ainda não possui perguntas cadastradas.");
+      return;
+    }
+
+    // 3. Mapeamos os dados para o formato que o seu HTML espera (com option_a, option_b, etc)
+    questions = data.map(q => {
+      const mapped = {
+        question_text: q.text,
+        correct_option: ''
+      };
+      
+      // Mapeia as alternativas (id_alternativa) para option_a, b, c...
+      const letras = ['a', 'b', 'c', 'd', 'e'];
+      q.options.forEach((opt, index) => {
+        const letra = letras[index];
+        mapped[`option_${letra}`] = opt.text;
+        if (opt.is_correct) mapped.correct_option = letra;
+      });
+
+      return mapped;
+    });
+
+    document.getElementById('total-steps').textContent = `/ ${String(questions.length).padStart(2, '0')}`;
+    renderStep();
+    
+    document.getElementById('loading-overlay').style.display = 'none';
+    document.getElementById('quiz-container').classList.remove('hidden');
+
+  } catch (err) {
+    console.error("❌ Erro ao carregar estrutura do quiz:", err);
+    showError("Erro técnico: " + err.message);
+  }
+}
 
     function renderStep() {
       const q = questions[currentStep];
