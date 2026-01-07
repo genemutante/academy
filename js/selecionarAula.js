@@ -3,6 +3,7 @@ import { habilitarQuiz } from './habilitarQuiz.js';
 import { initPlayer } from './initPlayer.js';
 import { narrar } from './narrativa.js';
 import { supabase } from './supabaseClient.js';
+import { verificarQuizRespondido } from './verificarQuizRespondido.js';
 
 function esperarElemento(id, callback) {
   const el = document.getElementById(id);
@@ -20,19 +21,19 @@ function esperarElemento(id, callback) {
 }
 
 export async function selecionarAula(aula, user_id) {
-  // --- 1. LIMPEZA E VALIDAÇÃO DE INTEGRIDADE ---
+  // --- 1. LIMPEZA DE ESTADO ANTERIOR ---
   if (window.interval) clearInterval(window.interval);
   if (window.timeoutProgressoInicial) clearTimeout(window.timeoutProgressoInicial);
 
-  // Verificação de ID: Garante que estamos a usar o ID da aula e não do curso
-  // Se o ID recebido for igual ao course_id, tentamos usar o lesson_id se disponível
+  // Garante que temos o ID da aula (evita usar o ID do curso)
   const lessonIdReal = (aula.id === aula.course_id && aula.lesson_id) ? aula.lesson_id : aula.id;
 
   console.groupCollapsed(`🧭 [selecionarAula] Aula: "${aula.title}" | ID: ${lessonIdReal}`);
   
-  // Reset de estados globais
+  // Reset de variáveis globais de controlo
   window.user_id = user_id;
-  window.aulaAtual = { ...aula, id: lessonIdReal }; // Força o ID correto no objeto global
+  window.aulaAtual = { ...aula, id: lessonIdReal }; 
+  window.pontoRetomada = 0;
   window.maiorTempoVisualizado = 0;
   window.lastTime = 0;
   window.progressoIniciado = false;
@@ -40,96 +41,87 @@ export async function selecionarAula(aula, user_id) {
 
   narrar(`📥 Aula selecionada: "${aula.title}"`, "info");
 
-  // Atualização da UI
+  // Reset da Interface
   esperarElemento("tituloAula", el => el.textContent = aula.title);
+  esperarElemento("recomecarSugestao", el => el.innerHTML = "");
   esperarElemento("mensagemAluno", el => {
     el.textContent = "A carregar progresso...";
     el.className = "text-gray-500 italic";
   });
 
   try {
-    // --- 2. BUSCA DE PROGRESSO NO BANCO (RPC) ---
-    console.log("📡 Chamando RPC fn_progresso_por_usuario_e_aula...");
-    const { data: progresso, error } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
+    // --- 2. BUSCA DE PROGRESSO REAL (RPC) ---
+    console.log("📡 A procurar progresso no banco de dados...");
+    const { data: progresso, error: errorRPC } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
       p_user_id: user_id,
       p_lesson_id: lessonIdReal
     });
 
-    if (error) throw error;
+    if (errorRPC) throw errorRPC;
 
+    // --- 3. VERIFICAÇÃO DO QUIZ (Corrigindo o erro do UUID 'true') ---
+    const quizRespondido = await verificarQuizRespondido(user_id, lessonIdReal);
+    
     const dados = Array.isArray(progresso) ? progresso[0] : progresso;
 
     if (dados) {
       console.log("✅ Dados de progresso recuperados:", dados);
       
       const assistido = dados.segundos_assistidos || 0;
-      const total = aula.duration || dados.duracao_total || 0;
+      const total = aula.duration || dados.duracao_total || 483; // fallback para duração do log
       
-      // Atualiza interface com progresso real
+      window.pontoRetomada = assistido;
+      window.maiorTempoVisualizado = assistido;
+
       atualizarIndicadorLocal(assistido, total);
       
-      // Lógica de Quiz e Conclusão
+      // Lógica de Conclusão e Quiz
       if (dados.status === '✔ Concluída') {
         window.aulaFinalizada = true;
-        habilitarQuiz(true);
+        habilitarQuiz(quizRespondido); 
         esperarElemento("mensagemAluno", el => {
-          el.textContent = "✅ Aula concluída!";
+          el.textContent = quizRespondido ? "✅ Aula e Quiz concluídos!" : "✅ Aula concluída! Faça o quiz abaixo.";
           el.className = "text-green-600 font-bold";
         });
       } else {
         habilitarQuiz(false);
         esperarElemento("mensagemAluno", el => {
-          el.textContent = "🕒 Continue assistindo para liberar o quiz";
+          el.textContent = "🕒 Continue a assistir para libertar o quiz";
           el.className = "text-blue-600";
         });
       }
 
-      // Sugestão de Retomada (se assistiu mais de 10s e não terminou)
-      if (assistido > 10 && dados.status !== '✔ Concluída') {
-        window.pontoRetomada = assistido;
+      // Criar botão de retomada se houver progresso significativo
+      if (assistido > 5 && dados.status !== '✔ Concluída') {
         const minutos = Math.floor(assistido / 60);
-        const segundos = assistido % 60;
-        const retomadaLabel = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
+        const segundos = Math.floor(assistido % 60);
+        const tempoFormatado = `${minutos}:${segundos.toString().padStart(2, '0')}`;
 
-        const link = document.createElement('div');
-        link.className = 'mt-2 text-sm text-blue-600 underline cursor-pointer hover:text-blue-800 transition flex items-center gap-1';
-        link.innerHTML = `🔁 Retomar de <strong>${retomadaLabel}</strong>`;
-        link.onclick = () => {
-          if (!window.player || typeof window.player.seekTo !== 'function') return;
-          mostrarNotificacao(`⏩ Saltando para ${retomadaLabel}...`);
-          window.player.seekTo(assistido, true);
-          setTimeout(() => window.player.playVideo?.(), 500);
+        const btnRetomar = document.createElement('button');
+        btnRetomar.className = "mt-2 text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition flex items-center gap-1";
+        btnRetomar.innerHTML = `<span>🔁 Retomar de ${tempoFormatado}</span>`;
+        btnRetomar.onclick = () => {
+          if (window.player && window.player.seekTo) {
+            window.player.seekTo(assistido, true);
+            window.player.playVideo();
+            mostrarNotificacao("Vídeo retomado!");
+          }
         };
-
-        esperarElemento("recomecarSugestao", el => {
-          el.innerHTML = ""; 
-          el.appendChild(link);
-        });
-      } else {
-        esperarElemento("recomecarSugestao", el => el.innerHTML = "");
+        esperarElemento("recomecarSugestao", el => el.appendChild(btnRetomar));
       }
 
     } else {
-      console.warn("🚫 Nenhum registro encontrado para este ID de aula no banco.");
-      atualizarIndicadorLocal(0, aula.duration);
-      esperarElemento("mensagemAluno", el => el.textContent = "Iniciando aula pela primeira vez");
+      console.log("🆕 Sem progresso prévio. Iniciando do zero.");
+      atualizarIndicadorLocal(0, aula.duration || 0);
     }
 
   } catch (err) {
-    console.error("❌ Erro ao carregar progresso:", err);
-    narrar("Erro ao sincronizar progresso com o servidor.", "error");
+    console.error("❌ Erro crítico em selecionarAula:", err);
   }
 
-  // --- 3. INICIALIZAÇÃO DO PLAYER ---
-  console.log("🎬 Iniciando player...");
-  initPlayer();
-
-  // Monitor de segurança para garantir que o rastreamento comece
-  window.timeoutProgressoInicial = setTimeout(() => {
-    if (!window.progressoIniciado && !window.aulaFinalizada) {
-      console.warn("⚠️ Rastreamento não iniciado automaticamente.");
-    }
-  }, 5000);
+  // --- 4. INICIALIZAÇÃO DO PLAYER (SÓ APÓS OS DADOS DO BANCO) ---
+  console.log(`🎬 Inicializando Player para a aula: ${lessonIdReal}`);
+  initPlayer(); 
 
   console.groupEnd();
 }
