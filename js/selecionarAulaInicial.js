@@ -1,3 +1,6 @@
+import { selecionarAula } from './selecionarAula.js';
+import { narrar } from './narrativa.js'; // Notei que 'narrar' também é usada mas não está importada neste arquivo
+
 export function selecionarAulaInicial(aulas, user_id) {
 
 console.log("🚨 Função selecionarAulaInicial foi chamada");
