@@ -129,42 +129,50 @@
       btnNext.disabled = !userAnswers[currentStep];
     }
 
-    async function submitQuiz() {
-      document.getElementById('loading').classList.remove('hidden');
-      
-      const acertos = questions.reduce((acc, q, idx) => {
-        const isCorrect = q.options.find(o => o.id === userAnswers[idx])?.is_correct;
-        return acc + (isCorrect ? 1 : 0);
-      }, 0);
 
-      const scorePercent = Math.round((acertos / questions.length) * 100);
-      const duracao = Math.floor((Date.now() - startTime) / 1000);
+async function submitQuiz() {
+  const btnNext = document.getElementById('btn-next');
+  btnNext.disabled = true;
+  btnNext.textContent = "Gravando...";
 
-      try {
-        const { error } = await _supabase
-          .from('user_quiz_results')
-          .insert({
-            user_id: userId,
-            lesson_id: lessonId,
-            quiz_id: quizIdAtivo, // ID obrigatório pela sua constraint
-            score: scorePercent,
-            total: questions.length,
-            answers: userAnswers,
-            duracao_em_segundos: duracao
-          });
+  const correctCount = questions.reduce((acc, q, idx) => {
+    return acc + (userAnswers[idx] === q.correct_option_id ? 1 : 0);
+  }, 0);
 
-        if (error) throw error;
+  const scorePercent = Math.round((correctCount / questions.length) * 100);
+  const duration = Math.floor((Date.now() - startTime) / 1000);
 
-        alert(`Concluído! Você acertou ${scorePercent}%`);
-        window.parent.postMessage({ type: 'QUIZ_COMPLETE', lessonId, score: scorePercent }, '*');
-        
-      } catch (err) {
-        console.error("Erro ao gravar:", err);
-        alert("Erro ao gravar no banco: " + err.message);
-      } finally {
-        document.getElementById('loading').classList.add('hidden');
-      }
+  try {
+    const { data, error } = await _supabase
+      .from('user_quiz_results')
+      .insert([
+        {
+          user_id: userId,
+          lesson_id: lessonId,
+          quiz_id: currentQuizId, // Certifique-se que esta variável foi preenchida no init
+          score: scorePercent,
+          total: questions.length,
+          answers: userAnswers,
+          duracao_em_segundos: duration,
+          submitted_at: new Date().toISOString()
+        }
+      ]);
+
+    if (error) {
+        // Se o erro for 42501, a mensagem abaixo confirmará o RLS
+        console.error("❌ Erro de RLS ou Banco:", error);
+        throw error;
     }
+
+    // Sucesso...
+    exibirFeedbackFinal(scorePercent);
+
+  } catch (err) {
+    alert("Erro ao salvar resultado: " + err.message);
+    btnNext.disabled = false;
+    btnNext.textContent = "Tentar Novamente";
+  }
+}
 
     function showError(msg) {
       document.getElementById('quiz-container').innerHTML = `<div class="text-center p-8 text-red-600">⚠️ ${msg}</div>`;
