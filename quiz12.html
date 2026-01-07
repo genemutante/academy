@@ -1,6 +1,6 @@
 
 
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -36,14 +36,14 @@
 
       <div class="glass-card rounded-3xl p-8 shadow-xl border border-white mb-6">
         <div id="question-content">
-          <h2 id="question-text" class="text-xl text-slate-800 font-semibold mb-6">A carregar pergunta...</h2>
+          <h2 id="question-text" class="text-xl text-slate-800 font-semibold mb-6">Carregando...</h2>
           <div id="options-container" class="space-y-3"></div>
         </div>
       </div>
 
       <div class="flex justify-between items-center">
         <button id="btn-back" class="px-6 py-3 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition invisible">Voltar</button>
-        <button id="btn-next" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>Avançar</button>
+        <button id="btn-next" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition disabled:opacity-50" disabled>Avançar</button>
       </div>
     </div>
   </div>
@@ -53,11 +53,13 @@
     const SUPABASE_URL = 'https://hiigckoowkrpewlybfef.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaWdja29vd2tycGV3bHliZmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MTc3NzIsImV4cCI6MjA4MzI5Mzc3Mn0.b5Uf3GXkE_jOVE0J1h3ssWdldiFjm6qQ1yUZr_Mu3Oo';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    
+
+
     let questions = [];
     let currentStep = 0;
     let userAnswers = {};
-    let quizId = null; // Guardar o ID do Quiz para salvar depois
+    let quizIdAtivo = null;
+    const startTime = Date.now();
     
     const params = new URLSearchParams(window.location.search);
     const userId = params.get('user_id');
@@ -70,30 +72,25 @@
       }
 
       try {
-        // 1. Achar o Quiz vinculado a esta Aula (context_id)
+        // 1. Descobrir o ID do Quiz vinculado a esta Aula (context_id)
         const { data: quizData, error: quizError } = await _supabase
           .from('quizzes')
           .select('id')
           .eq('context_id', lessonId)
           .single();
 
-        if (quizError || !quizData) throw new Error("Quiz não encontrado para esta aula.");
-        quizId = quizData.id;
+        if (quizError || !quizData) throw new Error("Não existe quiz para esta aula.");
+        quizIdAtivo = quizData.id;
 
-        // 2. Buscar perguntas e opções desse Quiz específico
+        // 2. Buscar perguntas e opções
         const { data, error } = await _supabase
           .from('questions')
-          .select(`
-            id,
-            text,
-            options ( id, text, is_correct )
-          `)
-          .eq('quiz_id', quizId);
+          .select(`id, text, options ( id, text, is_correct )`)
+          .eq('quiz_id', quizIdAtivo);
 
         if (error) throw error;
-        if (!data || data.length === 0) throw new Error("Nenhuma pergunta encontrada.");
+        if (!data || data.length === 0) throw new Error("Quiz sem perguntas.");
 
-        // Formatar os dados para o quiz
         questions = data;
         renderStep();
       } catch (err) {
@@ -105,20 +102,20 @@
     }
 
     function renderStep() {
-      const question = questions[currentStep];
+      const q = questions[currentStep];
       const container = document.getElementById('options-container');
       
-      document.getElementById('question-text').textContent = question.text;
+      document.getElementById('question-text').textContent = q.text;
       document.getElementById('step-indicator').textContent = `Pergunta ${currentStep + 1} de ${questions.length}`;
       document.getElementById('progress-bar').style.width = `${((currentStep + 1) / questions.length) * 100}%`;
       
       container.innerHTML = '';
       
-      question.options.forEach((opt) => {
+      q.options.forEach((opt) => {
         const card = document.createElement('div');
         const isSelected = userAnswers[currentStep] === opt.id;
         card.className = `option-card p-4 rounded-2xl border-2 ${isSelected ? 'selected' : ''}`;
-        card.innerHTML = `${opt.text}`;
+        card.innerHTML = opt.text;
         card.onclick = () => {
           userAnswers[currentStep] = opt.id;
           renderStep();
@@ -135,14 +132,13 @@
     async function submitQuiz() {
       document.getElementById('loading').classList.remove('hidden');
       
-      // Cálculo de Acertos baseado no ID da opção correta
-      const correctCount = questions.reduce((acc, q, idx) => {
-        const selectedOptId = userAnswers[idx];
-        const isCorrect = q.options.find(o => o.id === selectedOptId)?.is_correct;
+      const acertos = questions.reduce((acc, q, idx) => {
+        const isCorrect = q.options.find(o => o.id === userAnswers[idx])?.is_correct;
         return acc + (isCorrect ? 1 : 0);
       }, 0);
 
-      const scorePercent = Math.round((correctCount / questions.length) * 100);
+      const scorePercent = Math.round((acertos / questions.length) * 100);
+      const duracao = Math.floor((Date.now() - startTime) / 1000);
 
       try {
         const { error } = await _supabase
@@ -150,25 +146,28 @@
           .insert({
             user_id: userId,
             lesson_id: lessonId,
-            quiz_id: quizId, // Importante gravar o ID do Quiz
+            quiz_id: quizIdAtivo, // ID obrigatório pela sua constraint
             score: scorePercent,
-            answers: userAnswers
+            total: questions.length,
+            answers: userAnswers,
+            duracao_em_segundos: duracao
           });
 
         if (error) throw error;
 
-        alert(`Avaliação concluída! Acertou ${scorePercent}% das questões.`);
+        alert(`Concluído! Você acertou ${scorePercent}%`);
         window.parent.postMessage({ type: 'QUIZ_COMPLETE', lessonId, score: scorePercent }, '*');
         
       } catch (err) {
-        alert("Erro ao guardar o resultado: " + err.message);
+        console.error("Erro ao gravar:", err);
+        alert("Erro ao gravar no banco: " + err.message);
       } finally {
         document.getElementById('loading').classList.add('hidden');
       }
     }
 
     function showError(msg) {
-      document.getElementById('quiz-container').innerHTML = `<div class="text-center p-8 bg-red-50 text-red-700 rounded-3xl">⚠️ ${msg}</div>`;
+      document.getElementById('quiz-container').innerHTML = `<div class="text-center p-8 text-red-600">⚠️ ${msg}</div>`;
       document.getElementById('quiz-container').classList.remove('hidden');
       document.getElementById('loading').classList.add('hidden');
     }
