@@ -12,9 +12,10 @@ export function carregarProgressoCurso() {
   let pontos = 0;
   const totalPontos = aulas.length * 2; // 1 ponto por aula assistida + 1 ponto por quiz
 
-  aulas.forEach(aula => {
-    if (aula.status === '✔ Concluída') pontos++;       // 1 ponto por assistir tudo
-    if (aula.quizEnviado === true) pontos++;           // 1 ponto por enviar quiz
+   aulas.forEach(aula => {
+    // Garante que o status existe antes de comparar
+    if (aula && aula.status === '✔ Concluída') pontos++;       
+    if (aula && aula.quizEnviado === true) pontos++;           
   });
 
   const percentual = Math.floor((pontos / totalPontos) * 100);
