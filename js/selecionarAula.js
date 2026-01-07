@@ -7,134 +7,75 @@ import { supabase } from './supabaseClient.js';
 function esperarElemento(id, callback) {
   const el = document.getElementById(id);
   if (el) return callback(el);
-
   const observer = new MutationObserver(() => {
     const el = document.getElementById(id);
-    if (el) {
-      observer.disconnect();
-      callback(el);
-    }
+    if (el) { observer.disconnect(); callback(el); }
   });
-
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
 export async function selecionarAula(aula, user_id) {
-  console.groupCollapsed(`🧭 [selecionarAula] Início - Aula: "${aula.title}" | ID: ${aula.id}`);
+  console.groupCollapsed(`🧭 [selecionarAula] Iniciando: "${aula.title}"`);
 
+  // Resets de estado global da aula
   window.user_id = user_id;
   window.aulaAtual = aula;
   window.maiorTempoVisualizado = 0;
   window.lastTime = 0;
-  window._tempoInicioAguardoProgresso = null;
-  window._erroAtrasoProgressoNarrado = false;
   window.progressoIniciado = false;
-  window.aulaFinalizada = false; // 🔒 Reset trava de aula concluída
+  window.aulaFinalizada = false;
 
-  narrar(`📥 Aula selecionada: "${aula.title}" (ID: ${aula.id})`, "info");
+  narrar(`📥 Carregando conteúdo da aula: "${aula.title}"`, "info");
 
+  // 1. Atualiza Interface
   esperarElemento("tituloAula", el => el.textContent = aula.title);
-  esperarElemento("mensagemAluno", el => {
-    el.textContent = "";
-    el.className = "";
-  });
-  esperarElemento("recomecarSugestao", el => el.innerHTML = "");
-  esperarElemento("indicadorNumerico", el => el.textContent = "");
-  esperarElemento("progressoTexto", el => el.innerHTML = "⏳ Carregando progresso...");
+  esperarElemento("recomecarSugestao", el => el.innerHTML = ""); 
 
-  window.pontoRetomada = null;
+  // 2. Busca o último ponto de retomada nos segmentos salvos
+  let pontoRetomada = 0;
+  const { data: segmentos } = await supabase
+    .from('progress_segments')
+    .select('segment')
+    .eq('user_id', user_id)
+    .eq('lesson_id', aula.id);
 
-  const btnQuiz = document.getElementById("btnQuiz");
-  if (btnQuiz) {
-    btnQuiz.disabled = true;
-    btnQuiz.textContent = "Fazer Avaliação da Aula";
-    btnQuiz.className = "bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed";
-    btnQuiz.onclick = null;
+  if (segmentos && segmentos.length > 0) {
+    // Encontra o maior valor de 'end' entre todos os pedaços assistidos
+    pontoRetomada = Math.max(...segmentos.map(s => s.segment.end));
+    window.pontoRetomada = pontoRetomada;
+    window.maiorTempoVisualizado = pontoRetomada;
   }
 
-  if (window.interval) {
-    clearInterval(window.interval);
-    window.narrativaCiclosExecutados = 0;
-    narrar("🛑 Limpando ciclo anterior de rastreamento.", "info");
-  }
+  // 3. Exibe botão de retomada se houver progresso significativo
+  if (pontoRetomada > 5 && aula.status !== '✔ Concluída') {
+    const min = Math.floor(pontoRetomada / 60);
+    const seg = pontoRetomada % 60;
+    const tempoLabel = `${min}m${seg.toString().padStart(2, '0')}s`;
 
-  const { data: progresso } = await supabase.rpc('fn_progresso_por_usuario_e_aula', {
-    p_user_id: user_id,
-    p_lesson_id: aula.id
-  });
-
-  const dados = progresso?.[0] || null;
-  console.log("📦 Dados de progresso recebidos:", dados);
-
-  if (dados) {
-    aula.status = dados.status;
-    window.aulaAtual.status = dados.status;
-    console.log(`📌 Status atual da aula: ${dados.status}`);
-
-    if (dados.status === '✔ Concluída') {
-      console.log("✅ Aula já marcada como concluída. Atualizando UI e habilitando quiz...");
-      window.aulaFinalizada = true; // 🔒 Ativa trava para impedir rastreamento
-
-      atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
-      esperarElemento("progressoTexto", el => el.textContent = "✅ Aula concluída");
-      esperarElemento("recomecarSugestao", el => el.innerHTML = "");
-      esperarElemento("indicadorNumerico", el => el.textContent = "");
-
-      await habilitarQuiz(aula.id, user_id);
-
-      console.log("🎬 Recarregando player mesmo com aula concluída");
-      initPlayer();
-
-      console.groupEnd();
-      return;
-    }
-
-    if (dados.segundos_assistidos > 0) {
-      console.log(`⏪ Aula com progresso. Restaurando ponto: ${dados.segundos_assistidos}s`);
-      window.lastTime = dados.segundos_assistidos;
-      window.maiorTempoVisualizado = dados.segundos_assistidos;
-      window.pontoRetomada = Math.max(0, dados.segundos_assistidos - 15);
-      atualizarIndicadorLocal(dados.segundos_assistidos, dados.duracao_total);
-
-      const minutos = Math.floor(window.pontoRetomada / 60);
-      const segundos = window.pontoRetomada % 60;
-      const retomadaLabel = `${minutos}m${segundos.toString().padStart(2, '0')}s`;
-
-      const link = document.createElement('div');
-      link.className = 'mt-2 text-sm text-blue-600 underline cursor-pointer hover:text-blue-800 transition flex items-center gap-1';
-      link.innerHTML = `🔁 Retomar de <strong>${retomadaLabel}</strong>`;
-      link.onclick = () => {
-        if (!window.player || typeof window.player.seekTo !== 'function') return;
-        mostrarNotificacao(`⏩ Pulando para ${retomadaLabel}...`);
-        window.player.seekTo(window.pontoRetomada, true);
-        setTimeout(() => window.player.playVideo?.(), 500);
+    esperarElemento("recomecarSugestao", el => {
+      const btn = document.createElement('div');
+      btn.className = 'mt-2 text-sm text-blue-600 underline cursor-pointer hover:text-blue-800 transition flex items-center gap-1 font-bold';
+      btn.innerHTML = `🔁 Você parou em ${tempoLabel}. Clique para continuar de onde parou.`;
+      btn.onclick = () => {
+        if (window.player?.seekTo) {
+          window.player.seekTo(pontoRetomada, true);
+          window.player.playVideo();
+          btn.remove();
+          mostrarNotificacao(`⏩ Retomando em ${tempoLabel}`);
+        }
       };
-
-      esperarElemento("recomecarSugestao", el => el.appendChild(link));
-    } else {
-      console.log("🆕 Nenhum segundo assistido anteriormente.");
-    }
-  } else {
-    console.warn("🚫 Nenhum dado de progresso encontrado. Iniciando do zero.");
-    atualizarIndicadorLocal(0, aula.duration);
+      el.appendChild(btn);
+    });
   }
 
-  // 🎬 Player
-  console.log("🎬 Iniciando player...");
-  initPlayer();
-  window.progressoIniciado = false;
+  // 4. Verifica se deve habilitar o Quiz imediatamente
+  if (aula.status === '✔ Concluída') {
+    habilitarQuiz(aula.id);
+  }
 
-  window.timeoutProgressoInicial = setTimeout(() => {
-    if (!window.progressoIniciado && !window.aulaFinalizada) { // 🔒 Bloqueia notificações se aula finalizada
-      narrar("⚠️ Nenhum progresso detectado após 10s. Reproduza o vídeo para iniciar rastreamento.", "warning");
-    }
-  }, 10000);
+  // 5. Inicializa o Player do YouTube
+  atualizarIndicadorLocal(pontoRetomada, aula.duration || 0);
+  initPlayer();
 
   console.groupEnd();
-
-
-
 }
-
-
-  window.selecionarAula = selecionarAula;
