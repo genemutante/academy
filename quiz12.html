@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+
+
+
+    <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -7,7 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Outfit:wght@300;400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" />
 
   <script>
     tailwind.config = {
@@ -16,8 +19,7 @@
         extend: {
           fontFamily: {
             jakarta: ['Plus Jakarta Sans', 'sans-serif'],
-            sans: ['Outfit', 'sans-serif'],
-            display: ['Nunito', 'sans-serif']
+            sans: ['Outfit', 'sans-serif']
           },
           colors: {
             primary: { 50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 400: '#60A5FA', 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 800: '#1E40AF', 900: '#1E3A8A' }
@@ -28,73 +30,58 @@
   </script>
 
   <style>
-    .glass-effect { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
     .option-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid transparent; }
-    .option-card:hover { transform: translateY(-2px); background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.3); }
-    .option-card.selected { background: #3B82F6 !important; color: white !important; border-color: #2563EB; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); }
-    .progress-glow { box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
-    #loading-overlay { background: #ffffff; z-index: 100; transition: opacity 0.5s ease; }
+    .option-card.selected { background: #3B82F6 !important; color: white !important; border-color: #2563EB; }
+    #loading-overlay { background: #ffffff; z-index: 100; }
   </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-100 flex items-center justify-center p-4">
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex items-center justify-center p-4 text-slate-900 dark:text-slate-100">
 
   <div id="loading-overlay" class="fixed inset-0 flex flex-col items-center justify-center">
-    <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p class="font-jakarta font-bold text-slate-700 animate-pulse text-lg">Preparando Avaliação...</p>
+    <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="font-jakarta font-bold animate-pulse">A carregar perguntas...</p>
   </div>
 
-  <div class="w-full max-w-2xl relative">
+  <div class="w-full max-w-2xl">
     <div id="quiz-container" class="hidden">
       
-      <div class="mb-8 relative">
+      <div class="mb-8">
         <div class="flex justify-between items-end mb-4">
-          <div>
-            <span class="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold tracking-widest uppercase mb-2">Avaliação de Conhecimento</span>
-            <h1 class="text-3xl font-jakarta font-extrabold tracking-tight">Desafio da Aula</h1>
-          </div>
+          <h1 class="text-2xl font-jakarta font-extrabold tracking-tight">Avaliação da Aula</h1>
           <div class="text-right">
-            <span id="step-counter" class="text-2xl font-jakarta font-black text-blue-600">01</span>
-            <span id="total-steps" class="text-slate-400 font-bold">/ 05</span>
+            <span id="step-counter" class="text-2xl font-black text-blue-600">01</span>
+            <span id="total-steps" class="text-slate-400 font-bold">/ 00</span>
           </div>
         </div>
-        
-        <div class="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-          <div id="progress-bar" class="h-full bg-blue-600 rounded-full transition-all duration-700 ease-out progress-glow" style="width: 0%"></div>
+        <div class="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full">
+          <div id="progress-bar" class="h-full bg-blue-600 rounded-full transition-all duration-700" style="width: 0%"></div>
         </div>
       </div>
 
-      <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-blue-500/10 border border-slate-100 dark:border-slate-800 min-h-[400px] flex flex-col">
+      <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 min-h-[400px] flex flex-col">
         <div id="step-content" class="flex-grow">
-          <h2 id="question-text" class="text-2xl font-bold leading-tight mb-8">...</h2>
-          <div id="options-container" class="grid gap-4">
-            </div>
+          <h2 id="question-text" class="text-xl font-bold mb-8 leading-snug">...</h2>
+          <div id="options-container" class="grid gap-3"></div>
         </div>
 
-        <div class="flex items-center justify-between mt-10 pt-6 border-t border-slate-100 dark:border-slate-800">
-          <button id="btn-back" class="px-6 py-3 font-bold text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-2 invisible">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            Voltar
-          </button>
-          <button id="btn-next" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-jakarta font-bold shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:pointer-events-none" disabled>
-            Próxima Pergunta
-          </button>
+        <div class="flex items-center justify-between mt-8 pt-6 border-t border-slate-50 dark:border-slate-800">
+          <button id="btn-back" class="font-bold text-slate-400 hover:text-blue-600 invisible">Voltar</button>
+          <button id="btn-next" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg disabled:opacity-50" disabled>Próxima</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
+    <script>
     // --- CONFIGURAÇÃO SUPABASE ---
     const SUPABASE_URL = 'https://hiigckoowkrpewlybfef.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaWdja29vd2tycGV3bHliZmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MTc3NzIsImV4cCI6MjA4MzI5Mzc3Mn0.b5Uf3GXkE_jOVE0J1h3ssWdldiFjm6qQ1yUZr_Mu3Oo';
-
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let questions = [];
     let currentStep = 0;
     let userAnswers = {};
-    const startTime = Date.now();
 
     const params = new URLSearchParams(window.location.search);
     const lessonId = params.get('lesson_id');
@@ -102,35 +89,25 @@
     const courseId = params.get('course_id');
 
     async function loadQuiz() {
-      console.log("🔍 Carregando perguntas para:", lessonId);
-
-      if (!lessonId || lessonId === "false") {
-        showError("ID da aula inválido na URL.");
+      if (!lessonId) {
+        showError("ID da aula não encontrado na URL.");
         return;
       }
 
       try {
-        // Tenta buscar na tabela 'questions' (baseado no seu log de erro PGRST205)
-        let { data, error } = await _supabase
+        console.log("📡 Consultando tabela 'questions' para lesson_id:", lessonId);
+        
+        // FOCO AQUI: Chamada direta à tabela 'questions'
+        const { data, error } = await _supabase
           .from('questions')
           .select('*')
           .eq('lesson_id', lessonId)
           .order('order', { ascending: true });
 
-        // Se falhar ou estiver vazio, tenta 'quiz_questions'
-        if (error || !data || data.length === 0) {
-          const retry = await _supabase
-            .from('quiz_questions')
-            .select('*')
-            .eq('lesson_id', lessonId)
-            .order('order', { ascending: true });
-          
-          if (retry.error) throw retry.error;
-          data = retry.data;
-        }
+        if (error) throw error;
 
         if (!data || data.length === 0) {
-          showError("Nenhuma pergunta encontrada para esta aula.");
+          showError("Nenhuma pergunta cadastrada para este ID de aula.");
           return;
         }
 
@@ -138,14 +115,12 @@
         document.getElementById('total-steps').textContent = `/ ${String(questions.length).padStart(2, '0')}`;
         renderStep();
         
-        gsap.to("#loading-overlay", { opacity: 0, duration: 0.5, onComplete: () => {
-          document.getElementById('loading-overlay').style.display = 'none';
-          document.getElementById('quiz-container').classList.remove('hidden');
-        }});
+        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('quiz-container').classList.remove('hidden');
 
       } catch (err) {
-        console.error("❌ Erro:", err.message);
-        showError("Erro ao conectar com o banco de dados.");
+        console.error("❌ Erro Supabase:", err);
+        showError("Erro ao carregar dados: " + err.message);
       }
     }
 
@@ -153,9 +128,7 @@
       const q = questions[currentStep];
       document.getElementById('question-text').textContent = q.question_text;
       document.getElementById('step-counter').textContent = String(currentStep + 1).padStart(2, '0');
-      
-      const progress = ((currentStep + 1) / questions.length) * 100;
-      document.getElementById('progress-bar').style.width = `${progress}%`;
+      document.getElementById('progress-bar').style.width = `${((currentStep + 1) / questions.length) * 100}%`;
 
       const container = document.getElementById('options-container');
       container.innerHTML = '';
@@ -164,22 +137,17 @@
         const text = q[`option_${opt}`];
         if (text) {
           const btn = document.createElement('div');
-          btn.className = `option-card p-5 rounded-2xl cursor-pointer bg-slate-50 dark:bg-slate-800/50 font-medium ${userAnswers[currentStep] === opt ? 'selected' : ''}`;
-          btn.innerHTML = `<span class="inline-block w-8 font-black opacity-50 uppercase">${opt})</span> ${text}`;
-          btn.onclick = () => selectOption(opt);
+          btn.className = `option-card p-4 rounded-xl cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-2 ${userAnswers[currentStep] === opt ? 'selected' : 'border-transparent'}`;
+          btn.innerHTML = `<span class="font-black mr-2 uppercase opacity-50">${opt})</span> ${text}`;
+          btn.onclick = () => { userAnswers[currentStep] = opt; renderStep(); };
           container.appendChild(btn);
         }
       });
 
       document.getElementById('btn-back').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
       const btnNext = document.getElementById('btn-next');
-      btnNext.textContent = currentStep === questions.length - 1 ? 'Finalizar Avaliação' : 'Próxima Pergunta';
       btnNext.disabled = !userAnswers[currentStep];
-    }
-
-    function selectOption(opt) {
-      userAnswers[currentStep] = opt;
-      renderStep();
+      btnNext.textContent = currentStep === questions.length - 1 ? 'Finalizar' : 'Próxima';
     }
 
     document.getElementById('btn-next').onclick = async () => {
@@ -187,26 +155,16 @@
         currentStep++;
         renderStep();
       } else {
-        await finishQuiz();
+        await finish();
       }
     };
 
     document.getElementById('btn-back').onclick = () => {
-      if (currentStep > 0) {
-        currentStep--;
-        renderStep();
-      }
+      if (currentStep > 0) { currentStep--; renderStep(); }
     };
 
-    async function finishQuiz() {
-      const btnNext = document.getElementById('btn-next');
-      btnNext.disabled = true;
-      btnNext.textContent = "Enviando...";
-
-      const score = questions.reduce((acc, q, idx) => {
-        return acc + (userAnswers[idx] === q.correct_option ? 1 : 0);
-      }, 0);
-
+    async function finish() {
+      const score = questions.reduce((acc, q, idx) => acc + (userAnswers[idx] === q.correct_option ? 1 : 0), 0);
       const percent = Math.round((score / questions.length) * 100);
 
       try {
@@ -217,44 +175,19 @@
           score: percent,
           answers: userAnswers
         });
-
         if (error) throw error;
 
-        // Feedback Final
-        document.getElementById('step-content').innerHTML = `
-          <div class="text-center py-10">
-            <div class="text-6xl mb-6">🎉</div>
-            <h2 class="text-3xl font-jakarta font-black mb-2">Avaliação Concluída!</h2>
-            <p class="text-slate-500 mb-8">Seu desempenho foi de:</p>
-            <div class="inline-block px-8 py-4 bg-blue-600 text-white rounded-3xl text-4xl font-black mb-6">${percent}%</div>
-            <p class="text-sm text-slate-400 italic">Fechando em instantes...</p>
-          </div>
-        `;
-        document.getElementById('btn-back').style.display = 'none';
-        document.getElementById('btn-next').style.display = 'none';
-
-        setTimeout(() => {
-          window.parent.postMessage({ type: 'QUIZ_COMPLETE', lessonId, score: percent }, '*');
-        }, 3000);
-
+        document.getElementById('step-content').innerHTML = `<div class="text-center py-10"><h2 class="text-3xl font-black mb-4">Concluído!</h2><div class="text-5xl font-black text-blue-600">${percent}%</div></div>`;
+        setTimeout(() => window.parent.postMessage({ type: 'QUIZ_COMPLETE', lessonId, score: percent }, '*'), 2000);
       } catch (err) {
         alert("Erro ao salvar: " + err.message);
-        btnNext.disabled = false;
-        btnNext.textContent = "Tentar Novamente";
       }
     }
 
     function showError(msg) {
-      document.getElementById('loading-overlay').innerHTML = `
-        <div class="text-center p-10 bg-red-50 dark:bg-red-900/10 rounded-3xl">
-          <p class="text-4xl mb-4">⚠️</p>
-          <p class="font-jakarta font-bold text-red-600">${msg}</p>
-          <button onclick="location.reload()" class="mt-4 text-sm underline opacity-70">Tentar Novamente</button>
-        </div>
-      `;
+      document.getElementById('loading-overlay').innerHTML = `<div class="text-center p-6"><p class="text-red-500 font-bold">${msg}</p></div>`;
     }
 
-    // Iniciar
     loadQuiz();
   </script>
 </body>
